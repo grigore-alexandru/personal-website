@@ -8,14 +8,6 @@ interface StatsPanelProps {
   channels?: string[];
 }
 
-interface StatCardProps {
-  icon: React.ReactNode;
-  label: string;
-  value: number;
-  format: (n: number) => string;
-  children?: React.ReactNode;
-}
-
 const formatNumber = (n: number) => {
   if (isNaN(n)) return '0';
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -23,42 +15,12 @@ const formatNumber = (n: number) => {
   return n.toFixed(0);
 };
 
-const StatCard: FC<StatCardProps> = ({ icon, label, value, format, children }) => {
-  return (
-    <div
-      className="flex flex-col items-center p-8 rounded-2xl border border-gray-100 bg-gray-50"
-    >
-      <div className="p-4 rounded-full mb-6 border border-gray-200 bg-white">
-        {icon}
-      </div>
-      <AnimatedNumber
-        value={value}
-        format={format}
-        className="text-6xl font-extrabold mb-2"
-      />
-      <div
-        className="text-lg uppercase tracking-wider text-gray-600 mb-4"
-        style={{
-          fontFamily: designTokens?.typography?.fontFamily ?? 'sans-serif',
-          fontWeight: designTokens?.typography?.weights?.medium ?? 500,
-          letterSpacing: designTokens?.typography?.letterSpacings?.wide ?? '0.1em',
-        }}
-      >
-        {label}
-      </div>
-      {children}
-    </div>
-  );
-};
-
 const StatsPanel: FC<StatsPanelProps> = ({ views = 0, channels = [] }) => {
-  const formattedViews = useMemo(() => formatNumber(views), [views]);
-
   return (
     <section className="bg-gray-50 py-24">
-      <div className="container mx-auto px-6 lg:px-12">
+      <div className="max-w-6xl mx-auto px-6 lg:px-12">
         <h2
-          className="text-3xl font-bold text-center mb-12"
+          className="text-3xl font-bold text-center mb-16"
           style={{
             fontFamily: designTokens?.typography?.fontFamily ?? 'sans-serif',
             fontWeight: designTokens?.typography?.weights?.black ?? 900,
@@ -67,37 +29,83 @@ const StatsPanel: FC<StatsPanelProps> = ({ views = 0, channels = [] }) => {
         >
           Audience Statistics
         </h2>
-        <div className="grid gap-12 grid-cols-1 md:grid-cols-2">
-          <StatCard
-            icon={<Eye size={32} className="text-gray-600" />}
-            label="Total Views"
-            value={views}
-            format={formatNumber}
-          />
 
-          <StatCard
-            icon={<Share2 size={32} className="text-gray-600" />}
-            label="Platforms"
-            value={channels.length}
-            format={(n) => n.toFixed(0)}
-          >
-            <ul className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4 max-w-md mx-auto">
-              {channels.map((ch, i) => (
-                <li key={i}>
-                  <span
-                    className="block text-center px-4 py-2 bg-white rounded-full border border-gray-200 text-sm font-medium transition hover:bg-gray-100"
-                    style={{
-                      fontFamily: designTokens?.typography?.fontFamily ?? 'sans-serif',
-                      fontWeight: designTokens?.typography?.weights?.regular ?? 400,
-                      letterSpacing: designTokens?.typography?.letterSpacings?.wide ?? '0.1em',
-                    }}
-                  >
-                    {ch}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </StatCard>
+        <div className="grid gap-16 md:grid-cols-2">
+          
+          {/* Total Views */}
+          <div className="flex flex-col items-center text-center">
+            <div className="mb-6">
+              <Eye size={36} className="text-gray-600" />
+            </div>
+            <AnimatedNumber
+              value={views}
+              format={formatNumber}
+              className="text-7xl font-extrabold"
+            />
+            <div
+              className="mt-2 text-lg uppercase tracking-wider text-gray-500"
+              style={{
+                fontFamily: designTokens?.typography?.fontFamily,
+                fontWeight: designTokens?.typography?.weights?.medium,
+                letterSpacing: designTokens?.typography?.letterSpacings?.wide,
+              }}
+            >
+              Total Views
+            </div>
+          </div>
+
+          {/* Distribution */}
+          <div className="flex flex-col items-center text-center">
+            <div className="mb-6">
+              <Share2 size={36} className="text-gray-600" />
+            </div>
+            <AnimatedNumber
+              value={channels.length}
+              format={(n) => n.toFixed(0)}
+              className="text-7xl font-extrabold"
+            />
+            <div
+              className="mt-2 text-lg uppercase tracking-wider text-gray-500 mb-8"
+              style={{
+                fontFamily: designTokens?.typography?.fontFamily,
+                fontWeight: designTokens?.typography?.weights?.medium,
+                letterSpacing: designTokens?.typography?.letterSpacings?.wide,
+              }}
+            >
+              Platforms
+            </div>
+
+            {channels.length > 0 && (
+              <>
+                <h3
+                  className="text-base uppercase tracking-wider text-gray-400 mb-4"
+                  style={{
+                    fontFamily: designTokens?.typography?.fontFamily,
+                    fontWeight: designTokens?.typography?.weights?.regular,
+                    letterSpacing: designTokens?.typography?.letterSpacings?.wide,
+                  }}
+                >
+                  Platforms Included
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 w-full max-w-lg">
+                  {channels.map((channel, i) => (
+                    <span
+                      key={i}
+                      className="text-center px-4 py-2 rounded-full bg-white text-gray-700 text-sm transition"
+                      style={{
+                        fontFamily: designTokens?.typography?.fontFamily,
+                        fontWeight: designTokens?.typography?.weights?.regular,
+                        letterSpacing: designTokens?.typography?.letterSpacings?.wide,
+                      }}
+                    >
+                      {channel}
+                    </span>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
         </div>
       </div>
     </section>
