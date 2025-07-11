@@ -98,19 +98,16 @@ const ProjectDetailPage: React.FC = () => {
       )}
 
       {/* Project Hero */}
-      <ProjectHero bgUrl={project.poster} title={project.title} />
+      <ProjectHero 
+        bgUrl={project.poster} 
+        title={project.title}
+        type={project.type}
+        client={project.client_name}
+        date={project.date}
+      />
 
       {/* Project Content */}
       <div className="max-w-4xl mx-auto px-6 py-16">
-        {/* Meta Information */}
-        <div className="mb-8">
-          <MetaTriplet 
-            type={project.type}
-            client={project.client_name}
-            date={project.date}
-          />
-        </div>
-
         {/* Stats Panel */}
         <StatsPanel 
           views={project.reach.views}
