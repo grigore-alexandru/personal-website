@@ -40,20 +40,6 @@ const StatsPanel: FC<StatsPanelProps> = ({ views = 0, channels = [], impressions
   return (
     <section className="bg-gray-50 py-24">
       <div className="max-w-6xl mx-auto px-6 lg:px-12">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
-          className="text-3xl font-bold text-center mb-16"
-          style={{
-            fontFamily: designTokens?.typography?.fontFamily ?? 'sans-serif',
-            fontWeight: designTokens?.typography?.weights?.black ?? 900,
-            color: designTokens?.colors?.gray?.[800] ?? '#333',
-          }}
-        >
-          Audience Statistics
-        </motion.h2>
-
         <motion.div
           initial="hidden"
           animate="visible"
