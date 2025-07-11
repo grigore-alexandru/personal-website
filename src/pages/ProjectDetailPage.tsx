@@ -122,10 +122,10 @@ const ProjectDetailPage: React.FC = () => {
             About the Project
           </h2>
           {/* Stats Panel */}
-        <StatsPanel 
-          views={project.reach.views}
-          channels={project.reach.channels}
-        />
+          <StatsPanel 
+            views={project.reach.views}
+            channels={project.reach.channels}
+          />
           
           <p 
             className="text-gray-700 leading-relaxed"
