@@ -17,20 +17,47 @@ const formatNumber = (n: number) => {
   return n.toFixed(0);
 };
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 16 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      delay: i * 0.2,
-      duration: 0.6,
-      ease: 'easeOut',
-    },
-  }),
+const containerVariants = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.2 }
+  }
 };
 
-const StatsPanel: FC<StatsPanelProps> = ({ views = 0, channels = [], impressions = 0 }) => {
+const cardVariants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } }
+};
+
+const StatsPanel: FC<StatsPanelProps> = ({
+  views = 0,
+  channels = [],
+  impressions = 0,
+}) => {
+  const metrics = [
+    {
+      key: 'channels',
+      icon: <Share2 size={36} />,
+      value: channels.length,
+      label: 'Channels',
+      isCenter: false,
+    },
+    {
+      key: 'views',
+      icon: <Eye size={48} />,
+      value: views,
+      label: 'Total Views',
+      isCenter: true,
+    },
+    {
+      key: 'impressions',
+      icon: <TrendingUp size={36} />,
+      value: impressions,
+      label: 'Impressions',
+      isCenter: false,
+    },
+  ];
+
   return (
     <section className="bg-gray-50 py-24">
       <div className="max-w-6xl mx-auto px-6 lg:px-12">
@@ -40,54 +67,88 @@ const StatsPanel: FC<StatsPanelProps> = ({ views = 0, channels = [], impressions
           transition={{ duration: 0.6, ease: 'easeOut' }}
           className="text-3xl font-bold text-center mb-16"
           style={{
-            fontFamily: designTokens?.typography?.fontFamily ?? 'sans-serif',
-            fontWeight: designTokens?.typography?.weights?.black ?? 900,
-            color: designTokens?.colors?.gray?.[800] ?? '#333',
+            fontFamily: designTokens.typography.fontFamily,
+            fontWeight: designTokens.typography.weights.black,
+            color: designTokens.colors.gray[800],
           }}
         >
           Audience Statistics
         </motion.h2>
 
-        <div className="grid gap-12 md:grid-cols-3 text-center">
-          {[ 
-            { icon: <Eye size={36} />, value: views, label: 'Total Views' },
-            { icon: <Share2 size={36} />, value: channels.length, label: 'Platforms' },
-            { icon: <TrendingUp size={36} />, value: impressions, label: 'Impressions' }
-          ].map((item, i) => (
+        <motion.div
+          className="flex justify-center items-center space-x-16"
+          initial="hidden"
+          animate="visible"
+          variants={containerVariants}
+        >
+          {metrics.map((m) => (
             <motion.div
-              key={item.label}
-              custom={i}
-              initial="hidden"
-              animate="visible"
+              key={m.key}
               variants={cardVariants}
-              className="flex flex-col items-center"
+              className="flex flex-col items-center text-center"
             >
+              {/* Icon */}
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: i * 0.2 + 0.3, duration: 0.4 }}
-                className="mb-4 text-gray-600"
-              >
-                {item.icon}
-              </motion.div>
-              <AnimatedNumber
-                value={item.value}
-                format={formatNumber}
-                className="text-6xl font-extrabold mb-2"
-              />
-              <div
-                className="text-lg uppercase tracking-wider text-gray-500"
+                animate={{ scale: m.isCenter ? 1.2 : 1, opacity: 1 }}
+                transition={{ duration: 0.4, ease: 'easeOut' }}
+                className="mb-4"
                 style={{
-                  fontFamily: designTokens?.typography?.fontFamily,
-                  fontWeight: designTokens?.typography?.weights?.medium,
-                  letterSpacing: designTokens?.typography?.letterSpacings?.wide,
+                  color: m.isCenter
+                    ? designTokens.colors.primary
+                    : designTokens.colors.gray[600],
                 }}
               >
-                {item.label}
-              </div>
+                {m.icon}
+              </motion.div>
+
+              {/* Number */}
+              <motion.div
+                initial={m.isCenter ? { scale: 0.9, opacity: 0 } : { opacity: 0 }}
+                animate={m.isCenter
+                  ? { scale: [1, 1.05, 1], opacity: 1 }
+                  : { opacity: 1 }}
+                transition={
+                  m.isCenter
+                    ? { duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }
+                    : { duration: 0.6, ease: 'easeOut' }
+                }
+                className={
+                  m.isCenter
+                    ? 'text-8xl font-extrabold mb-2'
+                    : 'text-6xl font-extrabold mb-2'
+                }
+                style={{
+                  fontFamily: designTokens.typography.fontFamily,
+                  fontWeight: m.isCenter
+                    ? designTokens.typography.weights.extraBold
+                    : designTokens.typography.weights.bold,
+                  color: m.isCenter
+                    ? designTokens.colors.primary
+                    : designTokens.colors.black,
+                }}
+              >
+                <AnimatedNumber value={m.value} format={formatNumber} />
+              </motion.div>
+
+              {/* Label */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8, duration: 0.4, ease: 'easeOut' }}
+                className="text-lg uppercase tracking-wider"
+                style={{
+                  fontFamily: designTokens.typography.fontFamily,
+                  fontWeight: designTokens.typography.weights.medium,
+                  letterSpacing: designTokens.typography.letterSpacings.wide,
+                  color: designTokens.colors.gray[500],
+                }}
+              >
+                {m.label}
+              </motion.div>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
