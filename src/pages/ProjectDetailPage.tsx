@@ -108,12 +108,6 @@ const ProjectDetailPage: React.FC = () => {
 
       {/* Project Content */}
       <div className="max-w-4xl mx-auto px-6 py-16">
-        {/* Stats Panel */}
-        <StatsPanel 
-          views={project.reach.views}
-          channels={project.reach.channels}
-        />
-
         {/* About Section */}
         <section className="py-16">
           <h2 
@@ -127,6 +121,11 @@ const ProjectDetailPage: React.FC = () => {
           >
             About the Project
           </h2>
+          {/* Stats Panel */}
+        <StatsPanel 
+          views={project.reach.views}
+          channels={project.reach.channels}
+        />
           
           <p 
             className="text-gray-700 leading-relaxed"
