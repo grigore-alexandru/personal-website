@@ -12,8 +12,8 @@ interface StatsPanelProps {
 
 const formatNumber = (n: number) => {
   if (isNaN(n)) return '0';
-  if (n >= 1_000_000) return ${(n / 1_000_000).toFixed(1)}M;
-  if (n >= 1_000) return ${(n / 1_000).toFixed(1)}K;
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return n.toFixed(0);
 };
 
@@ -31,6 +31,12 @@ const cardVariants = {
 };
 
 const StatsPanel: FC<StatsPanelProps> = ({ views = 0, channels = [], impressions = 0 }) => {
+  const metrics = [
+    { icon: <Share2 size={36} />, value: channels.length, label: 'Channels' },
+    { icon: <Eye size={36} />, value: views, label: 'Total Views' },
+    { icon: <TrendingUp size={36} />, value: impressions, label: 'Impressions' }
+  ];
+
   return (
     <section className="bg-gray-50 py-24">
       <div className="max-w-6xl mx-auto px-6 lg:px-12">
@@ -49,11 +55,7 @@ const StatsPanel: FC<StatsPanelProps> = ({ views = 0, channels = [], impressions
         </motion.h2>
 
         <div className="grid gap-12 md:grid-cols-3 text-center">
-          {[ 
-            { icon: <Eye size={36} />, value: views, label: 'Total Views' },
-            { icon: <Share2 size={36} />, value: channels.length, label: 'Platforms' },
-            { icon: <TrendingUp size={36} />, value: impressions, label: 'Impressions' }
-          ].map((item, i) => (
+          {metrics.map((item, i) => (
             <motion.div
               key={item.label}
               custom={i}
