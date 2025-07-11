@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, Users, Share2 } from 'lucide-react';
+import { Eye, Users, Share2, TrendingUp } from 'lucide-react';
 import { designTokens } from '../styles/tokens';
 
 interface StatsPanelProps {
@@ -18,70 +18,148 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ views, channels }) => {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-8 py-6 border-y border-gray-200">
-      <div className="flex items-center gap-3">
-        <Eye size={20} className="text-gray-600" />
-        <div>
-          <span 
-            className="text-2xl font-bold text-black"
-            style={{
-              fontFamily: designTokens.typography.fontFamily,
-              fontWeight: designTokens.typography.weights.bold,
-            }}
-          >
-            {formatViews(views)}
-          </span>
-          <span 
-            className="text-sm text-gray-600 ml-2"
-            style={{
-              fontFamily: designTokens.typography.fontFamily,
-              fontWeight: designTokens.typography.weights.regular,
-            }}
-          >
-            Views
-          </span>
-        </div>
+    <div className="relative bg-gradient-to-r from-gray-900 via-black to-gray-900 text-white overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `radial-gradient(circle at 25% 25%, white 2px, transparent 2px),
+                           radial-gradient(circle at 75% 75%, white 2px, transparent 2px)`,
+          backgroundSize: '60px 60px'
+        }} />
       </div>
+      
+      {/* Gradient Overlays */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+      <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+      
+      <div className="relative max-w-screen-xl mx-auto px-6 py-12 lg:py-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+          
+          {/* Views Stat */}
+          <div className="text-center group">
+            <div className="relative inline-flex items-center justify-center w-20 h-20 lg:w-24 lg:h-24 mb-6 mx-auto">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-600/20 rounded-full blur-xl group-hover:blur-2xl transition-all duration-500" />
+              <div className="relative w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300">
+                <Eye size={28} className="text-white lg:w-8 lg:h-8" />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <div 
+                className="text-4xl lg:text-6xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300"
+                style={{
+                  fontFamily: designTokens.typography.fontFamily,
+                  fontWeight: designTokens.typography.weights.bold,
+                }}
+              >
+                {formatViews(views)}
+              </div>
+              <div 
+                className="text-lg lg:text-xl text-white/80 uppercase tracking-wider"
+                style={{
+                  fontFamily: designTokens.typography.fontFamily,
+                  fontWeight: designTokens.typography.weights.regular,
+                  letterSpacing: designTokens.typography.letterSpacings.wide,
+                }}
+              >
+                Total Views
+              </div>
+              <div className="text-sm text-white/60">
+                Across all platforms
+              </div>
+            </div>
+          </div>
 
-      <div className="flex items-center gap-3">
-        <Users size={20} className="text-gray-600" />
-        <div>
-          <span 
-            className="text-2xl font-bold text-black"
-            style={{
-              fontFamily: designTokens.typography.fontFamily,
-              fontWeight: designTokens.typography.weights.bold,
-            }}
-          >
-            {channels.length}
-          </span>
-          <span 
-            className="text-sm text-gray-600 ml-2"
-            style={{
-              fontFamily: designTokens.typography.fontFamily,
-              fontWeight: designTokens.typography.weights.regular,
-            }}
-          >
-            Channels
-          </span>
+          {/* Channels Stat */}
+          <div className="text-center group">
+            <div className="relative inline-flex items-center justify-center w-20 h-20 lg:w-24 lg:h-24 mb-6 mx-auto">
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-teal-600/20 rounded-full blur-xl group-hover:blur-2xl transition-all duration-500" />
+              <div className="relative w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-green-500 to-teal-600 rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300">
+                <Users size={28} className="text-white lg:w-8 lg:h-8" />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <div 
+                className="text-4xl lg:text-6xl font-bold bg-gradient-to-r from-green-400 to-teal-400 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300"
+                style={{
+                  fontFamily: designTokens.typography.fontFamily,
+                  fontWeight: designTokens.typography.weights.bold,
+                }}
+              >
+                {channels.length}
+              </div>
+              <div 
+                className="text-lg lg:text-xl text-white/80 uppercase tracking-wider"
+                style={{
+                  fontFamily: designTokens.typography.fontFamily,
+                  fontWeight: designTokens.typography.weights.regular,
+                  letterSpacing: designTokens.typography.letterSpacings.wide,
+                }}
+              >
+                Platforms
+              </div>
+              <div className="text-sm text-white/60">
+                Distribution channels
+              </div>
+            </div>
+          </div>
+
+          {/* Reach Stat */}
+          <div className="text-center group">
+            <div className="relative inline-flex items-center justify-center w-20 h-20 lg:w-24 lg:h-24 mb-6 mx-auto">
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-red-600/20 rounded-full blur-xl group-hover:blur-2xl transition-all duration-500" />
+              <div className="relative w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300">
+                <TrendingUp size={28} className="text-white lg:w-8 lg:h-8" />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <div 
+                className="text-4xl lg:text-6xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300"
+                style={{
+                  fontFamily: designTokens.typography.fontFamily,
+                  fontWeight: designTokens.typography.weights.bold,
+                }}
+              >
+                100%
+              </div>
+              <div 
+                className="text-lg lg:text-xl text-white/80 uppercase tracking-wider"
+                style={{
+                  fontFamily: designTokens.typography.fontFamily,
+                  fontWeight: designTokens.typography.weights.regular,
+                  letterSpacing: designTokens.typography.letterSpacings.wide,
+                }}
+              >
+                Impact
+              </div>
+              <div className="text-sm text-white/60">
+                Client satisfaction
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div className="flex items-center gap-3">
-        <Share2 size={20} className="text-gray-600" />
-        <div className="flex flex-wrap gap-2">
+        {/* Platform Tags */}
+        <div className="mt-12 flex flex-wrap justify-center gap-3">
           {channels.map((channel, index) => (
-            <span
+            <div
               key={index}
-              className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
-              style={{
-                fontFamily: designTokens.typography.fontFamily,
-                fontWeight: designTokens.typography.weights.regular,
-                letterSpacing: designTokens.typography.letterSpacings.wide,
-              }}
+              className="group relative overflow-hidden"
             >
-              {channel}
-            </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-white/5 rounded-full blur-sm group-hover:blur-md transition-all duration-300" />
+              <span
+                className="relative px-6 py-3 bg-white/10 backdrop-blur-sm text-white/90 text-sm rounded-full border border-white/20 hover:bg-white/20 hover:border-white/30 transition-all duration-300 group-hover:scale-105"
+                style={{
+                  fontFamily: designTokens.typography.fontFamily,
+                  fontWeight: designTokens.typography.weights.regular,
+                  letterSpacing: designTokens.typography.letterSpacings.wide,
+                }}
+              >
+                {channel}
+              </span>
+            </div>
           ))}
         </div>
       </div>
