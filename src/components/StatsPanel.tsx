@@ -19,83 +19,66 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ views, channels }) => {
 
   return (
     <div className="bg-white border-t border-b border-gray-100">
-      <div className="max-w-screen-xl mx-auto px-6 py-16 lg:py-20">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      <div className="max-w-screen-xl mx-auto px-6 py-20">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24">
           
           {/* Total Views */}
-          <div className="text-center lg:text-left">
-            <div className="flex items-center justify-center lg:justify-start mb-6">
-              <div className="w-16 h-16 lg:w-20 lg:h-20 bg-gray-100 rounded-full flex items-center justify-center mr-6">
-                <Eye size={28} className="text-gray-700 lg:w-8 lg:h-8" />
-              </div>
-              <div>
-                <div 
-                  className="text-5xl lg:text-6xl font-bold text-black mb-2"
-                  style={{
-                    fontFamily: designTokens.typography.fontFamily,
-                    fontWeight: designTokens.typography.weights.bold,
-                  }}
-                >
-                  {formatViews(views)}
-                </div>
-                <div 
-                  className="text-lg lg:text-xl text-gray-600 uppercase tracking-wider"
-                  style={{
-                    fontFamily: designTokens.typography.fontFamily,
-                    fontWeight: designTokens.typography.weights.regular,
-                    letterSpacing: designTokens.typography.letterSpacings.wide,
-                  }}
-                >
-                  Total Views
-                </div>
-              </div>
+          <div className="text-center">
+            <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-8 border border-gray-100">
+              <Eye size={32} className="text-gray-600" />
             </div>
-            <p 
-              className="text-gray-500 text-sm lg:text-base max-w-md mx-auto lg:mx-0"
+            <div 
+              className="text-7xl font-bold text-black mb-4"
+              style={{
+                fontFamily: designTokens.typography.fontFamily,
+                fontWeight: designTokens.typography.weights.bold,
+              }}
+            >
+              {formatViews(views)}
+            </div>
+            <div 
+              className="text-xl text-gray-600 uppercase tracking-wider"
               style={{
                 fontFamily: designTokens.typography.fontFamily,
                 fontWeight: designTokens.typography.weights.regular,
+                letterSpacing: designTokens.typography.letterSpacings.wide,
               }}
             >
-              Cumulative reach across all distribution platforms and channels
-            </p>
+              Total Views
+            </div>
           </div>
 
           {/* Distribution */}
-          <div className="text-center lg:text-left">
-            <div className="flex items-center justify-center lg:justify-start mb-6">
-              <div className="w-16 h-16 lg:w-20 lg:h-20 bg-gray-100 rounded-full flex items-center justify-center mr-6">
-                <Share2 size={28} className="text-gray-700 lg:w-8 lg:h-8" />
-              </div>
-              <div>
-                <div 
-                  className="text-5xl lg:text-6xl font-bold text-black mb-2"
-                  style={{
-                    fontFamily: designTokens.typography.fontFamily,
-                    fontWeight: designTokens.typography.weights.bold,
-                  }}
-                >
-                  {channels.length}
-                </div>
-                <div 
-                  className="text-lg lg:text-xl text-gray-600 uppercase tracking-wider"
-                  style={{
-                    fontFamily: designTokens.typography.fontFamily,
-                    fontWeight: designTokens.typography.weights.regular,
-                    letterSpacing: designTokens.typography.letterSpacings.wide,
-                  }}
-                >
-                  Distribution
-                </div>
-              </div>
+          <div className="text-center">
+            <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-8 border border-gray-100">
+              <Share2 size={32} className="text-gray-600" />
+            </div>
+            <div 
+              className="text-7xl font-bold text-black mb-4"
+              style={{
+                fontFamily: designTokens.typography.fontFamily,
+                fontWeight: designTokens.typography.weights.bold,
+              }}
+            >
+              {channels.length}
+            </div>
+            <div 
+              className="text-xl text-gray-600 uppercase tracking-wider mb-8"
+              style={{
+                fontFamily: designTokens.typography.fontFamily,
+                fontWeight: designTokens.typography.weights.regular,
+                letterSpacing: designTokens.typography.letterSpacings.wide,
+              }}
+            >
+              Distribution
             </div>
             
-            {/* Platform Tags - Positioned close to distribution */}
-            <div className="flex flex-wrap justify-center lg:justify-start gap-3 mb-4">
+            {/* Platform Tags - Elegantly positioned */}
+            <div className="flex flex-wrap justify-center gap-3">
               {channels.map((channel, index) => (
                 <span
                   key={index}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-full border border-gray-200 hover:bg-gray-200 transition-colors"
+                  className="px-6 py-3 bg-gray-50 text-gray-700 text-sm rounded-full border border-gray-200 hover:bg-gray-100 hover:border-gray-300 transition-all duration-200 font-medium"
                   style={{
                     fontFamily: designTokens.typography.fontFamily,
                     fontWeight: designTokens.typography.weights.regular,
@@ -106,16 +89,6 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ views, channels }) => {
                 </span>
               ))}
             </div>
-            
-            <p 
-              className="text-gray-500 text-sm lg:text-base max-w-md mx-auto lg:mx-0"
-              style={{
-                fontFamily: designTokens.typography.fontFamily,
-                fontWeight: designTokens.typography.weights.regular,
-              }}
-            >
-              Strategic multi-platform distribution for maximum audience reach
-            </p>
           </div>
         </div>
       </div>
