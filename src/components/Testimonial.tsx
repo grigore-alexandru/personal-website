@@ -1,5 +1,6 @@
 import React from 'react';
 import { Quote } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { designTokens } from '../styles/tokens';
 
 interface TestimonialProps {
@@ -10,26 +11,24 @@ interface TestimonialProps {
 
 const Testimonial: React.FC<TestimonialProps> = ({ client, text, role }) => {
   return (
-    <div
-      className="relative bg-white rounded-2xl p-10 md:p-12 overflow-hidden"
-      style={{
-        border: `1px solid ${designTokens?.colors?.gray?.[100] ?? '#eee'}`,
-        boxShadow: `0 2px 8px rgba(0, 0, 0, 0.03)`,
-      }}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8, ease: 'easeOut' }}
+      className="relative bg-transparent rounded-2xl px-8 py-12 md:px-12 md:py-16 overflow-hidden text-center"
     >
       {/* Decorative Quote Icon */}
       <Quote
-        size={120}
-        className="absolute -top-8 -left-8 text-gray-100 opacity-40"
+        size={140}
+        className="absolute top-4 left-4 text-gray-100 opacity-30 pointer-events-none"
         style={{
           transform: 'rotate(180deg)',
-          pointerEvents: 'none',
         }}
       />
 
-      <div className="relative z-10">
+      <div className="relative z-10 max-w-3xl mx-auto">
         <blockquote
-          className="text-xl md:text-2xl text-gray-700 italic leading-relaxed mb-8"
+          className="text-2xl md:text-3xl leading-relaxed text-gray-800 italic mb-8"
           style={{
             fontFamily: designTokens?.typography?.fontFamily,
             fontWeight: designTokens?.typography?.weights?.regular,
@@ -41,7 +40,7 @@ const Testimonial: React.FC<TestimonialProps> = ({ client, text, role }) => {
 
         <div>
           <cite
-            className="text-lg md:text-xl text-black font-bold not-italic block"
+            className="text-xl md:text-2xl text-black font-bold not-italic block"
             style={{
               fontFamily: designTokens?.typography?.fontFamily,
               fontWeight: designTokens?.typography?.weights?.bold,
@@ -51,7 +50,7 @@ const Testimonial: React.FC<TestimonialProps> = ({ client, text, role }) => {
           </cite>
           {role && (
             <p
-              className="text-gray-500 text-sm md:text-base mt-1"
+              className="text-gray-500 text-base md:text-lg mt-1"
               style={{
                 fontFamily: designTokens?.typography?.fontFamily,
                 fontWeight: designTokens?.typography?.weights?.regular,
@@ -62,7 +61,7 @@ const Testimonial: React.FC<TestimonialProps> = ({ client, text, role }) => {
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
