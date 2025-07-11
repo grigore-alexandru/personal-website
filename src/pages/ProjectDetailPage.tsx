@@ -21,13 +21,13 @@ const ProjectDetailPage: React.FC = () => {
   useEffect(() => {
     const fetchProject = async () => {
       if (!clientSlug || !projectSlug) return;
-      
+
       try {
         const [projectData, projectsData] = await Promise.all([
           loadProject(clientSlug, projectSlug),
           loadProjects()
         ]);
-        
+
         setProject(projectData);
         setAllProjects(projectsData);
       } catch (error) {
@@ -91,7 +91,7 @@ const ProjectDetailPage: React.FC = () => {
       {showBackButton && (
         <Link
           to="/what-i-do/video-production/"
-          className="fixed bottom-8 left-8 z-50 w-12 h-12 bg-black text-white rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors shadow-lg"
+          className="fixed bottom-8 left-8 z-50 w-12 h-12 bg-black text-white rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors"
         >
           <ArrowLeft size={20} />
         </Link>
@@ -111,15 +111,16 @@ const ProjectDetailPage: React.FC = () => {
         <StatsPanel 
           views={project.reach.views}
           channels={project.reach.channels}
+          impressions={project.reach.impressions}
         />
       </div>
 
-      {/* Project Content */}
-      <div className="max-w-4xl mx-auto px-6 py-12">
+      {/* Project Content Container */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-12 py-12">
         {/* About Section */}
-        <section className="py-12">
+        <section className="py-12 md:py-16">
           <h2 
-            className="text-black font-bold mb-6"
+            className="text-black font-bold mb-6 text-center"
             style={{
               fontSize: designTokens.typography.sizes.xl,
               fontFamily: designTokens.typography.fontFamily,
@@ -143,9 +144,9 @@ const ProjectDetailPage: React.FC = () => {
         </section>
 
         {/* Video Carousel */}
-        <section className="py-16">
+        <section className="py-12 md:py-16">
           <h2 
-            className="text-black font-bold mb-8"
+            className="text-black font-bold mb-6 text-center"
             style={{
               fontSize: designTokens.typography.sizes.xl,
               fontFamily: designTokens.typography.fontFamily,
@@ -155,14 +156,13 @@ const ProjectDetailPage: React.FC = () => {
           >
             Watch the Project
           </h2>
-          
           <VideoCarousel videos={project.videos} />
         </section>
 
         {/* Testimonials */}
-        <section className="py-16">
+        <section className="py-12 md:py-16">
           <h2 
-            className="text-black font-bold mb-8"
+            className="text-black font-bold mb-6 text-center"
             style={{
               fontSize: designTokens.typography.sizes.xl,
               fontFamily: designTokens.typography.fontFamily,
@@ -172,16 +172,16 @@ const ProjectDetailPage: React.FC = () => {
           >
             Client Testimonial
           </h2>
-          
           <Testimonial 
             client={project.testimonial.client}
             text={project.testimonial.text}
+            role={project.testimonial.role}
           />
         </section>
 
         {/* Navigation */}
-        <section className="py-16 border-t border-gray-200">
-          <div className="flex justify-between items-center">
+        <section className="py-12 md:py-16">
+          <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
             {prevProject ? (
               <Link
                 to={`/what-i-do/video-production/${prevProject.client_name.toLowerCase().replace(/\s+/g, '-')}/${prevProject.title.toLowerCase().replace(/\s+/g, '-')}`}
@@ -190,17 +190,15 @@ const ProjectDetailPage: React.FC = () => {
                 <ArrowLeft size={20} />
                 <span>Previous Project</span>
               </Link>
-            ) : (
-              <div />
-            )}
-            
+            ) : <div />}
+
             <Link
               to="/what-i-do/video-production/"
               className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
             >
               View All Projects
             </Link>
-            
+
             {nextProject ? (
               <Link
                 to={`/what-i-do/video-production/${nextProject.client_name.toLowerCase().replace(/\s+/g, '-')}/${nextProject.title.toLowerCase().replace(/\s+/g, '-')}`}
@@ -209,9 +207,7 @@ const ProjectDetailPage: React.FC = () => {
                 <span>Next Project</span>
                 <ArrowRight size={20} />
               </Link>
-            ) : (
-              <div />
-            )}
+            ) : <div />}
           </div>
         </section>
       </div>
