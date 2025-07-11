@@ -106,6 +106,12 @@ const ProjectDetailPage: React.FC = () => {
         date={project.date}
       />
 
+      {/* Stats Panel */}
+      <StatsPanel 
+        views={project.reach.views}
+        channels={project.reach.channels}
+      />
+
       {/* Project Content */}
       <div className="max-w-4xl mx-auto px-6 py-16">
         {/* About Section */}
@@ -121,12 +127,6 @@ const ProjectDetailPage: React.FC = () => {
           >
             About the Project
           </h2>
-          {/* Stats Panel */}
-          <StatsPanel 
-            views={project.reach.views}
-            channels={project.reach.channels}
-          />
-          
           <p 
             className="text-gray-700 leading-relaxed"
             style={{
