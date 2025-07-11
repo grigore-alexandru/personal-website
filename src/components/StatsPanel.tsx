@@ -11,51 +11,26 @@ interface StatsPanelProps {
 }
 
 const formatNumber = (n: number) => {
-  if (!n || isNaN(n)) return '0';
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  if (isNaN(n)) return '0';
+  if (n >= 1_000_000) return ${(n / 1_000_000).toFixed(1)}M;
+  if (n >= 1_000) return ${(n / 1_000).toFixed(1)}K;
   return n.toFixed(0);
-};
-
-const containerVariants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.2 } }
 };
 
 const cardVariants = {
   hidden: { opacity: 0, y: 16 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } }
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: i * 0.2,
+      duration: 0.6,
+      ease: 'easeOut',
+    },
+  }),
 };
 
-const StatsPanel: FC<StatsPanelProps> = ({
-  views = 0,
-  channels = [],
-  impressions = 0,
-}) => {
-  const metrics = [
-    {
-      key: 'channels',
-      icon: <Share2 size={36} />,
-      value: channels.length ?? 0,
-      label: 'Channels',
-      isCenter: false,
-    },
-    {
-      key: 'views',
-      icon: <Eye size={48} />,
-      value: views,
-      label: 'Total Views',
-      isCenter: true,
-    },
-    {
-      key: 'impressions',
-      icon: <TrendingUp size={36} />,
-      value: impressions,
-      label: 'Impressions',
-      isCenter: false,
-    },
-  ];
-
+const StatsPanel: FC<StatsPanelProps> = ({ views = 0, channels = [], impressions = 0 }) => {
   return (
     <section className="bg-gray-50 py-24">
       <div className="max-w-6xl mx-auto px-6 lg:px-12">
@@ -73,79 +48,46 @@ const StatsPanel: FC<StatsPanelProps> = ({
           Audience Statistics
         </motion.h2>
 
-        <motion.div
-          className="flex justify-center items-center flex-wrap gap-12 md:gap-16"
-          initial="hidden"
-          animate="visible"
-          variants={containerVariants}
-        >
-          {metrics.map((m) => (
+        <div className="grid gap-12 md:grid-cols-3 text-center">
+          {[ 
+            { icon: <Eye size={36} />, value: views, label: 'Total Views' },
+            { icon: <Share2 size={36} />, value: channels.length, label: 'Platforms' },
+            { icon: <TrendingUp size={36} />, value: impressions, label: 'Impressions' }
+          ].map((item, i) => (
             <motion.div
-              key={m.key}
+              key={item.label}
+              custom={i}
+              initial="hidden"
+              animate="visible"
               variants={cardVariants}
-              className="flex flex-col items-center text-center"
+              className="flex flex-col items-center"
             >
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: m.isCenter ? 1.2 : 1, opacity: 1 }}
-                transition={{ duration: 0.4, ease: 'easeOut' }}
-                className="mb-4"
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: i * 0.2 + 0.3, duration: 0.4 }}
+                className="mb-4 text-gray-600"
+              >
+                {item.icon}
+              </motion.div>
+              <AnimatedNumber
+                value={item.value}
+                format={formatNumber}
+                className="text-6xl font-extrabold mb-2"
+              />
+              <div
+                className="text-lg uppercase tracking-wider text-gray-500"
                 style={{
-                  color: m.isCenter
-                    ? designTokens?.colors?.primary ?? '#3b82f6'
-                    : designTokens?.colors?.gray?.[600] ?? '#666',
+                  fontFamily: designTokens?.typography?.fontFamily,
+                  fontWeight: designTokens?.typography?.weights?.medium,
+                  letterSpacing: designTokens?.typography?.letterSpacings?.wide,
                 }}
               >
-                {m.icon}
-              </motion.div>
-
-              <motion.div
-                initial={m.isCenter ? { scale: 0.9, opacity: 0 } : { opacity: 0 }}
-                animate={
-                  m.isCenter
-                    ? { scale: [1, 1.05, 1], opacity: 1 }
-                    : { opacity: 1 }
-                }
-                transition={
-                  m.isCenter
-                    ? { duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }
-                    : { duration: 0.6, ease: 'easeOut' }
-                }
-                className={
-                  m.isCenter
-                    ? 'text-8xl font-extrabold mb-2'
-                    : 'text-6xl font-extrabold mb-2'
-                }
-                style={{
-                  fontFamily: designTokens?.typography?.fontFamily ?? 'sans-serif',
-                  fontWeight: m.isCenter
-                    ? designTokens?.typography?.weights?.extraBold ?? 800
-                    : designTokens?.typography?.weights?.bold ?? 700,
-                  color: m.isCenter
-                    ? designTokens?.colors?.primary ?? '#3b82f6'
-                    : designTokens?.colors?.black ?? '#000',
-                }}
-              >
-                <AnimatedNumber value={m.value} format={formatNumber} />
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8, duration: 0.4, ease: 'easeOut' }}
-                className="text-lg uppercase tracking-wider"
-                style={{
-                  fontFamily: designTokens?.typography?.fontFamily ?? 'sans-serif',
-                  fontWeight: designTokens?.typography?.weights?.medium ?? 500,
-                  letterSpacing: designTokens?.typography?.letterSpacings?.wide ?? '0.1em',
-                  color: designTokens?.colors?.gray?.[500] ?? '#666',
-                }}
-              >
-                {m.label}
-              </motion.div>
+                {item.label}
+              </div>
             </motion.div>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );
