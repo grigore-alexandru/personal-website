@@ -1,11 +1,10 @@
 import React, { FC, useMemo } from 'react';
 import { Eye, Share2 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { designTokens } from '../styles/tokens';
 
 interface StatsPanelProps {
   views: number;
-  channels: string[];
+  channels?: string[]; // Optional, safer
 }
 
 interface StatCardProps {
@@ -16,6 +15,7 @@ interface StatCardProps {
 }
 
 const formatNumber = (n: number) => {
+  if (typeof n !== 'number' || isNaN(n)) return '0';
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return n.toString();
@@ -23,25 +23,20 @@ const formatNumber = (n: number) => {
 
 const StatCard: FC<StatCardProps> = ({ icon, label, value, children }) => {
   return (
-    <motion.div
-      className="flex flex-col items-center p-8 bg-white rounded-2xl shadow-lg border border-gray-100"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      whileHover={{ scale: 1.03, boxShadow: '0 10px 25px rgba(0,0,0,0.05)' }}
+    <div
+      className="flex flex-col items-center p-8 bg-white rounded-2xl shadow-lg border border-gray-100 transform transition-transform hover:scale-[1.02] hover:shadow-xl"
     >
       <div
-        className="p-4 bg-gray-50 rounded-full mb-6"
-        style={{ border: `1px solid ${designTokens.colors.gray[200]}` }}
+        className="p-4 bg-gray-50 rounded-full mb-6 border border-gray-200"
       >
         {icon}
       </div>
       <div
         className="text-6xl font-extrabold mb-2"
         style={{
-          fontFamily: designTokens.typography.fontFamily,
-          fontWeight: designTokens.typography.weights.extraBold,
-          color: designTokens.colors.black,
+          fontFamily: designTokens?.typography?.fontFamily ?? 'sans-serif',
+          fontWeight: designTokens?.typography?.weights?.extraBold ?? 700,
+          color: designTokens?.colors?.black ?? '#000',
         }}
       >
         {value}
@@ -49,19 +44,19 @@ const StatCard: FC<StatCardProps> = ({ icon, label, value, children }) => {
       <div
         className="text-lg uppercase tracking-wider text-gray-600 mb-4"
         style={{
-          fontFamily: designTokens.typography.fontFamily,
-          fontWeight: designTokens.typography.weights.medium,
-          letterSpacing: designTokens.typography.letterSpacings.wide,
+          fontFamily: designTokens?.typography?.fontFamily ?? 'sans-serif',
+          fontWeight: designTokens?.typography?.weights?.medium ?? 500,
+          letterSpacing: designTokens?.typography?.letterSpacings?.wide ?? '0.1em',
         }}
       >
         {label}
       </div>
       {children}
-    </motion.div>
+    </div>
   );
 };
 
-const StatsPanel: FC<StatsPanelProps> = ({ views, channels }) => {
+const StatsPanel: FC<StatsPanelProps> = ({ views = 0, channels = [] }) => {
   const formattedViews = useMemo(() => formatNumber(views), [views]);
 
   return (
@@ -70,22 +65,20 @@ const StatsPanel: FC<StatsPanelProps> = ({ views, channels }) => {
         <h2
           className="text-3xl font-bold text-center mb-12"
           style={{
-            fontFamily: designTokens.typography.fontFamily,
-            fontWeight: designTokens.typography.weights.black,
-            color: designTokens.colors.gray[800],
+            fontFamily: designTokens?.typography?.fontFamily ?? 'sans-serif',
+            fontWeight: designTokens?.typography?.weights?.black ?? 900,
+            color: designTokens?.colors?.gray?.[800] ?? '#333',
           }}
         >
           Audience Statistics
         </h2>
         <div className="grid gap-12 grid-cols-1 md:grid-cols-2">
-          {/* Total Views */}
           <StatCard
             icon={<Eye size={32} className="text-gray-600" />}
             label="Total Views"
             value={formattedViews}
           />
 
-          {/* Distribution */}
           <StatCard
             icon={<Share2 size={32} className="text-gray-600" />}
             label="Platforms"
@@ -97,9 +90,9 @@ const StatsPanel: FC<StatsPanelProps> = ({ views, channels }) => {
                   <span
                     className="px-4 py-2 bg-white rounded-full border border-gray-200 text-sm font-medium transition hover:shadow-sm"
                     style={{
-                      fontFamily: designTokens.typography.fontFamily,
-                      fontWeight: designTokens.typography.weights.regular,
-                      letterSpacing: designTokens.typography.letterSpacings.wide,
+                      fontFamily: designTokens?.typography?.fontFamily ?? 'sans-serif',
+                      fontWeight: designTokens?.typography?.weights?.regular ?? 400,
+                      letterSpacing: designTokens?.typography?.letterSpacings?.wide ?? '0.1em',
                     }}
                   >
                     {ch}
