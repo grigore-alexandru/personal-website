@@ -1,6 +1,7 @@
 import React, { FC } from 'react';
 import { Eye, Share2, TrendingUp } from 'lucide-react';
 import AnimatedNumber from './AnimatedNumber';
+import { motion } from 'framer-motion';
 import { designTokens } from '../styles/tokens';
 
 interface StatsPanelProps {
@@ -16,11 +17,27 @@ const formatNumber = (n: number) => {
   return n.toFixed(0);
 };
 
+const cardVariants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: i * 0.2,
+      duration: 0.6,
+      ease: 'easeOut',
+    },
+  }),
+};
+
 const StatsPanel: FC<StatsPanelProps> = ({ views = 0, channels = [], impressions = 0 }) => {
   return (
     <section className="bg-gray-50 py-24">
       <div className="max-w-6xl mx-auto px-6 lg:px-12">
-        <h2
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
           className="text-3xl font-bold text-center mb-16"
           style={{
             fontFamily: designTokens?.typography?.fontFamily ?? 'sans-serif',
@@ -29,70 +46,47 @@ const StatsPanel: FC<StatsPanelProps> = ({ views = 0, channels = [], impressions
           }}
         >
           Audience Statistics
-        </h2>
+        </motion.h2>
 
-        <div className="grid gap-8 md:grid-cols-3">
-          
-          {/* Card 1: Total Views */}
-          <div className="flex flex-col items-center text-center bg-white rounded-2xl p-8">
-            <Eye size={36} className="text-gray-600 mb-4" />
-            <AnimatedNumber
-              value={views}
-              format={formatNumber}
-              className="text-6xl font-extrabold mb-2"
-            />
-            <div
-              className="text-lg uppercase tracking-wider text-gray-500"
-              style={{
-                fontFamily: designTokens?.typography?.fontFamily,
-                fontWeight: designTokens?.typography?.weights?.medium,
-                letterSpacing: designTokens?.typography?.letterSpacings?.wide,
-              }}
+        <div className="grid gap-12 md:grid-cols-3 text-center">
+          {[ 
+            { icon: <Eye size={36} />, value: views, label: 'Total Views' },
+            { icon: <Share2 size={36} />, value: channels.length, label: 'Platforms' },
+            { icon: <TrendingUp size={36} />, value: impressions, label: 'Impressions' }
+          ].map((item, i) => (
+            <motion.div
+              key={item.label}
+              custom={i}
+              initial="hidden"
+              animate="visible"
+              variants={cardVariants}
+              className="flex flex-col items-center"
             >
-              Total Views
-            </div>
-          </div>
-
-          {/* Card 2: Platforms */}
-          <div className="flex flex-col items-center text-center bg-white rounded-2xl p-8">
-            <Share2 size={36} className="text-gray-600 mb-4" />
-            <AnimatedNumber
-              value={channels.length}
-              format={(n) => n.toFixed(0)}
-              className="text-6xl font-extrabold mb-2"
-            />
-            <div
-              className="text-lg uppercase tracking-wider text-gray-500"
-              style={{
-                fontFamily: designTokens?.typography?.fontFamily,
-                fontWeight: designTokens?.typography?.weights?.medium,
-                letterSpacing: designTokens?.typography?.letterSpacings?.wide,
-              }}
-            >
-              Platforms
-            </div>
-          </div>
-
-          {/* Card 3: Impressions */}
-          <div className="flex flex-col items-center text-center bg-white rounded-2xl p-8">
-            <TrendingUp size={36} className="text-gray-600 mb-4" />
-            <AnimatedNumber
-              value={impressions}
-              format={formatNumber}
-              className="text-6xl font-extrabold mb-2"
-            />
-            <div
-              className="text-lg uppercase tracking-wider text-gray-500"
-              style={{
-                fontFamily: designTokens?.typography?.fontFamily,
-                fontWeight: designTokens?.typography?.weights?.medium,
-                letterSpacing: designTokens?.typography?.letterSpacings?.wide,
-              }}
-            >
-              Impressions
-            </div>
-          </div>
-
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: i * 0.2 + 0.3, duration: 0.4 }}
+                className="mb-4 text-gray-600"
+              >
+                {item.icon}
+              </motion.div>
+              <AnimatedNumber
+                value={item.value}
+                format={formatNumber}
+                className="text-6xl font-extrabold mb-2"
+              />
+              <div
+                className="text-lg uppercase tracking-wider text-gray-500"
+                style={{
+                  fontFamily: designTokens?.typography?.fontFamily,
+                  fontWeight: designTokens?.typography?.weights?.medium,
+                  letterSpacing: designTokens?.typography?.letterSpacings?.wide,
+                }}
+              >
+                {item.label}
+              </div>
+            </motion.div>
+          ))}
         </div>
       </div>
     </section>
