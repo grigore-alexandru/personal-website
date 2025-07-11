@@ -11,7 +11,7 @@ interface StatsPanelProps {
 }
 
 const formatNumber = (n: number) => {
-  if (isNaN(n)) return '0';
+  if (!n || isNaN(n)) return '0';
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return n.toFixed(0);
@@ -19,9 +19,7 @@ const formatNumber = (n: number) => {
 
 const containerVariants = {
   hidden: {},
-  visible: {
-    transition: { staggerChildren: 0.2 }
-  }
+  visible: { transition: { staggerChildren: 0.2 } }
 };
 
 const cardVariants = {
@@ -38,7 +36,7 @@ const StatsPanel: FC<StatsPanelProps> = ({
     {
       key: 'channels',
       icon: <Share2 size={36} />,
-      value: channels.length,
+      value: channels.length ?? 0,
       label: 'Channels',
       isCenter: false,
     },
@@ -67,16 +65,16 @@ const StatsPanel: FC<StatsPanelProps> = ({
           transition={{ duration: 0.6, ease: 'easeOut' }}
           className="text-3xl font-bold text-center mb-16"
           style={{
-            fontFamily: designTokens.typography.fontFamily,
-            fontWeight: designTokens.typography.weights.black,
-            color: designTokens.colors.gray[800],
+            fontFamily: designTokens?.typography?.fontFamily ?? 'sans-serif',
+            fontWeight: designTokens?.typography?.weights?.black ?? 900,
+            color: designTokens?.colors?.gray?.[800] ?? '#333',
           }}
         >
           Audience Statistics
         </motion.h2>
 
         <motion.div
-          className="flex justify-center items-center space-x-16"
+          className="flex justify-center items-center flex-wrap gap-12 md:gap-16"
           initial="hidden"
           animate="visible"
           variants={containerVariants}
@@ -87,7 +85,6 @@ const StatsPanel: FC<StatsPanelProps> = ({
               variants={cardVariants}
               className="flex flex-col items-center text-center"
             >
-              {/* Icon */}
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: m.isCenter ? 1.2 : 1, opacity: 1 }}
@@ -95,19 +92,20 @@ const StatsPanel: FC<StatsPanelProps> = ({
                 className="mb-4"
                 style={{
                   color: m.isCenter
-                    ? designTokens.colors.primary
-                    : designTokens.colors.gray[600],
+                    ? designTokens?.colors?.primary ?? '#3b82f6'
+                    : designTokens?.colors?.gray?.[600] ?? '#666',
                 }}
               >
                 {m.icon}
               </motion.div>
 
-              {/* Number */}
               <motion.div
                 initial={m.isCenter ? { scale: 0.9, opacity: 0 } : { opacity: 0 }}
-                animate={m.isCenter
-                  ? { scale: [1, 1.05, 1], opacity: 1 }
-                  : { opacity: 1 }}
+                animate={
+                  m.isCenter
+                    ? { scale: [1, 1.05, 1], opacity: 1 }
+                    : { opacity: 1 }
+                }
                 transition={
                   m.isCenter
                     ? { duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }
@@ -119,29 +117,28 @@ const StatsPanel: FC<StatsPanelProps> = ({
                     : 'text-6xl font-extrabold mb-2'
                 }
                 style={{
-                  fontFamily: designTokens.typography.fontFamily,
+                  fontFamily: designTokens?.typography?.fontFamily ?? 'sans-serif',
                   fontWeight: m.isCenter
-                    ? designTokens.typography.weights.extraBold
-                    : designTokens.typography.weights.bold,
+                    ? designTokens?.typography?.weights?.extraBold ?? 800
+                    : designTokens?.typography?.weights?.bold ?? 700,
                   color: m.isCenter
-                    ? designTokens.colors.primary
-                    : designTokens.colors.black,
+                    ? designTokens?.colors?.primary ?? '#3b82f6'
+                    : designTokens?.colors?.black ?? '#000',
                 }}
               >
                 <AnimatedNumber value={m.value} format={formatNumber} />
               </motion.div>
 
-              {/* Label */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.8, duration: 0.4, ease: 'easeOut' }}
                 className="text-lg uppercase tracking-wider"
                 style={{
-                  fontFamily: designTokens.typography.fontFamily,
-                  fontWeight: designTokens.typography.weights.medium,
-                  letterSpacing: designTokens.typography.letterSpacings.wide,
-                  color: designTokens.colors.gray[500],
+                  fontFamily: designTokens?.typography?.fontFamily ?? 'sans-serif',
+                  fontWeight: designTokens?.typography?.weights?.medium ?? 500,
+                  letterSpacing: designTokens?.typography?.letterSpacings?.wide ?? '0.1em',
+                  color: designTokens?.colors?.gray?.[500] ?? '#666',
                 }}
               >
                 {m.label}
