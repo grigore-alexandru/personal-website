@@ -38,7 +38,7 @@ const StatsPanel: FC<StatsPanelProps> = ({ views = 0, channels = [], impressions
   ];
 
   return (
-    <section className="bg-gray-50 py-24">
+    <section className="bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-6 lg:px-12">
         <motion.div
           initial="hidden"
