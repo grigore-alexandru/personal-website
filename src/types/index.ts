@@ -1,4 +1,5 @@
 export interface Project {
+  id?: string;
   title: string;
   type: string;
   client_type: string;
@@ -8,6 +9,7 @@ export interface Project {
   reach: {
     views: number;
     channels: string[];
+    impressions: number;
   };
   poster: string;
   videos: Video[];
@@ -21,7 +23,7 @@ export interface Project {
 
 export interface Video {
   title: string;
-  platform: 'youtube' | 'vimeo' | 'mega';
+  platform: 'youtube' | 'vimeo' | 'mega' | 'instagram';
   link: string;
 }
 

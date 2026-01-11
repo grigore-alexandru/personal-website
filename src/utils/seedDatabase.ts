@@ -1,87 +1,24 @@
-import { Project } from '../types';
-import { supabase } from '../lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+import * as dotenv from 'dotenv';
+import { resolve } from 'path';
 
-export const loadProjects = async (): Promise<Project[]> => {
-  const { data: projectsData, error: projectsError } = await supabase
-    .from('projects')
-    .select('*')
-    .order('date', { ascending: false });
+dotenv.config({ path: resolve(process.cwd(), '.env') });
 
-  if (projectsError) {
-    console.error('Error loading projects:', projectsError);
-    return [];
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  throw new Error('Missing Supabase environment variables');
+}
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
   }
+});
 
-  if (!projectsData) return [];
-
-  const projectsWithVideos = await Promise.all(
-    projectsData.map(async (project) => {
-      const { data: videosData, error: videosError } = await supabase
-        .from('videos')
-        .select('*')
-        .eq('project_id', project.id)
-        .order('order_index', { ascending: true });
-
-      if (videosError) {
-        console.error('Error loading videos for project:', videosError);
-        return null;
-      }
-
-      return {
-        id: project.id,
-        title: project.title,
-        type: project.type,
-        client_type: project.client_type,
-        client_name: project.client_name,
-        client_logo: project.client_logo,
-        date: project.date,
-        reach: {
-          views: project.reach_views,
-          channels: project.reach_channels,
-          impressions: project.reach_impressions,
-        },
-        poster: project.poster,
-        videos: videosData.map((video) => ({
-          title: video.title,
-          platform: video.platform as 'youtube' | 'vimeo' | 'mega' | 'instagram',
-          link: video.link,
-        })),
-        description: project.description,
-        testimonial: {
-          client: project.testimonial_client,
-          text: project.testimonial_text,
-          role: project.testimonial_role || undefined,
-        },
-      } as Project;
-    })
-  );
-
-  return projectsWithVideos.filter((p): p is Project => p !== null);
-};
-
-export const loadProject = async (clientSlug: string, projectSlug: string): Promise<Project | null> => {
-  const projects = await loadProjects();
-  return projects.find(p =>
-    slugify(p.client_name) === clientSlug &&
-    slugify(p.title) === projectSlug
-  ) || null;
-};
-
-export const slugify = (text: string): string => {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-};
-
-export const generateProjectUrl = (project: Project): string => {
-  return `/what-i-do/video-production/${slugify(project.client_name)}/${slugify(project.title)}`;
-};
-
-// Mock data for seeding - keeping for reference
-/* prettier-ignore */
-const mockProjects: Project[] = [
-  /* ——— MUSIC: TROOPER ——— */
+const mockProjects = [
   {
     title: "Trooper – Dual Release",
     type: "Music Video",
@@ -97,23 +34,21 @@ const mockProjects: Project[] = [
     videos: [
       {
         title: "Când ești doar un simplu om",
-        platform: "youtube",
+        platform: "youtube" as const,
         link: "https://www.youtube.com/embed/Ic7UQBXr1p4"
       },
       {
         title: "Vlad Țepeș",
-        platform: "youtube",
+        platform: "youtube" as const,
         link: "https://www.youtube.com/embed/hDjg8qUyN7A"
       }
     ],
-    description: "A two-part visual narrative blending modern metal aesthetics with Romanian medieval iconography to amplify the band’s socially charged lyrics.",
+    description: "A two-part visual narrative blending modern metal aesthetics with Romanian medieval iconography to amplify the band's socially charged lyrics.",
     testimonial: {
       client: "Alin Dincă (Lead Vocalist)",
       text: "They translated our raw energy into an epic visual journey."
     }
   },
-
-  /* ——— MUSIC: DESTIN ——— */
   {
     title: "Destin – Trilogy",
     type: "Music Video",
@@ -129,23 +64,21 @@ const mockProjects: Project[] = [
     videos: [
       {
         title: "TMDF",
-        platform: "youtube",
+        platform: "youtube" as const,
         link: "https://www.youtube.com/embed/H-W5kA0NGNw"
       },
       {
         title: "Felinar",
-        platform: "youtube",
+        platform: "youtube" as const,
         link: "https://www.youtube.com/embed/9M1zAUYeoG4"
       }
     ],
-    description: "A moody, performance-driven package that alternates neon-lit interiors with twilight exteriors to reflect the band’s urban-folk fusion.",
+    description: "A moody, performance-driven package that alternates neon-lit interiors with twilight exteriors to reflect the band's urban-folk fusion.",
     testimonial: {
       client: "Destin Management",
       text: "Exceptional visual storytelling that elevated our release cycle."
     }
   },
-
-  /* ——— PRESENTATION: LESSONPLAZA ——— */
   {
     title: "LessonPlaza – Seed-Stage Pitch",
     type: "Presentation",
@@ -161,18 +94,16 @@ const mockProjects: Project[] = [
     videos: [
       {
         title: "Investor Presentation",
-        platform: "youtube",
+        platform: "youtube" as const,
         link: "https://www.youtube.com/embed/shcXLeIJAPA"
       }
     ],
-    description: "Concise 2-minute explainer illustrating the platform’s adaptive-learning engine with motion-graphic overlays and real user testimonials.",
+    description: "Concise 2-minute explainer illustrating the platform's adaptive-learning engine with motion-graphic overlays and real user testimonials.",
     testimonial: {
       client: "Irina Popescu (CEO)",
       text: "The video became the centrepiece of our successful seed round."
     }
   },
-
-  /* ——— PRESENTATION: PUREPEARL INNOVO ——— */
   {
     title: "Purepearl Innovo – Biotech Reveal",
     type: "Presentation",
@@ -188,7 +119,7 @@ const mockProjects: Project[] = [
     videos: [
       {
         title: "Corporate Launch Clip",
-        platform: "youtube",
+        platform: "youtube" as const,
         link: "https://www.youtube.com/embed/JJc7irC9zes"
       }
     ],
@@ -198,10 +129,8 @@ const mockProjects: Project[] = [
       text: "They crystallised complex science into a captivating narrative."
     }
   },
-
-  /* ——— EVENT: ROMATSA CUP ——— */
   {
-    title: "ROMATSA – Air-Traffic Controllers’ Cup",
+    title: "ROMATSA – Air-Traffic Controllers' Cup",
     type: "Event Highlights",
     client_type: "Company",
     client_name: "ROMATSA",
@@ -215,18 +144,16 @@ const mockProjects: Project[] = [
     videos: [
       {
         title: "Event Recap",
-        platform: "youtube",
+        platform: "youtube" as const,
         link: "https://www.youtube.com/embed/geon-jbnZqQ"
       }
     ],
-    description: "Dynamic 90-second wrap-up weaving drone-shot athletics with control-tower cutaways to celebrate ROMATSA’s culture of precision and teamwork.",
+    description: "Dynamic 90-second wrap-up weaving drone-shot athletics with control-tower cutaways to celebrate ROMATSA's culture of precision and teamwork.",
     testimonial: {
       client: "George Ionescu",
       text: "A stellar recap that boosted internal morale and external visibility."
     }
   },
-
-  /* ——— ADVERTISEMENT: VOCEA SEMNELOR ——— */
   {
     title: "Vocea Semnelor – Awareness Billboard",
     type: "Advertisement",
@@ -242,7 +169,7 @@ const mockProjects: Project[] = [
     videos: [
       {
         title: "Billboard Spot",
-        platform: "youtube",
+        platform: "youtube" as const,
         link: "https://www.youtube.com/embed/b1Aberb4Gzo"
       }
     ],
@@ -252,8 +179,6 @@ const mockProjects: Project[] = [
       text: "Their creativity helped us reach audiences we never imagined."
     }
   },
-
-  /* ——— VLOG: CODIN MATICIUC ——— */
   {
     title: "Codin Maticiuc – Dubai Real-Estate Vlog",
     type: "Vlog",
@@ -269,18 +194,16 @@ const mockProjects: Project[] = [
     videos: [
       {
         title: "Investing in Dubai",
-        platform: "youtube",
+        platform: "youtube" as const,
         link: "https://www.youtube.com/embed/Zb633-ZGmEo"
       }
     ],
-    description: "12-minute lifestyle vlog combining tongue-in-cheek humour with high-rise aerials to unpack Dubai’s booming property market.",
+    description: "12-minute lifestyle vlog combining tongue-in-cheek humour with high-rise aerials to unpack Dubai's booming property market.",
     testimonial: {
       client: "Codin Maticiuc",
       text: "Exactly the vibe my YouTube community loves."
     }
   },
-
-  /* ——— TRAILER: INTERNATIONAL BOOK TRAILER FESTIVAL ——— */
   {
     title: "International Book Trailer Festival",
     type: "Trailer",
@@ -296,18 +219,16 @@ const mockProjects: Project[] = [
     videos: [
       {
         title: "Festival Teaser",
-        platform: "youtube",
+        platform: "youtube" as const,
         link: "https://www.youtube.com/embed/XLG_WLaoB-I"
       }
     ],
     description: "A kinetic-typography teaser interlacing author sound-bites with fast-cut imagery of landmark literary venues across Europe.",
     testimonial: {
       client: "Festival Board",
-      text: "The trailer captured the festival’s soul in under a minute."
+      text: "The trailer captured the festival's soul in under a minute."
     }
   },
-
-  /* ——— TRAILER: BOOVIE FESTIVAL ——— */
   {
     title: "Boovie Festival – Award-Winning Trailer",
     type: "Trailer",
@@ -323,7 +244,7 @@ const mockProjects: Project[] = [
     videos: [
       {
         title: "Grand Prize Trailer",
-        platform: "youtube",
+        platform: "youtube" as const,
         link: "https://www.youtube.com/embed/ZLpD2NN59-U"
       }
     ],
@@ -333,8 +254,6 @@ const mockProjects: Project[] = [
       text: "An electrifying piece that set a new benchmark for us."
     }
   },
-
-  /* ——— ERASMUS+ PROJECT (COMMUNICATION) ——— */
   {
     title: "Erasmus+ – Overcoming Communication Barriers",
     type: "Documentary Short",
@@ -350,7 +269,7 @@ const mockProjects: Project[] = [
     videos: [
       {
         title: "Project Documentary",
-        platform: "youtube",
+        platform: "youtube" as const,
         link: "https://www.youtube.com/embed/7llaXsq-AtA"
       }
     ],
@@ -360,8 +279,6 @@ const mockProjects: Project[] = [
       text: "Beautifully captures the human side of European collaboration."
     }
   },
-
-  /* ——— ERASMUS+ PROJECT (FOOD-Y) ——— */
   {
     title: "Erasmus+ FOOD-Y – Responsible Purchasing",
     type: "Competition Entry",
@@ -377,7 +294,7 @@ const mockProjects: Project[] = [
     videos: [
       {
         title: "Competition Spot (3rd Place)",
-        platform: "youtube",
+        platform: "youtube" as const,
         link: "https://www.youtube.com/embed/vLd7TeG3eWA"
       }
     ],
@@ -387,8 +304,6 @@ const mockProjects: Project[] = [
       text: "Engaging, informative, and perfectly on message."
     }
   },
-
-  /* ——— SOCIAL CAMPAIGN: YOUNINCUBATOR ——— */
   {
     title: "Younincubator – Gen-Z Startup Series",
     type: "Advertisement",
@@ -404,7 +319,7 @@ const mockProjects: Project[] = [
     videos: [
       {
         title: "Social Media Reel",
-        platform: "instagram",
+        platform: "instagram" as const,
         link: "https://www.instagram.com/reel/DHLuu1lpd9k/"
       }
     ],
@@ -414,8 +329,6 @@ const mockProjects: Project[] = [
       text: "It boosted our applications by 40 % in a single week."
     }
   },
-
-  /* ——— PRESENTATION: BBB 2025 ——— */
   {
     title: "BBB 2025 – Concept Reveal",
     type: "Presentation",
@@ -431,7 +344,7 @@ const mockProjects: Project[] = [
     videos: [
       {
         title: "Launch Reel",
-        platform: "instagram",
+        platform: "instagram" as const,
         link: "https://www.instagram.com/reel/DHjRep1IB2Y/"
       }
     ],
@@ -441,8 +354,6 @@ const mockProjects: Project[] = [
       text: "Turned our abstract vision into a crowd-pleaser."
     }
   },
-
-  /* ——— PODCAST SERIES ——— */
   {
     title: "EduTalks – Season 1 Podcast Series",
     type: "Podcast",
@@ -458,42 +369,42 @@ const mockProjects: Project[] = [
     videos: [
       {
         title: "Vlad Zografi – Adolescența e momentul în care se face lumină.",
-        platform: "youtube",
+        platform: "youtube" as const,
         link: "https://www.youtube.com/embed/Wl4J7-aRV2M"
       },
       {
         title: "Doru Dumitrescu – Empatia profesorului stă la baza chimiei cu elevii",
-        platform: "youtube",
+        platform: "youtube" as const,
         link: "https://www.youtube.com/embed/cg6_Hqc1_FM"
       },
       {
         title: "George Bucur – E bine să stai în școală, dar să și muncești în același timp.",
-        platform: "youtube",
+        platform: "youtube" as const,
         link: "https://www.youtube.com/embed/fpajiUCGU9U"
       },
       {
         title: "Daniel Nuță – Ca actor, cea mai mare greșeală este să joci pentru aplauze.",
-        platform: "youtube",
+        platform: "youtube" as const,
         link: "https://www.youtube.com/embed/02v7dvvDgws"
       },
       {
         title: "Matei Reu – Bacul este doar un checkpoint.",
-        platform: "youtube",
+        platform: "youtube" as const,
         link: "https://www.youtube.com/embed/MZ84vOZLX8g"
       },
       {
         title: "Filip-Lucian Iorga – Ceea ce nu îți face plăcere, nu este bun de nimic.",
-        platform: "youtube",
+        platform: "youtube" as const,
         link: "https://www.youtube.com/embed/gLPMHHjs3Uo"
       },
       {
         title: "Step Into Democracy – Scopul este să ajungem la cei dezinteresați.",
-        platform: "youtube",
+        platform: "youtube" as const,
         link: "https://www.youtube.com/embed/K0TFe4RshWk"
       },
       {
-        title: "Aurelian “Balaurul” Dincă – Nu e ok să depindă ce mănânci mâine de…",
-        platform: "youtube",
+        title: 'Aurelian "Balaurul" Dincă – Nu e ok să depindă ce mănânci mâine de…',
+        platform: "youtube" as const,
         link: "https://www.youtube.com/embed/ICYKOI-7KKI"
       }
     ],
@@ -505,7 +416,7 @@ const mockProjects: Project[] = [
   }
 ];
 
-export const seedProjects = async () => {
+async function seedProjects() {
   console.log('Starting to seed projects...');
 
   for (const mockProject of mockProjects) {
@@ -557,4 +468,17 @@ export const seedProjects = async () => {
   }
 
   console.log('Seeding complete!');
-};
+}
+
+async function main() {
+  try {
+    console.log('Starting database seed...');
+    await seedProjects();
+    console.log('Database seeding completed successfully!');
+  } catch (error) {
+    console.error('Error seeding database:', error);
+    process.exit(1);
+  }
+}
+
+main();
