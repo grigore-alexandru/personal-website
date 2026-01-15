@@ -1,52 +1,71 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '../../../components/admin/AdminLayout';
 import { FormInput } from '../../../components/forms/FormInput';
+import { FormCheckbox } from '../../../components/forms/FormCheckbox';
 import { Button } from '../../../components/forms/Button';
 import { Tooltip } from '../../../components/ui/Tooltip';
-import { ValidationError } from '../../../components/ui/ValidationError';
 import { ToastContainer } from '../../../components/ui/Toast';
 import { ContentBlockEditor } from '../../../components/blocks/ContentBlockEditor';
+import { SourcesEditor } from '../../../components/forms/SourcesEditor';
+import { NotesEditor } from '../../../components/forms/NotesEditor';
+import { BlogPostPreview } from '../../../components/admin/BlogPostPreview';
 import { useToast } from '../../../hooks/useToast';
 import { slugify } from '../../../utils/slugify';
-import { validateSlug } from '../../../utils/validateSlug';
-import { checkSlugUniqueness } from '../../../utils/checkSlugUniqueness';
 import { saveDraft, loadDraft, removeDraft } from '../../../utils/draftStorage';
-import { getCurrentDateTime } from '../../../utils/dateUtils';
-import { supabase } from '../../../lib/supabase';
-import { ContentBlock } from '../../../types';
-import { Sparkles, Save, Trash2, Eye } from 'lucide-react';
+import { validateBlogForm, ValidationError } from '../../../utils/validateBlogForm';
+import { saveBlogPost } from '../../../utils/blogService';
+import { ContentBlock, Source } from '../../../types';
+import { Sparkles, Save, Trash2, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 interface BlogFormData {
   title: string;
   slug: string;
   hero_image_url: string;
   contentBlocks: ContentBlock[];
+  hasSources: boolean;
+  sources: Source[];
+  hasNotes: boolean;
+  notesContent: string;
 }
 
 const DRAFT_KEY = 'new-blog-post';
+const AUTO_SAVE_INTERVAL = 30000;
+
+function generateSourceId(): string {
+  return `source-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
 
 export function BlogCreateForm() {
   const navigate = useNavigate();
   const { toasts, showToast, closeToast } = useToast();
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const [formData, setFormData] = useState<BlogFormData>({
     title: '',
     slug: '',
     hero_image_url: '',
     contentBlocks: [],
+    hasSources: false,
+    sources: [],
+    hasNotes: false,
+    notesContent: '',
   });
 
-  const [errors, setErrors] = useState<Partial<Record<keyof BlogFormData, string>>>({});
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+  const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
+  const [savedDraftData, setSavedDraftData] = useState<BlogFormData | null>(null);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [lastAutoSave, setLastAutoSave] = useState<Date | null>(null);
 
   useEffect(() => {
     const savedDraft = loadDraft<BlogFormData>(DRAFT_KEY);
     if (savedDraft) {
-      setFormData(savedDraft);
-      showToast('success', 'Draft loaded from previous session');
+      setSavedDraftData(savedDraft);
+      setShowRecoveryDialog(true);
     }
   }, []);
 
@@ -63,15 +82,55 @@ export function BlogCreateForm() {
   }, [hasUnsavedChanges]);
 
   useEffect(() => {
-    if (formData.title || formData.slug || formData.hero_image_url || formData.contentBlocks.length > 0) {
+    const hasContent =
+      formData.title ||
+      formData.slug ||
+      formData.hero_image_url ||
+      formData.contentBlocks.length > 0 ||
+      formData.sources.length > 0 ||
+      formData.notesContent;
+
+    if (hasContent) {
       setHasUnsavedChanges(true);
-      saveDraft(DRAFT_KEY, formData);
     }
   }, [formData]);
 
-  const handleChange = (field: keyof BlogFormData, value: string) => {
+  useEffect(() => {
+    if (autoSaveTimerRef.current) {
+      clearInterval(autoSaveTimerRef.current);
+    }
+
+    if (hasUnsavedChanges) {
+      autoSaveTimerRef.current = setInterval(() => {
+        saveDraft(DRAFT_KEY, formData);
+        setLastAutoSave(new Date());
+      }, AUTO_SAVE_INTERVAL);
+    }
+
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearInterval(autoSaveTimerRef.current);
+      }
+    };
+  }, [formData, hasUnsavedChanges]);
+
+  const handleRecoverDraft = () => {
+    if (savedDraftData) {
+      setFormData(savedDraftData);
+      showToast('success', 'Draft recovered successfully');
+    }
+    setShowRecoveryDialog(false);
+  };
+
+  const handleDiscardRecovery = () => {
+    removeDraft(DRAFT_KEY);
+    setShowRecoveryDialog(false);
+    showToast('info', 'Starting with a fresh form');
+  };
+
+  const handleChange = (field: keyof BlogFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    setErrors(prev => ({ ...prev, [field]: undefined }));
+    setValidationErrors(prev => prev.filter(err => err.field !== field));
   };
 
   const generateSlug = () => {
@@ -84,67 +143,45 @@ export function BlogCreateForm() {
     }
   };
 
-  const validateSlugField = async () => {
-    const validation = validateSlug(formData.slug);
-
-    if (!validation.isValid) {
-      setErrors(prev => ({ ...prev, slug: validation.error }));
-      return false;
+  const handleToggleSources = (enabled: boolean) => {
+    if (enabled && formData.sources.length === 0) {
+      handleChange('sources', [{
+        id: generateSourceId(),
+        title: '',
+        url: '',
+      }]);
     }
-
-    const isUnique = await checkSlugUniqueness(formData.slug);
-    if (!isUnique) {
-      setErrors(prev => ({ ...prev, slug: 'This slug is already in use' }));
-      return false;
-    }
-
-    setErrors(prev => ({ ...prev, slug: undefined }));
-    return true;
+    handleChange('hasSources', enabled);
   };
-
-  const validateForm = useCallback((): boolean => {
-    const newErrors: Partial<Record<keyof BlogFormData, string>> = {};
-
-    if (!formData.title.trim()) {
-      newErrors.title = 'Title is required';
-    } else if (formData.title.length < 3) {
-      newErrors.title = 'Title must be at least 3 characters';
-    } else if (formData.title.length > 200) {
-      newErrors.title = 'Title must be less than 200 characters';
-    }
-
-    if (!formData.slug.trim()) {
-      newErrors.slug = 'Slug is required';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [formData]);
 
   const handleSaveDraft = async () => {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.from('posts').insert({
-        title: formData.title || 'Untitled Draft',
-        slug: formData.slug || `draft-${Date.now()}`,
-        hero_image_url: formData.hero_image_url || null,
-        content: convertBlocksToContent(formData.contentBlocks),
-        excerpt: '',
-        tags: [],
-        is_draft: true,
-        published_at: getCurrentDateTime(),
-      });
+      const result = await saveBlogPost(
+        {
+          title: formData.title,
+          slug: formData.slug,
+          hero_image_url: formData.hero_image_url,
+          contentBlocks: formData.contentBlocks,
+          hasSources: formData.hasSources,
+          sources: formData.sources,
+          hasNotes: formData.hasNotes,
+          notesContent: formData.notesContent,
+        },
+        true
+      );
 
-      if (error) throw error;
+      if (result.success) {
+        showToast('success', 'Draft saved successfully');
+        setHasUnsavedChanges(false);
 
-      showToast('success', 'Draft saved successfully');
-      setHasUnsavedChanges(false);
-      removeDraft(DRAFT_KEY);
-
-      setTimeout(() => {
-        navigate('/admin');
-      }, 1500);
+        setTimeout(() => {
+          navigate('/admin');
+        }, 1500);
+      } else {
+        showToast('error', result.error || 'Failed to save draft');
+      }
     } catch (error) {
       console.error('Error saving draft:', error);
       showToast('error', 'Failed to save draft');
@@ -154,40 +191,63 @@ export function BlogCreateForm() {
   };
 
   const handlePublish = async () => {
-    if (!validateForm()) {
-      showToast('error', 'Please fix validation errors before publishing');
-      return;
-    }
+    const validation = await validateBlogForm({
+      title: formData.title,
+      slug: formData.slug,
+      hero_image_url: formData.hero_image_url,
+      contentBlocks: formData.contentBlocks,
+      hasSources: formData.hasSources,
+      sources: formData.sources,
+      hasNotes: formData.hasNotes,
+      notesContent: formData.notesContent,
+    }, false);
 
-    const slugValid = await validateSlugField();
-    if (!slugValid) {
-      showToast('error', 'Please fix the slug before publishing');
+    if (!validation.isValid) {
+      setValidationErrors(validation.errors);
+      showToast('error', 'Please fix validation errors before publishing');
+
+      const firstErrorField = validation.errors[0]?.field;
+      if (firstErrorField) {
+        const element = document.querySelector(`[name="${firstErrorField}"]`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.from('posts').insert({
-        title: formData.title,
-        slug: formData.slug,
-        hero_image_url: formData.hero_image_url || null,
-        content: convertBlocksToContent(formData.contentBlocks),
-        excerpt: '',
-        tags: [],
-        is_draft: false,
-        published_at: getCurrentDateTime(),
-      });
+      const result = await saveBlogPost(
+        {
+          title: formData.title,
+          slug: formData.slug,
+          hero_image_url: formData.hero_image_url,
+          contentBlocks: formData.contentBlocks,
+          hasSources: formData.hasSources,
+          sources: formData.sources,
+          hasNotes: formData.hasNotes,
+          notesContent: formData.notesContent,
+        },
+        false
+      );
 
-      if (error) throw error;
+      if (result.success) {
+        showToast('success', 'Post published successfully');
+        setHasUnsavedChanges(false);
+        removeDraft(DRAFT_KEY);
 
-      showToast('success', 'Post published successfully');
-      setHasUnsavedChanges(false);
-      removeDraft(DRAFT_KEY);
-
-      setTimeout(() => {
-        navigate('/admin');
-      }, 1500);
+        setTimeout(() => {
+          if (result.slug) {
+            navigate(`/blog/${result.slug}`);
+          } else {
+            navigate('/admin');
+          }
+        }, 1500);
+      } else {
+        showToast('error', result.error || 'Failed to publish post');
+      }
     } catch (error) {
       console.error('Error publishing post:', error);
       showToast('error', 'Failed to publish post');
@@ -196,148 +256,295 @@ export function BlogCreateForm() {
     }
   };
 
-  const convertBlocksToContent = (blocks: ContentBlock[]): string => {
-    return JSON.stringify(blocks);
-  };
-
   const handleDiscard = () => {
     setFormData({
       title: '',
       slug: '',
       hero_image_url: '',
       contentBlocks: [],
+      hasSources: false,
+      sources: [],
+      hasNotes: false,
+      notesContent: '',
     });
-    setErrors({});
+    setValidationErrors([]);
     setHasUnsavedChanges(false);
     removeDraft(DRAFT_KEY);
     setShowDiscardDialog(false);
     showToast('success', 'Changes discarded');
   };
 
+  const editorContent = (
+    <div className="space-y-8">
+      {validationErrors.length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-red-900 mb-2">
+                Please fix the following errors:
+              </h3>
+              <ul className="space-y-1">
+                {validationErrors.map((error, index) => (
+                  <li key={index} className="text-sm text-red-700">
+                    {error.message}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-8">
+        <h1 className="text-3xl font-bold text-black mb-8">Create New Post</h1>
+
+        <div className="space-y-6">
+          <div>
+            <FormInput
+              label="Title"
+              value={formData.title}
+              onChange={(e) => handleChange('title', e.target.value)}
+              placeholder="Enter post title"
+              required
+              error={validationErrors.find(e => e.field === 'title')?.message}
+              helperText={`${formData.title.length}/200 characters`}
+              maxLength={200}
+            />
+          </div>
+
+          <div>
+            <div className="flex items-end gap-2">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-sm font-medium text-black">
+                    Slug <span className="text-red-500">*</span>
+                  </label>
+                  <Tooltip content="The slug is the URL-friendly version of your post title. It should be lowercase, use hyphens instead of spaces, and contain only letters, numbers, and hyphens." />
+                </div>
+                <FormInput
+                  label=""
+                  value={formData.slug}
+                  onChange={(e) => handleChange('slug', e.target.value)}
+                  placeholder="enter-url-slug"
+                  required
+                  error={validationErrors.find(e => e.field === 'slug')?.message}
+                  helperText="Lowercase letters, numbers, and hyphens only"
+                />
+              </div>
+              <Button
+                variant="secondary"
+                onClick={generateSlug}
+                icon={<Sparkles size={16} />}
+                className="mb-[52px]"
+              >
+                Generate
+              </Button>
+            </div>
+          </div>
+
+          <div>
+            <FormInput
+              label="Hero Image URL"
+              value={formData.hero_image_url}
+              onChange={(e) => handleChange('hero_image_url', e.target.value)}
+              placeholder="https://example.com/image.jpg"
+              type="url"
+              required
+              error={validationErrors.find(e => e.field === 'hero_image_url')?.message}
+              helperText="Enter a URL to an image for the post hero section"
+            />
+
+            {formData.hero_image_url && (
+              <div className="mt-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Eye size={16} className="text-neutral-600" />
+                  <span className="text-sm font-medium text-neutral-600">Preview</span>
+                </div>
+                <div className="rounded-lg overflow-hidden border border-neutral-200">
+                  <img
+                    src={formData.hero_image_url}
+                    alt="Hero preview"
+                    className="w-full h-64 object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23f5f5f5" width="400" height="300"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3EInvalid Image URL%3C/text%3E%3C/svg%3E';
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h2 className="text-2xl font-bold text-black mb-6">Content Blocks</h2>
+        {validationErrors.find(e => e.field === 'contentBlocks') && (
+          <p className="text-sm text-red-600 mb-4">
+            {validationErrors.find(e => e.field === 'contentBlocks')?.message}
+          </p>
+        )}
+        <ContentBlockEditor
+          blocks={formData.contentBlocks}
+          onChange={(blocks) => handleChange('contentBlocks', blocks)}
+        />
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-8">
+        <div className="mb-6">
+          <FormCheckbox
+            label="Include Sources"
+            checked={formData.hasSources}
+            onChange={handleToggleSources}
+          />
+          <p className="text-sm text-neutral-500 mt-1 ml-6">
+            Add a sources section with links to referenced materials
+          </p>
+        </div>
+
+        {formData.hasSources && (
+          <div className="pl-6 border-l-2 border-neutral-200">
+            {validationErrors.find(e => e.field === 'sources') && (
+              <p className="text-sm text-red-600 mb-4">
+                {validationErrors.find(e => e.field === 'sources')?.message}
+              </p>
+            )}
+            <SourcesEditor
+              sources={formData.sources}
+              onChange={(sources) => handleChange('sources', sources)}
+            />
+          </div>
+        )}
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-8">
+        <div className="mb-6">
+          <FormCheckbox
+            label="Include Notes"
+            checked={formData.hasNotes}
+            onChange={(enabled) => handleChange('hasNotes', enabled)}
+          />
+          <p className="text-sm text-neutral-500 mt-1 ml-6">
+            Add a notes section with additional commentary or context
+          </p>
+        </div>
+
+        {formData.hasNotes && (
+          <div className="pl-6 border-l-2 border-neutral-200">
+            {validationErrors.find(e => e.field === 'notes') && (
+              <p className="text-sm text-red-600 mb-4">
+                {validationErrors.find(e => e.field === 'notes')?.message}
+              </p>
+            )}
+            <NotesEditor
+              value={formData.notesContent}
+              onChange={(value) => handleChange('notesContent', value)}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <AdminLayout currentSection="Create New Post">
       <ToastContainer toasts={toasts} onClose={closeToast} />
 
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-8">
-          <h1 className="text-3xl font-bold text-black mb-8">Create New Post</h1>
-
-          <div className="space-y-6">
-            <div>
-              <FormInput
-                label="Title"
-                value={formData.title}
-                onChange={(e) => handleChange('title', e.target.value)}
-                placeholder="Enter post title"
-                required
-                error={errors.title}
-                helperText={`${formData.title.length}/200 characters`}
-                maxLength={200}
-              />
-            </div>
-
-            <div>
-              <div className="flex items-end gap-2">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <label className="block text-sm font-medium text-black">
-                      Slug <span className="text-red-500">*</span>
-                    </label>
-                    <Tooltip content="The slug is the URL-friendly version of your post title. It should be lowercase, use hyphens instead of spaces, and contain only letters, numbers, and hyphens. Example: 'my-awesome-post'" />
-                  </div>
-                  <FormInput
-                    label=""
-                    value={formData.slug}
-                    onChange={(e) => handleChange('slug', e.target.value)}
-                    onBlur={validateSlugField}
-                    placeholder="enter-url-slug"
-                    required
-                    error={errors.slug}
-                    helperText="Lowercase letters, numbers, and hyphens only"
-                  />
-                </div>
-                <Button
-                  variant="secondary"
-                  onClick={generateSlug}
-                  icon={<Sparkles size={16} />}
-                  className="mb-[52px]"
-                >
-                  Generate
-                </Button>
-              </div>
-            </div>
-
-            <div>
-              <FormInput
-                label="Hero Image URL"
-                value={formData.hero_image_url}
-                onChange={(e) => handleChange('hero_image_url', e.target.value)}
-                placeholder="https://example.com/image.jpg"
-                type="url"
-                helperText="Enter a URL to an image for the post hero section"
-              />
-
-              {formData.hero_image_url && (
-                <div className="mt-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Eye size={16} className="text-neutral-600" />
-                    <span className="text-sm font-medium text-neutral-600">Preview</span>
-                  </div>
-                  <div className="rounded-lg overflow-hidden border border-neutral-200">
-                    <img
-                      src={formData.hero_image_url}
-                      alt="Hero preview"
-                      className="w-full h-64 object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23f5f5f5" width="400" height="300"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3EInvalid Image URL%3C/text%3E%3C/svg%3E';
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-8">
-          <h2 className="text-2xl font-bold text-black mb-6">Content Blocks</h2>
-          <ContentBlockEditor
-            blocks={formData.contentBlocks}
-            onChange={(blocks) => setFormData(prev => ({ ...prev, contentBlocks: blocks }))}
-          />
-        </div>
-
-        <div className="sticky bottom-0 mt-8 bg-white border-t border-neutral-200 py-4 px-8 -mx-6 flex items-center justify-between gap-4 shadow-lg">
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-4">
           <Button
-            variant="danger"
-            onClick={() => setShowDiscardDialog(true)}
-            icon={<Trash2 size={16} />}
-            disabled={isSubmitting || !hasUnsavedChanges}
+            variant={isPreviewMode ? 'primary' : 'secondary'}
+            onClick={() => setIsPreviewMode(!isPreviewMode)}
+            icon={isPreviewMode ? <EyeOff size={16} /> : <Eye size={16} />}
           >
-            Discard
+            {isPreviewMode ? 'Hide Preview' : 'Show Preview'}
           </Button>
-
-          <div className="flex items-center gap-3">
-            <Button
-              variant="secondary"
-              onClick={handleSaveDraft}
-              icon={<Save size={16} />}
-              loading={isSubmitting}
-              disabled={isSubmitting}
-            >
-              Save Draft
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handlePublish}
-              loading={isSubmitting}
-              disabled={isSubmitting}
-            >
-              Publish
-            </Button>
-          </div>
+          {lastAutoSave && (
+            <span className="text-sm text-neutral-500">
+              Last auto-saved: {lastAutoSave.toLocaleTimeString()}
+            </span>
+          )}
         </div>
       </div>
+
+      {isPreviewMode ? (
+        <div className="grid grid-cols-2 gap-6">
+          <div className="max-w-4xl overflow-y-auto max-h-[calc(100vh-200px)]">
+            {editorContent}
+          </div>
+          <div className="sticky top-0 max-h-[calc(100vh-200px)] overflow-y-auto border-l border-neutral-200 pl-6">
+            <BlogPostPreview
+              title={formData.title}
+              heroImageUrl={formData.hero_image_url}
+              contentBlocks={formData.contentBlocks}
+              hasSources={formData.hasSources}
+              sources={formData.sources}
+              hasNotes={formData.hasNotes}
+              notesContent={formData.notesContent}
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="max-w-4xl mx-auto">
+          {editorContent}
+        </div>
+      )}
+
+      <div className="sticky bottom-0 mt-8 bg-white border-t border-neutral-200 py-4 px-8 flex items-center justify-between gap-4 shadow-lg">
+        <Button
+          variant="danger"
+          onClick={() => setShowDiscardDialog(true)}
+          icon={<Trash2 size={16} />}
+          disabled={isSubmitting || !hasUnsavedChanges}
+        >
+          Discard
+        </Button>
+
+        <div className="flex items-center gap-3">
+          <Button
+            variant="secondary"
+            onClick={handleSaveDraft}
+            icon={<Save size={16} />}
+            loading={isSubmitting}
+            disabled={isSubmitting}
+          >
+            Save Draft
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handlePublish}
+            loading={isSubmitting}
+            disabled={isSubmitting}
+          >
+            Publish
+          </Button>
+        </div>
+      </div>
+
+      {showRecoveryDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-xl font-bold text-black mb-2">Recover Unsaved Changes?</h3>
+            <p className="text-neutral-600 mb-6">
+              We found an unsaved draft from your previous session. Would you like to recover it?
+            </p>
+            <div className="flex items-center justify-end gap-3">
+              <Button
+                variant="ghost"
+                onClick={handleDiscardRecovery}
+              >
+                Start Fresh
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleRecoverDraft}
+              >
+                Recover Draft
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showDiscardDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

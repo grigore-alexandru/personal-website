@@ -62,3 +62,9 @@ export interface ImageBlock extends BaseContentBlock {
 }
 
 export type ContentBlock = SubtitleBlock | BodyBlock | ListBlock | ImageBlock;
+
+export interface Source {
+  id: string;
+  title: string;
+  url: string;
+}
