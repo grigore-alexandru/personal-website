@@ -1,9 +1,10 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
+import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
 import Typography from '@tiptap/extension-typography';
-import { Bold, Italic, List, ListOrdered, Heading2, ImagePlus } from 'lucide-react';
+import { Bold, Italic, List, ListOrdered, Heading2, ImagePlus, Link2, Unlink } from 'lucide-react';
 import { designTokens } from '../../styles/tokens';
 import { useState } from 'react';
 
@@ -16,6 +17,9 @@ interface RichTextEditorProps {
 export function RichTextEditor({ content, onChange, placeholder }: RichTextEditorProps) {
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
+  const [showLinkDialog, setShowLinkDialog] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [linkText, setLinkText] = useState('');
 
   const editor = useEditor({
     extensions: [
@@ -27,6 +31,13 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
       Image.configure({
         inline: false,
         allowBase64: true,
+      }),
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          target: '_blank',
+          rel: 'noopener noreferrer',
+        },
       }),
       Placeholder.configure({
         placeholder: placeholder || 'Start writing your blog post...',
@@ -54,6 +65,36 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
       setImageUrl('');
       setShowImageDialog(false);
     }
+  };
+
+  const handleOpenLinkDialog = () => {
+    const previousUrl = editor.getAttributes('link').href;
+    const selectedText = editor.state.doc.textBetween(
+      editor.state.selection.from,
+      editor.state.selection.to
+    );
+    setLinkUrl(previousUrl || '');
+    setLinkText(selectedText || '');
+    setShowLinkDialog(true);
+  };
+
+  const handleAddLink = () => {
+    if (linkUrl) {
+      if (linkText && !editor.state.selection.empty) {
+        editor.chain().focus().extendMarkRange('link').setLink({ href: linkUrl }).run();
+      } else if (linkText) {
+        editor.chain().focus().insertContent(`<a href="${linkUrl}">${linkText}</a>`).run();
+      } else {
+        editor.chain().focus().setLink({ href: linkUrl }).run();
+      }
+      setLinkUrl('');
+      setLinkText('');
+      setShowLinkDialog(false);
+    }
+  };
+
+  const handleRemoveLink = () => {
+    editor.chain().focus().unsetLink().run();
   };
 
   const ToolbarButton = ({
@@ -95,6 +136,20 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
           icon={<Italic size={18} />}
           label="Italic"
         />
+        <div className="w-px h-6 bg-neutral-200 mx-1" />
+        <ToolbarButton
+          onClick={handleOpenLinkDialog}
+          isActive={editor.isActive('link')}
+          icon={<Link2 size={18} />}
+          label="Insert Link"
+        />
+        {editor.isActive('link') && (
+          <ToolbarButton
+            onClick={handleRemoveLink}
+            icon={<Unlink size={18} />}
+            label="Remove Link"
+          />
+        )}
         <div className="w-px h-6 bg-neutral-200 mx-1" />
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
@@ -168,6 +223,76 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
                 className="px-4 py-2 bg-black text-white rounded-lg hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Insert
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showLinkDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-xl font-bold text-black mb-4">
+              {editor.isActive('link') ? 'Edit Link' : 'Insert Link'}
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-black mb-2">
+                  Link Text
+                </label>
+                <input
+                  type="text"
+                  value={linkText}
+                  onChange={(e) => setLinkText(e.target.value)}
+                  placeholder="Enter link text"
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddLink();
+                    }
+                  }}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-black mb-2">
+                  URL
+                </label>
+                <input
+                  type="url"
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  placeholder="https://example.com"
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddLink();
+                    }
+                  }}
+                />
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-3 mt-6">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLinkDialog(false);
+                  setLinkUrl('');
+                  setLinkText('');
+                }}
+                className="px-4 py-2 text-neutral-600 hover:text-black transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleAddLink}
+                disabled={!linkUrl}
+                className="px-4 py-2 bg-black text-white rounded-lg hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {editor.isActive('link') ? 'Update' : 'Insert'}
               </button>
             </div>
           </div>
@@ -249,6 +374,16 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
 
         .ProseMirror em {
           font-style: italic;
+        }
+
+        .ProseMirror a {
+          color: #2563eb;
+          text-decoration: underline;
+          cursor: pointer;
+        }
+
+        .ProseMirror a:hover {
+          color: #1d4ed8;
         }
       `}</style>
     </div>

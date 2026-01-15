@@ -3,6 +3,7 @@ import { ExternalLink } from 'lucide-react';
 import { generateHTML } from '@tiptap/html';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
+import Link from '@tiptap/extension-link';
 import { designTokens } from '../../styles/tokens';
 
 interface BlogPostPreviewProps {
@@ -29,6 +30,13 @@ export function BlogPostPreview({
       },
     }),
     Image,
+    Link.configure({
+      openOnClick: false,
+      HTMLAttributes: {
+        target: '_blank',
+        rel: 'noopener noreferrer',
+      },
+    }),
   ]);
 
   const renderNotesContent = (content: string) => {
@@ -151,6 +159,16 @@ export function BlogPostPreview({
 
         .prose em {
           font-style: italic;
+        }
+
+        .prose a {
+          color: #2563eb;
+          text-decoration: underline;
+          cursor: pointer;
+        }
+
+        .prose a:hover {
+          color: #1d4ed8;
         }
       `}</style>
     </div>
