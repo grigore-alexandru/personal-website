@@ -32,3 +32,33 @@ export interface Filter {
   label: string;
   active: boolean;
 }
+
+export type ContentBlockType = 'subtitle' | 'body' | 'list' | 'image';
+
+export interface BaseContentBlock {
+  id: string;
+  type: ContentBlockType;
+}
+
+export interface SubtitleBlock extends BaseContentBlock {
+  type: 'subtitle';
+  content: string;
+}
+
+export interface BodyBlock extends BaseContentBlock {
+  type: 'body';
+  content: string;
+}
+
+export interface ListBlock extends BaseContentBlock {
+  type: 'list';
+  items: string[];
+}
+
+export interface ImageBlock extends BaseContentBlock {
+  type: 'image';
+  url: string;
+  alt: string;
+}
+
+export type ContentBlock = SubtitleBlock | BodyBlock | ListBlock | ImageBlock;

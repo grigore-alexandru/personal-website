@@ -6,6 +6,7 @@ import { Button } from '../../../components/forms/Button';
 import { Tooltip } from '../../../components/ui/Tooltip';
 import { ValidationError } from '../../../components/ui/ValidationError';
 import { ToastContainer } from '../../../components/ui/Toast';
+import { ContentBlockEditor } from '../../../components/blocks/ContentBlockEditor';
 import { useToast } from '../../../hooks/useToast';
 import { slugify } from '../../../utils/slugify';
 import { validateSlug } from '../../../utils/validateSlug';
@@ -13,12 +14,14 @@ import { checkSlugUniqueness } from '../../../utils/checkSlugUniqueness';
 import { saveDraft, loadDraft, removeDraft } from '../../../utils/draftStorage';
 import { getCurrentDateTime } from '../../../utils/dateUtils';
 import { supabase } from '../../../lib/supabase';
+import { ContentBlock } from '../../../types';
 import { Sparkles, Save, Trash2, Eye } from 'lucide-react';
 
 interface BlogFormData {
   title: string;
   slug: string;
   hero_image_url: string;
+  contentBlocks: ContentBlock[];
 }
 
 const DRAFT_KEY = 'new-blog-post';
@@ -31,6 +34,7 @@ export function BlogCreateForm() {
     title: '',
     slug: '',
     hero_image_url: '',
+    contentBlocks: [],
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof BlogFormData, string>>>({});
@@ -59,7 +63,7 @@ export function BlogCreateForm() {
   }, [hasUnsavedChanges]);
 
   useEffect(() => {
-    if (formData.title || formData.slug || formData.hero_image_url) {
+    if (formData.title || formData.slug || formData.hero_image_url || formData.contentBlocks.length > 0) {
       setHasUnsavedChanges(true);
       saveDraft(DRAFT_KEY, formData);
     }
@@ -125,7 +129,7 @@ export function BlogCreateForm() {
         title: formData.title || 'Untitled Draft',
         slug: formData.slug || `draft-${Date.now()}`,
         hero_image_url: formData.hero_image_url || null,
-        content: '',
+        content: convertBlocksToContent(formData.contentBlocks),
         excerpt: '',
         tags: [],
         is_draft: true,
@@ -168,7 +172,7 @@ export function BlogCreateForm() {
         title: formData.title,
         slug: formData.slug,
         hero_image_url: formData.hero_image_url || null,
-        content: '',
+        content: convertBlocksToContent(formData.contentBlocks),
         excerpt: '',
         tags: [],
         is_draft: false,
@@ -192,11 +196,16 @@ export function BlogCreateForm() {
     }
   };
 
+  const convertBlocksToContent = (blocks: ContentBlock[]): string => {
+    return JSON.stringify(blocks);
+  };
+
   const handleDiscard = () => {
     setFormData({
       title: '',
       slug: '',
       hero_image_url: '',
+      contentBlocks: [],
     });
     setErrors({});
     setHasUnsavedChanges(false);
@@ -288,6 +297,14 @@ export function BlogCreateForm() {
               )}
             </div>
           </div>
+        </div>
+
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold text-black mb-6">Content Blocks</h2>
+          <ContentBlockEditor
+            blocks={formData.contentBlocks}
+            onChange={(blocks) => setFormData(prev => ({ ...prev, contentBlocks: blocks }))}
+          />
         </div>
 
         <div className="sticky bottom-0 mt-8 bg-white border-t border-neutral-200 py-4 px-8 -mx-6 flex items-center justify-between gap-4 shadow-lg">
