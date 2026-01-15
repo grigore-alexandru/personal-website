@@ -7,8 +7,14 @@ interface FormCheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
 }
 
 export const FormCheckbox = forwardRef<HTMLInputElement, FormCheckboxProps>(
-  ({ label, helperText, className = '', id, checked, ...props }, ref) => {
+  ({ label, helperText, className = '', id, checked, onChange, ...props }, ref) => {
     const checkboxId = id || label.toLowerCase().replace(/\s+/g, '-');
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (onChange) {
+        onChange(e.target.checked as any);
+      }
+    };
 
     return (
       <div className="w-full">
@@ -20,6 +26,7 @@ export const FormCheckbox = forwardRef<HTMLInputElement, FormCheckboxProps>(
               id={checkboxId}
               checked={checked}
               className="sr-only peer"
+              onChange={handleChange}
               {...props}
             />
             <div className="w-5 h-5 border-2 border-neutral-300 rounded bg-white peer-checked:bg-black peer-checked:border-black peer-focus:ring-2 peer-focus:ring-black peer-focus:ring-offset-2 transition-all peer-disabled:bg-neutral-100 peer-disabled:cursor-not-allowed flex items-center justify-center">
