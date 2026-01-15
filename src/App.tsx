@@ -4,6 +4,7 @@ import PortfolioPage from './pages/PortfolioPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
 import BlogPostPage from './pages/BlogPostPage';
 import AdminLoginPage from './pages/admin/AdminLoginPage';
+import { BlogCreateForm } from './pages/admin/create/BlogCreateForm';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 declare global {
@@ -38,9 +39,7 @@ function App() {
           path="/admin/blog/create"
           element={
             <ProtectedRoute>
-              <div className="min-h-screen flex items-center justify-center bg-white">
-                <p className="text-lg text-neutral-600">Blog Create Form (Coming in Phase 3)</p>
-              </div>
+              <BlogCreateForm />
             </ProtectedRoute>
           }
         />
