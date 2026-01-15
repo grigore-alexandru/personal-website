@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import PortfolioPage from './pages/PortfolioPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
 import BlogPostPage from './pages/BlogPostPage';
+import AdminLoginPage from './pages/admin/AdminLoginPage';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 declare global {
   interface Window {
@@ -10,7 +12,6 @@ declare global {
   }
 }
 
-// Initialize dataLayer for analytics
 if (typeof window !== 'undefined' && !window.dataLayer) {
   window.dataLayer = [];
 }
@@ -23,6 +24,36 @@ function App() {
         <Route path="/what-i-do/video-production/" element={<PortfolioPage />} />
         <Route path="/what-i-do/video-production/:clientSlug/:projectSlug" element={<ProjectDetailPage />} />
         <Route path="/blog/:slug" element={<BlogPostPage />} />
+
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <Navigate to="/admin/blog/create" replace />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/blog/create"
+          element={
+            <ProtectedRoute>
+              <div className="min-h-screen flex items-center justify-center bg-white">
+                <p className="text-lg text-neutral-600">Blog Create Form (Coming in Phase 3)</p>
+              </div>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/blog/edit/:id"
+          element={
+            <ProtectedRoute>
+              <div className="min-h-screen flex items-center justify-center bg-white">
+                <p className="text-lg text-neutral-600">Blog Edit Form (Coming in Future Phase)</p>
+              </div>
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </Router>
   );

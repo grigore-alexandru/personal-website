@@ -110,6 +110,7 @@ export interface Database {
           }>;
           has_notes: boolean;
           notes_content: string;
+          is_draft: boolean;
           published_at: string;
           created_at: string;
           updated_at: string;
@@ -134,6 +135,7 @@ export interface Database {
           }>;
           has_notes?: boolean;
           notes_content?: string;
+          is_draft?: boolean;
           published_at?: string;
           created_at?: string;
           updated_at?: string;
@@ -158,6 +160,7 @@ export interface Database {
           }>;
           has_notes?: boolean;
           notes_content?: string;
+          is_draft?: boolean;
           published_at?: string;
           created_at?: string;
           updated_at?: string;
