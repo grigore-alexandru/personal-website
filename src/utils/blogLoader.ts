@@ -1,14 +1,5 @@
 import { supabase } from '../lib/supabase';
 
-export interface ContentBlock {
-  type: 'subtitle' | 'body' | 'list' | 'image';
-  data: {
-    text?: string;
-    items?: string[];
-    url?: string;
-  };
-}
-
 export interface Source {
   title: string;
   url: string;
@@ -18,8 +9,9 @@ export interface BlogPost {
   id: string;
   title: string;
   slug: string;
-  heroImageUrl: string;
-  content: ContentBlock[];
+  content: any;
+  excerpt: string;
+  tags: string[];
   hasSources: boolean;
   sourcesData: Source[];
   hasNotes: boolean;
@@ -45,8 +37,9 @@ export const loadPost = async (slug: string): Promise<BlogPost | null> => {
     id: data.id,
     title: data.title,
     slug: data.slug,
-    heroImageUrl: data.hero_image_url,
-    content: data.content as ContentBlock[],
+    content: data.content,
+    excerpt: data.excerpt || '',
+    tags: data.tags || [],
     hasSources: data.has_sources,
     sourcesData: data.sources_data as Source[],
     hasNotes: data.has_notes,
@@ -72,8 +65,9 @@ export const loadAllPosts = async (): Promise<BlogPost[]> => {
     id: post.id,
     title: post.title,
     slug: post.slug,
-    heroImageUrl: post.hero_image_url,
-    content: post.content as ContentBlock[],
+    content: post.content,
+    excerpt: post.excerpt || '',
+    tags: post.tags || [],
     hasSources: post.has_sources,
     sourcesData: post.sources_data as Source[],
     hasNotes: post.has_notes,

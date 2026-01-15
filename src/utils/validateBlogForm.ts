@@ -1,12 +1,11 @@
-import { ContentBlock, Source } from '../types';
+import { Source, TipTapContent } from '../types';
 import { validateSlug } from './validateSlug';
 import { checkSlugUniqueness } from './checkSlugUniqueness';
 
 export interface BlogFormValidationData {
   title: string;
   slug: string;
-  hero_image_url: string;
-  contentBlocks: ContentBlock[];
+  content: TipTapContent;
   hasSources: boolean;
   sources: Source[];
   hasNotes: boolean;
@@ -21,6 +20,29 @@ export interface ValidationError {
 export interface ValidationResult {
   isValid: boolean;
   errors: ValidationError[];
+}
+
+function extractTextFromTipTap(content: TipTapContent): string {
+  if (!content) return '';
+
+  let text = '';
+
+  if (content.text) {
+    text += content.text;
+  }
+
+  if (content.content && Array.isArray(content.content)) {
+    for (const child of content.content) {
+      text += extractTextFromTipTap(child);
+    }
+  }
+
+  return text;
+}
+
+function hasContentInTipTap(content: TipTapContent): boolean {
+  const text = extractTextFromTipTap(content);
+  return text.trim().length > 0;
 }
 
 export async function validateBlogForm(
@@ -52,35 +74,8 @@ export async function validateBlogForm(
       }
     }
 
-    if (!data.hero_image_url.trim()) {
-      errors.push({ field: 'hero_image_url', message: 'Hero image URL is required' });
-    } else {
-      try {
-        new URL(data.hero_image_url);
-      } catch {
-        errors.push({ field: 'hero_image_url', message: 'Please enter a valid URL' });
-      }
-    }
-
-    if (data.contentBlocks.length === 0) {
-      errors.push({ field: 'contentBlocks', message: 'At least one content block is required' });
-    } else {
-      const hasEmptyBlocks = data.contentBlocks.some(block => {
-        if (block.type === 'subtitle' || block.type === 'body') {
-          return !block.content.trim();
-        }
-        if (block.type === 'list') {
-          return block.items.length === 0 || block.items.every(item => !item.trim());
-        }
-        if (block.type === 'image') {
-          return !block.url.trim();
-        }
-        return false;
-      });
-
-      if (hasEmptyBlocks) {
-        errors.push({ field: 'contentBlocks', message: 'Some content blocks are empty. Please fill them in or remove them.' });
-      }
+    if (!data.content || !hasContentInTipTap(data.content)) {
+      errors.push({ field: 'content', message: 'Blog post content is required' });
     }
   }
 

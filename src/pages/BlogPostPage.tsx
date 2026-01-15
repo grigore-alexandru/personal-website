@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { loadPost, BlogPost, ContentBlock } from '../utils/blogLoader';
+import { loadPost, BlogPost } from '../utils/blogLoader';
 import Header from '../components/Header';
 import { designTokens } from '../styles/tokens';
+import { generateHTML } from '@tiptap/html';
+import StarterKit from '@tiptap/starter-kit';
+import Image from '@tiptap/extension-image';
+import LinkExtension from '@tiptap/extension-link';
 
 const BlogPostPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -67,74 +71,31 @@ const BlogPostPage: React.FC = () => {
     );
   }
 
-  const renderContentBlock = (block: ContentBlock, index: number) => {
-    switch (block.type) {
-      case 'subtitle':
-        return (
-          <h2
-            key={index}
-            className="text-black font-bold mb-4 mt-8"
-            style={{
-              fontSize: designTokens.typography.sizes.lg,
-              fontFamily: designTokens.typography.fontFamily,
-              fontWeight: designTokens.typography.weights.bold,
-              lineHeight: designTokens.typography.lineHeights.heading,
-            }}
-          >
-            {block.data.text}
-          </h2>
-        );
+  const renderContent = () => {
+    if (!post?.content) return null;
 
-      case 'body':
-        return (
-          <p
-            key={index}
-            className="text-gray-700 leading-relaxed mb-4"
-            style={{
-              fontSize: designTokens.typography.sizes.sm,
-              fontFamily: designTokens.typography.fontFamily,
-              fontWeight: designTokens.typography.weights.regular,
-              lineHeight: designTokens.typography.lineHeights.body,
-            }}
-          >
-            {block.data.text}
-          </p>
-        );
+    const html = generateHTML(post.content, [
+      StarterKit.configure({
+        heading: {
+          levels: [2],
+        },
+      }),
+      Image,
+      LinkExtension.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          target: '_blank',
+          rel: 'noopener noreferrer',
+        },
+      }),
+    ]);
 
-      case 'list':
-        return (
-          <ul
-            key={index}
-            className="list-disc list-inside mb-4 space-y-2"
-            style={{
-              fontSize: designTokens.typography.sizes.sm,
-              fontFamily: designTokens.typography.fontFamily,
-              fontWeight: designTokens.typography.weights.regular,
-              lineHeight: designTokens.typography.lineHeights.body,
-            }}
-          >
-            {block.data.items?.map((item, itemIndex) => (
-              <li key={itemIndex} className="text-gray-700">
-                {item}
-              </li>
-            ))}
-          </ul>
-        );
-
-      case 'image':
-        return (
-          <div key={index} className="mb-8">
-            <img
-              src={block.data.url}
-              alt=""
-              className="w-full h-auto rounded-lg"
-            />
-          </div>
-        );
-
-      default:
-        return null;
-    }
+    return (
+      <div
+        className="prose prose-lg max-w-none"
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    );
   };
 
   return (
@@ -181,9 +142,9 @@ const BlogPostPage: React.FC = () => {
           })}
         </p>
 
-        {/* Content Blocks */}
+        {/* Content */}
         <div className="mb-12 md:mb-16">
-          {post.content.map((block, index) => renderContentBlock(block, index))}
+          {renderContent()}
         </div>
 
         {/* Sources Section */}
@@ -258,6 +219,79 @@ const BlogPostPage: React.FC = () => {
           </section>
         )}
       </div>
+
+      <style>{`
+        .prose p {
+          font-size: ${designTokens.typography.sizes.sm};
+          font-family: ${designTokens.typography.fontFamily};
+          font-weight: ${designTokens.typography.weights.regular};
+          line-height: ${designTokens.typography.lineHeights.body};
+          color: rgb(55, 65, 81);
+          margin-bottom: 1rem;
+        }
+
+        .prose h2 {
+          font-size: ${designTokens.typography.sizes.lg};
+          font-family: ${designTokens.typography.fontFamily};
+          font-weight: ${designTokens.typography.weights.bold};
+          line-height: ${designTokens.typography.lineHeights.heading};
+          color: ${designTokens.colors.textPrimary};
+          margin-top: 2rem;
+          margin-bottom: 1rem;
+        }
+
+        .prose h2:first-child {
+          margin-top: 0;
+        }
+
+        .prose ul,
+        .prose ol {
+          font-size: ${designTokens.typography.sizes.sm};
+          font-family: ${designTokens.typography.fontFamily};
+          font-weight: ${designTokens.typography.weights.regular};
+          line-height: ${designTokens.typography.lineHeights.body};
+          color: rgb(55, 65, 81);
+          margin-bottom: 1rem;
+          padding-left: 1.5rem;
+        }
+
+        .prose ul {
+          list-style-type: disc;
+        }
+
+        .prose ol {
+          list-style-type: decimal;
+        }
+
+        .prose li {
+          margin-bottom: 0.5rem;
+        }
+
+        .prose img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 0.5rem;
+          margin: 2rem 0;
+          display: block;
+        }
+
+        .prose strong {
+          font-weight: ${designTokens.typography.weights.bold};
+        }
+
+        .prose em {
+          font-style: italic;
+        }
+
+        .prose a {
+          color: #2563eb;
+          text-decoration: underline;
+        }
+
+        .prose a:hover {
+          color: #1d4ed8;
+        }
+      `}</style>
     </div>
   );
 };

@@ -94,15 +94,9 @@ export interface Database {
           id: string;
           title: string;
           slug: string;
-          hero_image_url: string;
-          content: Array<{
-            type: 'subtitle' | 'body' | 'list' | 'image';
-            data: {
-              text?: string;
-              items?: string[];
-              url?: string;
-            };
-          }>;
+          content: any;
+          excerpt: string;
+          tags: string[];
           has_sources: boolean;
           sources_data: Array<{
             title: string;
@@ -119,15 +113,9 @@ export interface Database {
           id?: string;
           title: string;
           slug: string;
-          hero_image_url: string;
-          content?: Array<{
-            type: 'subtitle' | 'body' | 'list' | 'image';
-            data: {
-              text?: string;
-              items?: string[];
-              url?: string;
-            };
-          }>;
+          content?: any;
+          excerpt?: string;
+          tags?: string[];
           has_sources?: boolean;
           sources_data?: Array<{
             title: string;
@@ -144,15 +132,9 @@ export interface Database {
           id?: string;
           title?: string;
           slug?: string;
-          hero_image_url?: string;
-          content?: Array<{
-            type: 'subtitle' | 'body' | 'list' | 'image';
-            data: {
-              text?: string;
-              items?: string[];
-              url?: string;
-            };
-          }>;
+          content?: any;
+          excerpt?: string;
+          tags?: string[];
           has_sources?: boolean;
           sources_data?: Array<{
             title: string;

@@ -1,12 +1,11 @@
 import { supabase } from '../lib/supabase';
-import { ContentBlock, Source } from '../types';
+import { Source, TipTapContent } from '../types';
 import { getCurrentDateTime } from './dateUtils';
 
 export interface BlogPostData {
   title: string;
   slug: string;
-  hero_image_url: string;
-  contentBlocks: ContentBlock[];
+  content: TipTapContent;
   hasSources: boolean;
   sources: Source[];
   hasNotes: boolean;
@@ -30,8 +29,7 @@ export async function saveBlogPost(
     const postData = {
       title: data.title || (isDraft ? 'Untitled Draft' : ''),
       slug: data.slug || (isDraft ? `draft-${Date.now()}` : ''),
-      hero_image_url: data.hero_image_url || null,
-      content: data.contentBlocks,
+      content: data.content,
       has_sources: data.hasSources,
       sources_data: data.hasSources ? data.sources : [],
       has_notes: data.hasNotes,
@@ -79,8 +77,7 @@ export async function updateBlogPost(
     const postData = {
       title: data.title,
       slug: data.slug,
-      hero_image_url: data.hero_image_url || null,
-      content: data.contentBlocks,
+      content: data.content,
       has_sources: data.hasSources,
       sources_data: data.hasSources ? data.sources : [],
       has_notes: data.hasNotes,

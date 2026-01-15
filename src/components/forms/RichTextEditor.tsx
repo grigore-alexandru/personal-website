@@ -4,9 +4,10 @@ import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
 import Typography from '@tiptap/extension-typography';
-import { Bold, Italic, List, ListOrdered, Heading2, ImagePlus, Link2, Unlink } from 'lucide-react';
+import { Bold, Italic, List, ListOrdered, Heading2, ImagePlus, Link2, Unlink, Loader2 } from 'lucide-react';
 import { designTokens } from '../../styles/tokens';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { uploadImageToSupabase, validateImageFile } from '../../utils/imageUpload';
 
 interface RichTextEditorProps {
   content: string;
@@ -15,11 +16,12 @@ interface RichTextEditorProps {
 }
 
 export function RichTextEditor({ content, onChange, placeholder }: RichTextEditorProps) {
-  const [showImageDialog, setShowImageDialog] = useState(false);
-  const [imageUrl, setImageUrl] = useState('');
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
   const [linkText, setLinkText] = useState('');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
     extensions: [
@@ -59,11 +61,32 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
     return null;
   }
 
-  const handleAddImage = () => {
-    if (imageUrl) {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !editor) return;
+
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      setUploadError(validation.error || 'Invalid file');
+      setTimeout(() => setUploadError(null), 5000);
+      return;
+    }
+
+    setIsUploadingImage(true);
+    setUploadError(null);
+
+    try {
+      const imageUrl = await uploadImageToSupabase(file);
       editor.chain().focus().setImage({ src: imageUrl }).run();
-      setImageUrl('');
-      setShowImageDialog(false);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload image';
+      setUploadError(errorMessage);
+      setTimeout(() => setUploadError(null), 5000);
+    } finally {
+      setIsUploadingImage(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -172,62 +195,28 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
         />
         <div className="w-px h-6 bg-neutral-200 mx-1" />
         <ToolbarButton
-          onClick={() => setShowImageDialog(true)}
-          icon={<ImagePlus size={18} />}
+          onClick={() => fileInputRef.current?.click()}
+          icon={isUploadingImage ? <Loader2 size={18} className="animate-spin" /> : <ImagePlus size={18} />}
           label="Insert Image"
         />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+          onChange={handleImageUpload}
+          className="hidden"
+        />
       </div>
+
+      {uploadError && (
+        <div className="px-4 py-2 bg-red-50 border-b border-red-200 text-red-600 text-sm">
+          {uploadError}
+        </div>
+      )}
 
       <div className="p-6">
         <EditorContent editor={editor} />
       </div>
-
-      {showImageDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
-            <h3 className="text-xl font-bold text-black mb-4">Insert Image</h3>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-black mb-2">
-                Image URL
-              </label>
-              <input
-                type="url"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="https://example.com/image.jpg"
-                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                autoFocus
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddImage();
-                  }
-                }}
-              />
-            </div>
-            <div className="flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowImageDialog(false);
-                  setImageUrl('');
-                }}
-                className="px-4 py-2 text-neutral-600 hover:text-black transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleAddImage}
-                disabled={!imageUrl}
-                className="px-4 py-2 bg-black text-white rounded-lg hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Insert
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {showLinkDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
