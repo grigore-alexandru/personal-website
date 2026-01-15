@@ -96,10 +96,11 @@ export interface Database {
           slug: string;
           hero_image_url: string;
           content: Array<{
-            type: 'subtitle' | 'body' | 'list';
+            type: 'subtitle' | 'body' | 'list' | 'image';
             data: {
               text?: string;
               items?: string[];
+              url?: string;
             };
           }>;
           has_sources: boolean;
@@ -119,10 +120,11 @@ export interface Database {
           slug: string;
           hero_image_url: string;
           content?: Array<{
-            type: 'subtitle' | 'body' | 'list';
+            type: 'subtitle' | 'body' | 'list' | 'image';
             data: {
               text?: string;
               items?: string[];
+              url?: string;
             };
           }>;
           has_sources?: boolean;
@@ -142,10 +144,11 @@ export interface Database {
           slug?: string;
           hero_image_url?: string;
           content?: Array<{
-            type: 'subtitle' | 'body' | 'list';
+            type: 'subtitle' | 'body' | 'list' | 'image';
             data: {
               text?: string;
               items?: string[];
+              url?: string;
             };
           }>;
           has_sources?: boolean;

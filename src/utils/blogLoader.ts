@@ -1,10 +1,11 @@
 import { supabase } from '../lib/supabase';
 
 export interface ContentBlock {
-  type: 'subtitle' | 'body' | 'list';
+  type: 'subtitle' | 'body' | 'list' | 'image';
   data: {
     text?: string;
     items?: string[];
+    url?: string;
   };
 }
 

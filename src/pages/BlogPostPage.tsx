@@ -121,6 +121,17 @@ const BlogPostPage: React.FC = () => {
           </ul>
         );
 
+      case 'image':
+        return (
+          <div key={index} className="mb-8">
+            <img
+              src={block.data.url}
+              alt=""
+              className="w-full h-auto rounded-lg"
+            />
+          </div>
+        );
+
       default:
         return null;
     }
@@ -140,17 +151,8 @@ const BlogPostPage: React.FC = () => {
         </Link>
       )}
 
-      {/* Hero Section */}
-      <div className="relative w-full h-[400px] md:h-[500px] overflow-hidden">
-        <img
-          src={post.heroImageUrl}
-          alt={post.title}
-          className="w-full h-full object-cover"
-        />
-      </div>
-
       {/* Content Container */}
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-12 py-12 md:py-16">
+      <div className="max-w-3xl mx-auto px-3 sm:px-4 lg:px-6 py-12 md:py-16">
         {/* Post Title */}
         <h1
           className="text-black font-bold mb-8 text-center"
