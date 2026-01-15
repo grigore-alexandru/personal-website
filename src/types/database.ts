@@ -89,6 +89,77 @@ export interface Database {
           created_at?: string;
         };
       };
+      posts: {
+        Row: {
+          id: string;
+          title: string;
+          slug: string;
+          hero_image_url: string;
+          content: Array<{
+            type: 'subtitle' | 'body' | 'list';
+            data: {
+              text?: string;
+              items?: string[];
+            };
+          }>;
+          has_sources: boolean;
+          sources_data: Array<{
+            title: string;
+            url: string;
+          }>;
+          has_notes: boolean;
+          notes_content: string;
+          published_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          slug: string;
+          hero_image_url: string;
+          content?: Array<{
+            type: 'subtitle' | 'body' | 'list';
+            data: {
+              text?: string;
+              items?: string[];
+            };
+          }>;
+          has_sources?: boolean;
+          sources_data?: Array<{
+            title: string;
+            url: string;
+          }>;
+          has_notes?: boolean;
+          notes_content?: string;
+          published_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          slug?: string;
+          hero_image_url?: string;
+          content?: Array<{
+            type: 'subtitle' | 'body' | 'list';
+            data: {
+              text?: string;
+              items?: string[];
+            };
+          }>;
+          has_sources?: boolean;
+          sources_data?: Array<{
+            title: string;
+            url: string;
+          }>;
+          has_notes?: boolean;
+          notes_content?: string;
+          published_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
   };
 }
