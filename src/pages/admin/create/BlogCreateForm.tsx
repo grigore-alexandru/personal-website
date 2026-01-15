@@ -6,7 +6,7 @@ import { FormCheckbox } from '../../../components/forms/FormCheckbox';
 import { Button } from '../../../components/forms/Button';
 import { Tooltip } from '../../../components/ui/Tooltip';
 import { ToastContainer } from '../../../components/ui/Toast';
-import { ContentBlockEditor } from '../../../components/blocks/ContentBlockEditor';
+import { RichTextEditor } from '../../../components/forms/RichTextEditor';
 import { SourcesEditor } from '../../../components/forms/SourcesEditor';
 import { NotesEditor } from '../../../components/forms/NotesEditor';
 import { BlogPostPreview } from '../../../components/admin/BlogPostPreview';
@@ -15,14 +15,13 @@ import { slugify } from '../../../utils/slugify';
 import { saveDraft, loadDraft, removeDraft } from '../../../utils/draftStorage';
 import { validateBlogForm, ValidationError } from '../../../utils/validateBlogForm';
 import { saveBlogPost } from '../../../utils/blogService';
-import { ContentBlock, Source } from '../../../types';
+import { Source, TipTapContent } from '../../../types';
 import { Sparkles, Save, Trash2, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 interface BlogFormData {
   title: string;
   slug: string;
-  hero_image_url: string;
-  contentBlocks: ContentBlock[];
+  content: TipTapContent;
   hasSources: boolean;
   sources: Source[];
   hasNotes: boolean;
@@ -44,8 +43,7 @@ export function BlogCreateForm() {
   const [formData, setFormData] = useState<BlogFormData>({
     title: '',
     slug: '',
-    hero_image_url: '',
-    contentBlocks: [],
+    content: { type: 'doc', content: [] },
     hasSources: false,
     sources: [],
     hasNotes: false,
@@ -85,8 +83,7 @@ export function BlogCreateForm() {
     const hasContent =
       formData.title ||
       formData.slug ||
-      formData.hero_image_url ||
-      formData.contentBlocks.length > 0 ||
+      (formData.content.content && formData.content.content.length > 0) ||
       formData.sources.length > 0 ||
       formData.notesContent;
 
@@ -162,8 +159,7 @@ export function BlogCreateForm() {
         {
           title: formData.title,
           slug: formData.slug,
-          hero_image_url: formData.hero_image_url,
-          contentBlocks: formData.contentBlocks,
+          content: formData.content,
           hasSources: formData.hasSources,
           sources: formData.sources,
           hasNotes: formData.hasNotes,
@@ -194,8 +190,7 @@ export function BlogCreateForm() {
     const validation = await validateBlogForm({
       title: formData.title,
       slug: formData.slug,
-      hero_image_url: formData.hero_image_url,
-      contentBlocks: formData.contentBlocks,
+      content: formData.content,
       hasSources: formData.hasSources,
       sources: formData.sources,
       hasNotes: formData.hasNotes,
@@ -223,8 +218,7 @@ export function BlogCreateForm() {
         {
           title: formData.title,
           slug: formData.slug,
-          hero_image_url: formData.hero_image_url,
-          contentBlocks: formData.contentBlocks,
+          content: formData.content,
           hasSources: formData.hasSources,
           sources: formData.sources,
           hasNotes: formData.hasNotes,
@@ -260,8 +254,7 @@ export function BlogCreateForm() {
     setFormData({
       title: '',
       slug: '',
-      hero_image_url: '',
-      contentBlocks: [],
+      content: { type: 'doc', content: [] },
       hasSources: false,
       sources: [],
       hasNotes: false,
@@ -342,52 +335,7 @@ export function BlogCreateForm() {
               </Button>
             </div>
           </div>
-
-          <div>
-            <FormInput
-              label="Hero Image URL"
-              value={formData.hero_image_url}
-              onChange={(e) => handleChange('hero_image_url', e.target.value)}
-              placeholder="https://example.com/image.jpg"
-              type="url"
-              required
-              error={validationErrors.find(e => e.field === 'hero_image_url')?.message}
-              helperText="Enter a URL to an image for the post hero section"
-            />
-
-            {formData.hero_image_url && (
-              <div className="mt-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Eye size={16} className="text-neutral-600" />
-                  <span className="text-sm font-medium text-neutral-600">Preview</span>
-                </div>
-                <div className="rounded-lg overflow-hidden border border-neutral-200">
-                  <img
-                    src={formData.hero_image_url}
-                    alt="Hero preview"
-                    className="w-full h-64 object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23f5f5f5" width="400" height="300"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3EInvalid Image URL%3C/text%3E%3C/svg%3E';
-                    }}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
         </div>
-      </div>
-
-      <div>
-        <h2 className="text-2xl font-bold text-black mb-6">Content Blocks</h2>
-        {validationErrors.find(e => e.field === 'contentBlocks') && (
-          <p className="text-sm text-red-600 mb-4">
-            {validationErrors.find(e => e.field === 'contentBlocks')?.message}
-          </p>
-        )}
-        <ContentBlockEditor
-          blocks={formData.contentBlocks}
-          onChange={(blocks) => handleChange('contentBlocks', blocks)}
-        />
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-8">
@@ -443,6 +391,20 @@ export function BlogCreateForm() {
           </div>
         )}
       </div>
+
+      <div>
+        <h2 className="text-2xl font-bold text-black mb-6">Content</h2>
+        {validationErrors.find(e => e.field === 'content') && (
+          <p className="text-sm text-red-600 mb-4">
+            {validationErrors.find(e => e.field === 'content')?.message}
+          </p>
+        )}
+        <RichTextEditor
+          content={JSON.stringify(formData.content)}
+          onChange={(content) => handleChange('content', content)}
+          placeholder="Start writing your blog post..."
+        />
+      </div>
     </div>
   );
 
@@ -475,8 +437,7 @@ export function BlogCreateForm() {
           <div className="sticky top-0 max-h-[calc(100vh-200px)] overflow-y-auto border-l border-neutral-200 pl-6">
             <BlogPostPreview
               title={formData.title}
-              heroImageUrl={formData.hero_image_url}
-              contentBlocks={formData.contentBlocks}
+              content={formData.content}
               hasSources={formData.hasSources}
               sources={formData.sources}
               hasNotes={formData.hasNotes}

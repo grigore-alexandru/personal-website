@@ -1,10 +1,13 @@
-import { ContentBlock, Source } from '../../types';
+import { Source, TipTapContent } from '../../types';
 import { ExternalLink } from 'lucide-react';
+import { generateHTML } from '@tiptap/html';
+import StarterKit from '@tiptap/starter-kit';
+import Image from '@tiptap/extension-image';
+import { designTokens } from '../../styles/tokens';
 
 interface BlogPostPreviewProps {
   title: string;
-  heroImageUrl: string;
-  contentBlocks: ContentBlock[];
+  content: TipTapContent;
   hasSources: boolean;
   sources: Source[];
   hasNotes: boolean;
@@ -13,59 +16,20 @@ interface BlogPostPreviewProps {
 
 export function BlogPostPreview({
   title,
-  heroImageUrl,
-  contentBlocks,
+  content,
   hasSources,
   sources,
   hasNotes,
   notesContent,
 }: BlogPostPreviewProps) {
-  const renderContentBlock = (block: ContentBlock) => {
-    switch (block.type) {
-      case 'subtitle':
-        return (
-          <h2 key={block.id} className="text-2xl font-bold text-black mb-4 mt-8">
-            {block.content || 'Untitled Subtitle'}
-          </h2>
-        );
-      case 'body':
-        return (
-          <p key={block.id} className="text-neutral-700 leading-relaxed mb-6">
-            {block.content || 'Empty paragraph'}
-          </p>
-        );
-      case 'list':
-        return (
-          <ul key={block.id} className="list-disc list-inside space-y-2 mb-6 text-neutral-700">
-            {block.items.map((item, index) => (
-              <li key={index}>{item || 'Empty item'}</li>
-            ))}
-          </ul>
-        );
-      case 'image':
-        return (
-          <div key={block.id} className="my-8">
-            {block.url ? (
-              <img
-                src={block.url}
-                alt={block.alt || 'Blog post image'}
-                className="w-full rounded-lg"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="400"%3E%3Crect fill="%23f5f5f5" width="800" height="400"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3EImage not found%3C/text%3E%3C/svg%3E';
-                }}
-              />
-            ) : (
-              <div className="w-full h-64 bg-neutral-100 rounded-lg flex items-center justify-center text-neutral-400">
-                No image URL provided
-              </div>
-            )}
-            {block.alt && (
-              <p className="text-sm text-neutral-500 text-center mt-2">{block.alt}</p>
-            )}
-          </div>
-        );
-    }
-  };
+  const html = generateHTML(content, [
+    StarterKit.configure({
+      heading: {
+        levels: [2],
+      },
+    }),
+    Image,
+  ]);
 
   const renderNotesContent = (content: string) => {
     return content
@@ -79,34 +43,14 @@ export function BlogPostPreview({
   return (
     <div className="bg-white min-h-screen">
       <article className="max-w-4xl mx-auto px-6 py-12">
-        {heroImageUrl ? (
-          <div className="mb-8 -mx-6">
-            <img
-              src={heroImageUrl}
-              alt={title || 'Blog post hero'}
-              className="w-full h-96 object-cover"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="1200" height="600"%3E%3Crect fill="%23f5f5f5" width="1200" height="600"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3EHero image not found%3C/text%3E%3C/svg%3E';
-              }}
-            />
-          </div>
-        ) : (
-          <div className="mb-8 -mx-6 w-full h-96 bg-neutral-100 flex items-center justify-center text-neutral-400">
-            No hero image
-          </div>
-        )}
-
         <h1 className="text-4xl md:text-5xl font-bold text-black mb-8">
           {title || 'Untitled Post'}
         </h1>
 
-        <div className="prose prose-lg max-w-none">
-          {contentBlocks.length > 0 ? (
-            contentBlocks.map(block => renderContentBlock(block))
-          ) : (
-            <p className="text-neutral-400 italic">No content blocks added yet</p>
-          )}
-        </div>
+        <div
+          className="prose prose-lg max-w-none"
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
 
         {hasSources && completeSources.length > 0 && (
           <div className="mt-12 pt-8 border-t border-neutral-200">
@@ -144,6 +88,71 @@ export function BlogPostPreview({
           </div>
         )}
       </article>
+
+      <style>{`
+        .prose {
+          font-family: ${designTokens.typography.fontFamily};
+        }
+
+        .prose p {
+          font-size: ${designTokens.typography.sizes.sm};
+          font-weight: ${designTokens.typography.weights.regular};
+          line-height: ${designTokens.typography.lineHeights.body};
+          color: rgb(55, 65, 81);
+          margin-bottom: 1rem;
+        }
+
+        .prose h2 {
+          font-size: ${designTokens.typography.sizes.lg};
+          font-weight: ${designTokens.typography.weights.bold};
+          line-height: ${designTokens.typography.lineHeights.heading};
+          color: ${designTokens.colors.textPrimary};
+          margin-top: 2rem;
+          margin-bottom: 1rem;
+        }
+
+        .prose h2:first-child {
+          margin-top: 0;
+        }
+
+        .prose ul,
+        .prose ol {
+          font-size: ${designTokens.typography.sizes.sm};
+          font-weight: ${designTokens.typography.weights.regular};
+          line-height: ${designTokens.typography.lineHeights.body};
+          color: rgb(55, 65, 81);
+          margin-bottom: 1rem;
+          padding-left: 1.5rem;
+        }
+
+        .prose ul {
+          list-style-type: disc;
+        }
+
+        .prose ol {
+          list-style-type: decimal;
+        }
+
+        .prose li {
+          margin-bottom: 0.5rem;
+        }
+
+        .prose img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 0.5rem;
+          margin: 2rem 0;
+          display: block;
+        }
+
+        .prose strong {
+          font-weight: ${designTokens.typography.weights.bold};
+        }
+
+        .prose em {
+          font-style: italic;
+        }
+      `}</style>
     </div>
   );
 }

@@ -68,3 +68,24 @@ export interface Source {
   title: string;
   url: string;
 }
+
+export interface TipTapContent {
+  type: string;
+  content?: TipTapContent[];
+  attrs?: Record<string, any>;
+  text?: string;
+  marks?: Array<{
+    type: string;
+    attrs?: Record<string, any>;
+  }>;
+}
+
+export interface BlogFormData {
+  title: string;
+  slug: string;
+  content: TipTapContent;
+  hasSources: boolean;
+  sources: Source[];
+  hasNotes: boolean;
+  notesContent: string;
+}
