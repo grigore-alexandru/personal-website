@@ -17,10 +17,35 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
     });
   };
 
+  const extractFirstParagraph = (content: any): string => {
+    if (!content || !content.content || !Array.isArray(content.content)) {
+      return '';
+    }
+
+    // Find the first paragraph node
+    const firstParagraph = content.content.find(
+      (node: any) => node.type === 'paragraph' && node.content && node.content.length > 0
+    );
+
+    if (!firstParagraph || !firstParagraph.content) {
+      return '';
+    }
+
+    // Extract text from all text nodes in the paragraph
+    const text = firstParagraph.content
+      .filter((node: any) => node.type === 'text')
+      .map((node: any) => node.text || '')
+      .join('');
+
+    return text;
+  };
+
   const truncateExcerpt = (text: string, maxLength: number = 280) => {
     if (text.length <= maxLength) return text;
     return text.slice(0, maxLength).trim() + '...';
   };
+
+  const excerptText = extractFirstParagraph(post.content);
 
   return (
     <article className="block bg-white border border-gray-100 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-gray-200 group">
@@ -64,7 +89,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
           )}
 
           <div className="flex-1 flex flex-col justify-between">
-            {post.excerpt && (
+            {excerptText && (
               <p
                 className="text-gray-700 mb-4"
                 style={{
@@ -74,7 +99,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
                   lineHeight: designTokens.typography.lineHeights.body,
                 }}
               >
-                {truncateExcerpt(post.excerpt)}
+                {truncateExcerpt(excerptText)}
               </p>
             )}
 
