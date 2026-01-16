@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { BlogPost } from '../utils/blogLoader';
@@ -9,6 +9,21 @@ interface BlogPostCardProps {
 }
 
 const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
+  // State to track if the screen is mobile size
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // Effect to listen for window resize events
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    
+    // Cleanup listener on unmount
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -40,12 +55,15 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
     return text;
   };
 
-  const truncateExcerpt = (text: string, maxLength: number = 280) => {
+  const truncateExcerpt = (text: string, maxLength: number) => {
     if (text.length <= maxLength) return text;
     return text.slice(0, maxLength).trim() + '...';
   };
 
   const excerptText = extractFirstParagraph(post.content);
+  
+  // Dynamic limit: 120 chars for mobile, 280 for desktop
+  const displayExcerpt = truncateExcerpt(excerptText, isMobile ? 120 : 280);
 
   return (
     <article className="block bg-white border border-gray-100 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-gray-200 group">
@@ -89,7 +107,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
           )}
 
           <div className="flex-1 flex flex-col justify-between">
-            {excerptText && (
+            {displayExcerpt && (
               <p
                 className="text-gray-700 mb-4"
                 style={{
@@ -99,7 +117,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
                   lineHeight: designTokens.typography.lineHeights.body,
                 }}
               >
-                {truncateExcerpt(excerptText)}
+                {displayExcerpt}
               </p>
             )}
 
