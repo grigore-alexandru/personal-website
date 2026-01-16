@@ -83,8 +83,7 @@ export function BlogManagementPage() {
       const { error } = await supabase
         .from('posts')
         .update({
-          is_draft: false,
-          published_at: new Date().toISOString()
+          is_draft: false
         })
         .eq('id', postToPublish.id);
 
@@ -93,7 +92,7 @@ export function BlogManagementPage() {
       setPosts((prevPosts) =>
         prevPosts.map((post) =>
           post.id === postToPublish.id
-            ? { ...post, isDraft: false, publishedAt: new Date().toISOString() }
+            ? { ...post, isDraft: false }
             : post
         )
       );
@@ -225,12 +224,12 @@ export function BlogManagementPage() {
       {publishModalOpen && postToPublish && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold text-black mb-2">Publish Post</h3>
+            <h3 className="text-xl font-bold text-black mb-2">Make Post Public</h3>
             <p className="text-gray-600 mb-4">
-              Are you sure you want to publish "{postToPublish.title}"?
+              Are you sure you want to make "{postToPublish.title}" visible to the public?
             </p>
             <p className="text-sm text-gray-500 mb-6">
-              This will set the published date to now and make the post visible to the public.
+              This will keep the original publication date and make the post publicly visible.
             </p>
             <div className="flex gap-3">
               <button
@@ -246,7 +245,7 @@ export function BlogManagementPage() {
                 onClick={confirmPublish}
                 className="flex-1 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-medium"
               >
-                Publish
+                Make Public
               </button>
             </div>
           </div>

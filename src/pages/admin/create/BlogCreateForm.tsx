@@ -96,12 +96,13 @@ export function BlogCreateForm({ mode = 'create' }: BlogCreateFormProps) {
     try {
       const result = await loadPostForEdit(id);
       if (result.success && result.data) {
-        setFormData(result.data);
-
         if (mode === 'republish') {
           const newSlug = `${result.data.slug}-${Date.now()}`;
-          setFormData(prev => ({ ...prev, slug: newSlug }));
+          const updatedTitle = `${result.data.title} (updated)`;
+          setFormData({ ...result.data, slug: newSlug, title: updatedTitle });
           showToast('info', 'Creating a republish copy. Update the slug and title as needed.');
+        } else {
+          setFormData(result.data);
         }
       } else {
         showToast('error', result.error || 'Failed to load post');
@@ -275,7 +276,10 @@ export function BlogCreateForm({ mode = 'create' }: BlogCreateFormProps) {
       }
 
       if (result.success) {
-        const successMessage = mode === 'edit' ? 'Post updated successfully' : 'Post published successfully';
+        const successMessage =
+          mode === 'edit' ? 'Post updated successfully' :
+          mode === 'republish' ? 'Post republished successfully' :
+          'Post published successfully';
         showToast('success', successMessage);
         setHasUnsavedChanges(false);
         removeDraft(DRAFT_KEY);
@@ -299,22 +303,9 @@ export function BlogCreateForm({ mode = 'create' }: BlogCreateFormProps) {
   };
 
   const handleDiscard = () => {
-    setFormData({
-      title: '',
-      slug: '',
-      content: { type: 'doc', content: [] },
-      heroImageLarge: null,
-      heroImageThumbnail: null,
-      hasSources: false,
-      sources: [],
-      hasNotes: false,
-      notesContent: '',
-    });
-    setValidationErrors([]);
-    setHasUnsavedChanges(false);
     removeDraft(DRAFT_KEY);
     setShowDiscardDialog(false);
-    showToast('success', 'Changes discarded');
+    navigate('/admin/blog');
   };
 
   const getPageTitle = () => {
@@ -564,7 +555,7 @@ export function BlogCreateForm({ mode = 'create' }: BlogCreateFormProps) {
             loading={isSubmitting}
             disabled={isSubmitting}
           >
-            {mode === 'edit' ? 'Update' : 'Publish'}
+            {mode === 'edit' ? 'Update' : mode === 'republish' ? 'Republish' : 'Publish'}
           </Button>
         </div>
       </div>
@@ -599,7 +590,9 @@ export function BlogCreateForm({ mode = 'create' }: BlogCreateFormProps) {
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
             <h3 className="text-xl font-bold text-black mb-2">Discard Changes?</h3>
             <p className="text-neutral-600 mb-6">
-              Are you sure you want to discard all changes? This action cannot be undone.
+              {mode === 'edit'
+                ? 'Are you sure you want to discard all changes? Your original post will remain unchanged.'
+                : 'Are you sure you want to discard all changes? No post will be created.'}
             </p>
             <div className="flex items-center justify-end gap-3">
               <Button
