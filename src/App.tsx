@@ -7,6 +7,9 @@ import ProjectDetailPage from './pages/ProjectDetailPage';
 import BlogListPage from './pages/BlogListPage';
 import BlogPostPage from './pages/BlogPostPage';
 import AdminLoginPage from './pages/admin/AdminLoginPage';
+import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
+import { PortfolioManagementPage } from './pages/admin/PortfolioManagementPage';
+import { BlogManagementPage } from './pages/admin/BlogManagementPage';
 import { BlogCreateForm } from './pages/admin/create/BlogCreateForm';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import PublicLayout from './components/PublicLayout';
@@ -40,7 +43,23 @@ function App() {
           path="/admin"
           element={
             <ProtectedRoute>
-              <Navigate to="/admin/blog/create" replace />
+              <AdminDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/portfolio"
+          element={
+            <ProtectedRoute>
+              <PortfolioManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/blog"
+          element={
+            <ProtectedRoute>
+              <BlogManagementPage />
             </ProtectedRoute>
           }
         />
