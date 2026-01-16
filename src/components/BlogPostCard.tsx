@@ -91,7 +91,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
           <div className="flex-1 flex flex-col justify-between">
             {excerptText && (
               <p
-                className="text-gray-700 mb-4"
+                className="text-gray-400 mb-4"
                 style={{
                   fontSize: designTokens.typography.sizes.sm,
                   fontFamily: designTokens.typography.fontFamily,
