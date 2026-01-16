@@ -11,28 +11,39 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'short', // 'Apr' instead of 'April' matches the reference style better
+      month: 'short',
       day: 'numeric',
     });
   };
 
-  const truncateExcerpt = (text: string, maxLength: number = 240) => {
-    if (text.length <= maxLength) return text;
-    return text.slice(0, maxLength).trim() + '..';
+  // FIX: Extract text from the first 'body' block if excerpt is missing
+  const getExcerpt = () => {
+    if (post.excerpt) return post.excerpt;
+    // Find the first block that is a paragraph
+    const firstParagraph = post.content?.find(block => block.type === 'body');
+    return firstParagraph?.data.text || '';
   };
+
+  const truncateExcerpt = (text: string, maxLength: number = 240) => {
+    if (!text) return '';
+    if (text.length <= maxLength) return text;
+    return text.slice(0, maxLength).trim() + '...';
+  };
+
+  const excerptText = truncateExcerpt(getExcerpt());
 
   return (
     <article className="block bg-white mb-12 last:mb-0">
       {/* 1. Header Section: Title & Metadata */}
       <div className="mb-6">
-        <Link to={`/blog/${post.slug}`} className="block group">
+        <Link to={`/blog/${post.slug}`} className="block">
           <h2
             className="text-black mb-2"
             style={{
-              fontSize: '2rem', // Increased size for that editorial look
-              fontFamily: 'serif', // Ensure this maps to your serif token
-              fontWeight: designTokens.typography.weights.regular,
-              lineHeight: '1.2',
+              fontSize: designTokens.typography.sizes.xl, // Restored token
+              fontFamily: designTokens.typography.fontFamily, // Restored token
+              fontWeight: designTokens.typography.weights.bold, // Restored token
+              lineHeight: designTokens.typography.lineHeights.heading,
               letterSpacing: '-0.01em',
             }}
           >
@@ -43,7 +54,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
         <p
           className="text-gray-500 uppercase tracking-wide"
           style={{
-            fontSize: '0.75rem', // Smaller, distinct metadata style
+            fontSize: designTokens.typography.sizes.xs,
             fontFamily: designTokens.typography.fontFamily,
             fontWeight: designTokens.typography.weights.medium,
           }}
@@ -56,11 +67,11 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
       <div className="flex flex-col md:flex-row gap-8 items-start">
         
         {/* Left Column: Image */}
-        {post.heroImageThumbnail ? (
+        {post.heroImageUrl || post.heroImageThumbnail ? (
           <Link to={`/blog/${post.slug}`} className="w-full md:w-1/2 block flex-shrink-0">
             <div className="relative w-full aspect-[4/3] bg-gray-100 overflow-hidden">
               <img
-                src={post.heroImageThumbnail}
+                src={post.heroImageThumbnail || post.heroImageUrl}
                 alt={post.title}
                 className="absolute inset-0 w-full h-full object-cover" 
               />
@@ -76,10 +87,10 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
               fontSize: designTokens.typography.sizes.sm,
               fontFamily: designTokens.typography.fontFamily,
               fontWeight: designTokens.typography.weights.regular,
-              lineHeight: '1.6',
+              lineHeight: designTokens.typography.lineHeights.body,
             }}
           >
-            {truncateExcerpt(post.excerpt || '')}
+            {excerptText}
           </p>
 
           <div>
@@ -87,10 +98,10 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
               to={`/blog/${post.slug}`}
               className="inline-block px-8 py-3 bg-gray-600 text-white hover:bg-gray-800 transition-colors duration-200"
               style={{
-                fontSize: '0.875rem',
+                fontSize: designTokens.typography.sizes.sm,
                 fontFamily: designTokens.typography.fontFamily,
                 fontWeight: designTokens.typography.weights.medium,
-                borderRadius: '0', // Square corners like the reference
+                borderRadius: '0', // Square corners like image
               }}
             >
               Read More
