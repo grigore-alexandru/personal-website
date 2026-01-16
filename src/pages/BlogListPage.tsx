@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Calendar } from 'lucide-react';
 import { BlogPost, loadAllPosts } from '../utils/blogLoader';
 import BlogPostCard from '../components/BlogPostCard';
+import CustomDropdown from '../components/forms/CustomDropdown';
 import { designTokens } from '../styles/tokens';
 
 type DateFilter = 'all' | 'week' | 'month' | 'year';
@@ -94,26 +95,18 @@ const BlogListPage: React.FC = () => {
             />
           </div>
 
-          <div className="relative flex-shrink-0">
-            <select
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value as DateFilter)}
-              className="appearance-none pl-10 pr-8 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent bg-white cursor-pointer"
-              style={{
-                fontFamily: designTokens.typography.fontFamily,
-                fontSize: designTokens.typography.sizes.sm,
-              }}
-            >
-              <option value="all">All Time</option>
-              <option value="week">Past Week</option>
-              <option value="month">Past Month</option>
-              <option value="year">Past Year</option>
-            </select>
-            <Calendar
-              size={20}
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
-            />
-          </div>
+          <CustomDropdown
+            options={[
+              { value: 'all', label: 'All Time' },
+              { value: 'week', label: 'Past Week' },
+              { value: 'month', label: 'Past Month' },
+              { value: 'year', label: 'Past Year' },
+            ]}
+            value={dateFilter}
+            onChange={(val) => setDateFilter(val as DateFilter)}
+            icon={<Calendar size={18} className="text-gray-400" />}
+            className="sm:w-48"
+          />
         </div>
 
         {hasActiveFilters && (
