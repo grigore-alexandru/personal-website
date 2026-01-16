@@ -105,7 +105,7 @@ export function HeroImageUpload({
     <div className="space-y-3">
       <label className="block text-sm font-medium text-neutral-200">
         Hero Image
-        <span className="ml-1 text-xs text-neutral-400">(Required for published posts)</span>
+        <span className="ml-1 text-xs text-neutral-400">(Optional)</span>
       </label>
 
       {!hasImage && !previewUrl ? (

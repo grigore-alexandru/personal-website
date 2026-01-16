@@ -79,10 +79,6 @@ export async function validateBlogForm(
     if (!data.content || !hasContentInTipTap(data.content)) {
       errors.push({ field: 'content', message: 'Blog post content is required' });
     }
-
-    if (!data.heroImageLarge || !data.heroImageThumbnail) {
-      errors.push({ field: 'heroImage', message: 'Hero image is required for published posts' });
-    }
   }
 
   if (data.hasSources) {
