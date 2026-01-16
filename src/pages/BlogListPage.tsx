@@ -74,81 +74,62 @@ const BlogListPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <section
-        className="pt-20 pb-16 bg-gradient-to-b from-gray-50 to-white"
-      >
-        <div className="max-w-screen-xl mx-auto px-6 text-center">
-          <h1
-            className="text-black font-bold mb-4"
-            style={{
-              fontSize: designTokens.typography.sizes.xxl,
-              fontFamily: designTokens.typography.fontFamily,
-              fontWeight: designTokens.typography.weights.bold,
-              lineHeight: designTokens.typography.lineHeights.heading,
-              letterSpacing: '-0.02em',
-            }}
-          >
-            Blog
-          </h1>
+      <section className="max-w-4xl mx-auto px-6 pt-24 pb-8">
+        <div className="flex flex-col sm:flex-row gap-3 mb-8">
+          <div className="relative flex-1 flex items-center">
+            <Search
+              size={20}
+              className="absolute left-3 text-gray-400"
+            />
+            <input
+              type="text"
+              placeholder="Search posts, topics, or tags..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+              style={{
+                fontFamily: designTokens.typography.fontFamily,
+                fontSize: designTokens.typography.sizes.sm,
+              }}
+            />
+          </div>
 
-          <div className="max-w-2xl mx-auto mb-8">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1 flex items-center">
-                <Search
-                  size={20}
-                  className="absolute left-3 text-gray-400"
-                />
-                <input
-                  type="text"
-                  placeholder="Search posts, topics, or tags..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                  style={{
-                    fontFamily: designTokens.typography.fontFamily,
-                    fontSize: designTokens.typography.sizes.sm,
-                  }}
-                />
-              </div>
-
-              <div className="relative flex-shrink-0">
-                <select
-                  value={dateFilter}
-                  onChange={(e) => setDateFilter(e.target.value as DateFilter)}
-                  className="appearance-none pl-10 pr-8 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent bg-white cursor-pointer"
-                  style={{
-                    fontFamily: designTokens.typography.fontFamily,
-                    fontSize: designTokens.typography.sizes.sm,
-                  }}
-                >
-                  <option value="all">All Time</option>
-                  <option value="week">Past Week</option>
-                  <option value="month">Past Month</option>
-                  <option value="year">Past Year</option>
-                </select>
-                <Calendar
-                  size={20}
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
-                />
-              </div>
-            </div>
-
-            {hasActiveFilters && (
-              <div className="mt-4 flex justify-end">
-                <button
-                  onClick={clearFilters}
-                  className="text-sm text-gray-600 hover:text-black underline"
-                  style={{
-                    fontFamily: designTokens.typography.fontFamily,
-                    fontSize: designTokens.typography.sizes.sm,
-                  }}
-                >
-                  Clear filters
-                </button>
-              </div>
-            )}
+          <div className="relative flex-shrink-0">
+            <select
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value as DateFilter)}
+              className="appearance-none pl-10 pr-8 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent bg-white cursor-pointer"
+              style={{
+                fontFamily: designTokens.typography.fontFamily,
+                fontSize: designTokens.typography.sizes.sm,
+              }}
+            >
+              <option value="all">All Time</option>
+              <option value="week">Past Week</option>
+              <option value="month">Past Month</option>
+              <option value="year">Past Year</option>
+            </select>
+            <Calendar
+              size={20}
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
+            />
           </div>
         </div>
+
+        {hasActiveFilters && (
+          <div className="mb-6 flex justify-end">
+            <button
+              onClick={clearFilters}
+              className="text-sm text-gray-600 hover:text-black underline"
+              style={{
+                fontFamily: designTokens.typography.fontFamily,
+                fontSize: designTokens.typography.sizes.sm,
+              }}
+            >
+              Clear filters
+            </button>
+          </div>
+        )}
       </section>
 
       <section className="max-w-4xl mx-auto px-6 pb-16">

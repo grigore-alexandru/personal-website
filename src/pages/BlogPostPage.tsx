@@ -150,6 +150,23 @@ const BlogPostPage: React.FC = () => {
           })}
         </p>
 
+        {/* Hero Image */}
+        {post.heroImageUrl && (
+          <div className="mb-12 md:mb-16">
+            <div className="relative w-full overflow-hidden rounded-lg shadow-sm">
+              <img
+                src={post.heroImageUrl}
+                alt={post.title}
+                className="w-full h-auto object-cover"
+                style={{
+                  maxHeight: '500px',
+                }}
+                loading="lazy"
+              />
+            </div>
+          </div>
+        )}
+
         {/* Content */}
         <div className="mb-12 md:mb-16">
           {renderContent()}
