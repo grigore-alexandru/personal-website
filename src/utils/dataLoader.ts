@@ -75,7 +75,7 @@ export const slugify = (text: string): string => {
 };
 
 export const generateProjectUrl = (project: Project): string => {
-  return `/what-i-do/video-production/${slugify(project.client_name)}/${slugify(project.title)}`;
+  return `/portfolio/${slugify(project.client_name)}/${slugify(project.title)}`;
 };
 
 // Mock data for seeding - keeping for reference

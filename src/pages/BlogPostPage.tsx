@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { loadPost, BlogPost } from '../utils/blogLoader';
-import Header from '../components/Header';
 import { designTokens } from '../styles/tokens';
 import { generateHTML } from '@tiptap/html';
 import StarterKit from '@tiptap/starter-kit';
@@ -44,7 +43,6 @@ const BlogPostPage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-white">
-        <Header showFilter={false} />
         <div className="pt-20 flex items-center justify-center min-h-screen">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
         </div>
@@ -55,15 +53,14 @@ const BlogPostPage: React.FC = () => {
   if (!post) {
     return (
       <div className="min-h-screen bg-white">
-        <Header showFilter={false} />
         <div className="pt-20 flex items-center justify-center min-h-screen">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-black mb-4">Post Not Found</h1>
             <Link
-              to="/"
+              to="/blog"
               className="text-blue-600 hover:text-blue-800 underline"
             >
-              Return to Home
+              Return to Blog
             </Link>
           </div>
         </div>
@@ -113,12 +110,10 @@ const BlogPostPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header showFilter={false} />
-
       {/* Back Button */}
       {showBackButton && (
         <Link
-          to="/"
+          to="/blog"
           className="fixed bottom-8 left-8 z-50 w-12 h-12 bg-black text-white rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors"
         >
           <ArrowLeft size={20} />

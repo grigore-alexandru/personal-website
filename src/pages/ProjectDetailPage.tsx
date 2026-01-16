@@ -3,7 +3,6 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Project } from '../types';
 import { loadProject, loadProjects } from '../utils/dataLoader';
-import Header from '../components/Header';
 import ProjectHero from '../components/ProjectHero';
 import MetaTriplet from '../components/MetaTriplet';
 import StatsPanel from '../components/StatsPanel';
@@ -52,7 +51,6 @@ const ProjectDetailPage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-white">
-        <Header showFilter={false} />
         <div className="pt-20 flex items-center justify-center min-h-screen">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
         </div>
@@ -63,12 +61,11 @@ const ProjectDetailPage: React.FC = () => {
   if (!project) {
     return (
       <div className="min-h-screen bg-white">
-        <Header showFilter={false} />
         <div className="pt-20 flex items-center justify-center min-h-screen">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-black mb-4">Project Not Found</h1>
-            <Link 
-              to="/what-i-do/video-production/"
+            <Link
+              to="/portfolio"
               className="text-blue-600 hover:text-blue-800 underline"
             >
               Return to Portfolio
@@ -85,12 +82,10 @@ const ProjectDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header showFilter={false} projectTitle={project.title} />
-      
       {/* Back Button */}
       {showBackButton && (
         <Link
-          to="/what-i-do/video-production/"
+          to="/portfolio"
           className="fixed bottom-8 left-8 z-50 w-12 h-12 bg-black text-white rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors"
         >
           <ArrowLeft size={20} />
@@ -184,7 +179,7 @@ const ProjectDetailPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
             {prevProject ? (
               <Link
-                to={`/what-i-do/video-production/${prevProject.client_name.toLowerCase().replace(/\s+/g, '-')}/${prevProject.title.toLowerCase().replace(/\s+/g, '-')}`}
+                to={`/portfolio/${prevProject.client_name.toLowerCase().replace(/\s+/g, '-')}/${prevProject.title.toLowerCase().replace(/\s+/g, '-')}`}
                 className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors"
               >
                 <ArrowLeft size={20} />
@@ -193,7 +188,7 @@ const ProjectDetailPage: React.FC = () => {
             ) : <div />}
 
             <Link
-              to="/what-i-do/video-production/"
+              to="/portfolio"
               className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
             >
               View All Projects
@@ -201,7 +196,7 @@ const ProjectDetailPage: React.FC = () => {
 
             {nextProject ? (
               <Link
-                to={`/what-i-do/video-production/${nextProject.client_name.toLowerCase().replace(/\s+/g, '-')}/${nextProject.title.toLowerCase().replace(/\s+/g, '-')}`}
+                to={`/portfolio/${nextProject.client_name.toLowerCase().replace(/\s+/g, '-')}/${nextProject.title.toLowerCase().replace(/\s+/g, '-')}`}
                 className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors"
               >
                 <span>Next Project</span>

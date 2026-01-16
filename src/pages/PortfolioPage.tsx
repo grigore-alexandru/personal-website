@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Search, Filter as FilterIcon } from 'lucide-react';
 import { Project, Filter } from '../types';
 import { loadProjects } from '../utils/dataLoader';
-import Header from '../components/Header';
 import FilterBar from '../components/FilterBar';
 import MasonryGrid from '../components/MasonryGrid';
 import { designTokens } from '../styles/tokens';
@@ -81,18 +80,16 @@ const PortfolioPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header onFilterToggle={handleFilterToggle} showFilter={true} />
-      
-      <FilterBar 
+      <FilterBar
         filters={filters}
         onFilterChange={handleFilterChange}
         isVisible={showFilter}
       />
 
       {/* Hero Section */}
-      <section 
+      <section
         className="pt-20 pb-16 bg-gradient-to-b from-gray-50 to-white"
-        style={{ paddingTop: showFilter ? '160px' : '80px' }}
+        style={{ paddingTop: showFilter ? '80px' : '0px' }}
       >
         <div className="max-w-screen-xl mx-auto px-6 text-center">
           <h1 

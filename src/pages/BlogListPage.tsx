@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Calendar } from 'lucide-react';
 import { BlogPost, loadAllPosts } from '../utils/blogLoader';
-import Header from '../components/Header';
 import BlogPostCard from '../components/BlogPostCard';
 import { designTokens } from '../styles/tokens';
 
@@ -75,8 +74,6 @@ const BlogListPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header showFilter={false} />
-
       <section
         className="pt-20 pb-16 bg-gradient-to-b from-gray-50 to-white"
       >
