@@ -6,6 +6,8 @@ export interface BlogPostData {
   title: string;
   slug: string;
   content: TipTapContent;
+  heroImageLarge?: string | null;
+  heroImageThumbnail?: string | null;
   hasSources: boolean;
   sources: Source[];
   hasNotes: boolean;
@@ -30,6 +32,8 @@ export async function saveBlogPost(
       title: data.title || (isDraft ? 'Untitled Draft' : ''),
       slug: data.slug || (isDraft ? `draft-${Date.now()}` : ''),
       content: data.content,
+      hero_image_large: data.heroImageLarge || null,
+      hero_image_thumbnail: data.heroImageThumbnail || null,
       has_sources: data.hasSources,
       sources_data: data.hasSources ? data.sources : [],
       has_notes: data.hasNotes,
@@ -78,6 +82,8 @@ export async function updateBlogPost(
       title: data.title,
       slug: data.slug,
       content: data.content,
+      hero_image_large: data.heroImageLarge || null,
+      hero_image_thumbnail: data.heroImageThumbnail || null,
       has_sources: data.hasSources,
       sources_data: data.hasSources ? data.sources : [],
       has_notes: data.hasNotes,

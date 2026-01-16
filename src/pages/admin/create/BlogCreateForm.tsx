@@ -9,6 +9,7 @@ import { ToastContainer } from '../../../components/ui/Toast';
 import { RichTextEditor } from '../../../components/forms/RichTextEditor';
 import { SourcesEditor } from '../../../components/forms/SourcesEditor';
 import { NotesEditor } from '../../../components/forms/NotesEditor';
+import { HeroImageUpload } from '../../../components/forms/HeroImageUpload';
 import { BlogPostPreview } from '../../../components/admin/BlogPostPreview';
 import { useToast } from '../../../hooks/useToast';
 import { slugify } from '../../../utils/slugify';
@@ -22,6 +23,8 @@ interface BlogFormData {
   title: string;
   slug: string;
   content: TipTapContent;
+  heroImageLarge: string | null;
+  heroImageThumbnail: string | null;
   hasSources: boolean;
   sources: Source[];
   hasNotes: boolean;
@@ -44,6 +47,8 @@ export function BlogCreateForm() {
     title: '',
     slug: '',
     content: { type: 'doc', content: [] },
+    heroImageLarge: null,
+    heroImageThumbnail: null,
     hasSources: false,
     sources: [],
     hasNotes: false,
@@ -151,6 +156,18 @@ export function BlogCreateForm() {
     handleChange('hasSources', enabled);
   };
 
+  const handleHeroImageUpload = (largeUrl: string, thumbnailUrl: string) => {
+    handleChange('heroImageLarge', largeUrl);
+    handleChange('heroImageThumbnail', thumbnailUrl);
+    showToast('success', 'Hero image uploaded successfully');
+  };
+
+  const handleHeroImageRemove = () => {
+    handleChange('heroImageLarge', null);
+    handleChange('heroImageThumbnail', null);
+    showToast('info', 'Hero image removed');
+  };
+
   const handleSaveDraft = async () => {
     setIsSubmitting(true);
 
@@ -160,6 +177,8 @@ export function BlogCreateForm() {
           title: formData.title,
           slug: formData.slug,
           content: formData.content,
+          heroImageLarge: formData.heroImageLarge,
+          heroImageThumbnail: formData.heroImageThumbnail,
           hasSources: formData.hasSources,
           sources: formData.sources,
           hasNotes: formData.hasNotes,
@@ -191,6 +210,8 @@ export function BlogCreateForm() {
       title: formData.title,
       slug: formData.slug,
       content: formData.content,
+      heroImageLarge: formData.heroImageLarge,
+      heroImageThumbnail: formData.heroImageThumbnail,
       hasSources: formData.hasSources,
       sources: formData.sources,
       hasNotes: formData.hasNotes,
@@ -219,6 +240,8 @@ export function BlogCreateForm() {
           title: formData.title,
           slug: formData.slug,
           content: formData.content,
+          heroImageLarge: formData.heroImageLarge,
+          heroImageThumbnail: formData.heroImageThumbnail,
           hasSources: formData.hasSources,
           sources: formData.sources,
           hasNotes: formData.hasNotes,
@@ -255,6 +278,8 @@ export function BlogCreateForm() {
       title: '',
       slug: '',
       content: { type: 'doc', content: [] },
+      heroImageLarge: null,
+      heroImageThumbnail: null,
       hasSources: false,
       sources: [],
       hasNotes: false,
@@ -334,6 +359,21 @@ export function BlogCreateForm() {
                 Generate
               </Button>
             </div>
+          </div>
+
+          <div>
+            <HeroImageUpload
+              onUploadComplete={handleHeroImageUpload}
+              onRemove={handleHeroImageRemove}
+              largeUrl={formData.heroImageLarge}
+              thumbnailUrl={formData.heroImageThumbnail}
+              disabled={isSubmitting}
+            />
+            {validationErrors.find(e => e.field === 'heroImage') && (
+              <p className="text-sm text-red-600 mt-2">
+                {validationErrors.find(e => e.field === 'heroImage')?.message}
+              </p>
+            )}
           </div>
         </div>
       </div>

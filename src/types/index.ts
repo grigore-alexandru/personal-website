@@ -56,6 +56,8 @@ export interface BlogFormData {
   content: TipTapContent;
   excerpt: string;
   tags: string[];
+  heroImageLarge: string | null;
+  heroImageThumbnail: string | null;
   hasSources: boolean;
   sources: Source[];
   hasNotes: boolean;

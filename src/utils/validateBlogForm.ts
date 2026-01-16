@@ -6,6 +6,8 @@ export interface BlogFormValidationData {
   title: string;
   slug: string;
   content: TipTapContent;
+  heroImageLarge?: string | null;
+  heroImageThumbnail?: string | null;
   hasSources: boolean;
   sources: Source[];
   hasNotes: boolean;
@@ -76,6 +78,10 @@ export async function validateBlogForm(
 
     if (!data.content || !hasContentInTipTap(data.content)) {
       errors.push({ field: 'content', message: 'Blog post content is required' });
+    }
+
+    if (!data.heroImageLarge || !data.heroImageThumbnail) {
+      errors.push({ field: 'heroImage', message: 'Hero image is required for published posts' });
     }
   }
 

@@ -12,6 +12,8 @@ export interface BlogPost {
   content: any;
   excerpt: string;
   tags: string[];
+  heroImageLarge: string | null;
+  heroImageThumbnail: string | null;
   hasSources: boolean;
   sourcesData: Source[];
   hasNotes: boolean;
@@ -40,6 +42,8 @@ export const loadPost = async (slug: string): Promise<BlogPost | null> => {
     content: data.content,
     excerpt: data.excerpt || '',
     tags: data.tags || [],
+    heroImageLarge: data.hero_image_large,
+    heroImageThumbnail: data.hero_image_thumbnail,
     hasSources: data.has_sources,
     sourcesData: data.sources_data as Source[],
     hasNotes: data.has_notes,
@@ -69,6 +73,8 @@ export const loadAllPosts = async (): Promise<BlogPost[]> => {
     content: post.content,
     excerpt: post.excerpt || '',
     tags: post.tags || [],
+    heroImageLarge: post.hero_image_large,
+    heroImageThumbnail: post.hero_image_thumbnail,
     hasSources: post.has_sources,
     sourcesData: post.sources_data as Source[],
     hasNotes: post.has_notes,

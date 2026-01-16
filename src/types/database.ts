@@ -97,6 +97,8 @@ export interface Database {
           content: any;
           excerpt: string;
           tags: string[];
+          hero_image_large: string | null;
+          hero_image_thumbnail: string | null;
           has_sources: boolean;
           sources_data: Array<{
             title: string;
@@ -116,6 +118,8 @@ export interface Database {
           content?: any;
           excerpt?: string;
           tags?: string[];
+          hero_image_large?: string | null;
+          hero_image_thumbnail?: string | null;
           has_sources?: boolean;
           sources_data?: Array<{
             title: string;
@@ -135,6 +139,8 @@ export interface Database {
           content?: any;
           excerpt?: string;
           tags?: string[];
+          hero_image_large?: string | null;
+          hero_image_thumbnail?: string | null;
           has_sources?: boolean;
           sources_data?: Array<{
             title: string;
