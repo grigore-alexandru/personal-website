@@ -23,21 +23,32 @@ export function BlogPostPreview({
   hasNotes,
   notesContent,
 }: BlogPostPreviewProps) {
-  const html = generateHTML(content, [
-    StarterKit.configure({
-      heading: {
-        levels: [2],
-      },
-    }),
-    Image,
-    Link.configure({
-      openOnClick: false,
-      HTMLAttributes: {
-        target: '_blank',
-        rel: 'noopener noreferrer',
-      },
-    }),
-  ]);
+  let html = '';
+
+  try {
+    const validContent = content && typeof content === 'object' && content.type === 'doc'
+      ? content
+      : { type: 'doc', content: [] };
+
+    html = generateHTML(validContent, [
+      StarterKit.configure({
+        heading: {
+          levels: [2],
+        },
+      }),
+      Image,
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          target: '_blank',
+          rel: 'noopener noreferrer',
+        },
+      }),
+    ]);
+  } catch (error) {
+    console.error('Error generating HTML from content:', error);
+    html = '<p class="text-neutral-500 italic">Unable to render content preview</p>';
+  }
 
   const renderNotesContent = (content: string) => {
     return content

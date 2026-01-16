@@ -6,12 +6,13 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Typography from '@tiptap/extension-typography';
 import { Bold, Italic, List, ListOrdered, Heading2, ImagePlus, Link2, Unlink, Loader2 } from 'lucide-react';
 import { designTokens } from '../../styles/tokens';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { uploadImageToSupabase, validateImageFile } from '../../utils/imageUpload';
+import { TipTapContent } from '../../types';
 
 interface RichTextEditorProps {
-  content: string;
-  onChange: (content: string) => void;
+  content: TipTapContent;
+  onChange: (content: TipTapContent) => void;
   placeholder?: string;
 }
 
@@ -46,9 +47,9 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
       }),
       Typography,
     ],
-    content,
+    content: content,
     onUpdate: ({ editor }) => {
-      onChange(editor.getJSON() as any);
+      onChange(editor.getJSON() as TipTapContent);
     },
     editorProps: {
       attributes: {
@@ -56,6 +57,15 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
       },
     },
   });
+
+  useEffect(() => {
+    if (editor && content) {
+      const currentContent = editor.getJSON();
+      if (JSON.stringify(currentContent) !== JSON.stringify(content)) {
+        editor.commands.setContent(content);
+      }
+    }
+  }, [content, editor]);
 
   if (!editor) {
     return null;

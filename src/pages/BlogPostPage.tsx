@@ -74,28 +74,41 @@ const BlogPostPage: React.FC = () => {
   const renderContent = () => {
     if (!post?.content) return null;
 
-    const html = generateHTML(post.content, [
-      StarterKit.configure({
-        heading: {
-          levels: [2],
-        },
-      }),
-      Image,
-      LinkExtension.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          target: '_blank',
-          rel: 'noopener noreferrer',
-        },
-      }),
-    ]);
+    try {
+      const validContent = post.content && typeof post.content === 'object' && post.content.type === 'doc'
+        ? post.content
+        : { type: 'doc', content: [] };
 
-    return (
-      <div
-        className="prose prose-lg max-w-none"
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
-    );
+      const html = generateHTML(validContent, [
+        StarterKit.configure({
+          heading: {
+            levels: [2],
+          },
+        }),
+        Image,
+        LinkExtension.configure({
+          openOnClick: false,
+          HTMLAttributes: {
+            target: '_blank',
+            rel: 'noopener noreferrer',
+          },
+        }),
+      ]);
+
+      return (
+        <div
+          className="prose prose-lg max-w-none"
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      );
+    } catch (error) {
+      console.error('Error rendering content:', error);
+      return (
+        <div className="text-neutral-500 italic">
+          <p>Unable to render content</p>
+        </div>
+      );
+    }
   };
 
   return (

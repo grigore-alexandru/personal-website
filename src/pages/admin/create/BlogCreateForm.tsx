@@ -400,7 +400,7 @@ export function BlogCreateForm() {
           </p>
         )}
         <RichTextEditor
-          content={JSON.stringify(formData.content)}
+          content={formData.content}
           onChange={(content) => handleChange('content', content)}
           placeholder="Start writing your blog post..."
         />
