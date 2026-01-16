@@ -66,9 +66,9 @@ section {
 }
 
 /* Focus Styles */
-*:focus {
-  outline: 2px solid #000;
-  outline-offset: 2px;
+button:focus,
+a:focus {
+  outline: none;
 }
 
 /* Custom Scrollbar */

@@ -31,7 +31,7 @@ export function Button({
         px-6 py-3 rounded-lg font-medium transition-all
         flex items-center justify-center gap-2
         disabled:cursor-not-allowed
-        focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2
+        focus:outline-none
         ${variantStyles[variant]}
         ${className}
       `}
