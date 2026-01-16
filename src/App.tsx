@@ -67,17 +67,23 @@ function App() {
           path="/admin/blog/create"
           element={
             <ProtectedRoute>
-              <BlogCreateForm />
+              <BlogCreateForm mode="create" />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/admin/blog/edit/:id"
+          path="/admin/blog/edit/:postId"
           element={
             <ProtectedRoute>
-              <div className="min-h-screen flex items-center justify-center bg-white">
-                <p className="text-lg text-neutral-600">Blog Edit Form (Coming in Future Phase)</p>
-              </div>
+              <BlogCreateForm mode="edit" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/blog/republish/:postId"
+          element={
+            <ProtectedRoute>
+              <BlogCreateForm mode="republish" />
             </ProtectedRoute>
           }
         />

@@ -49,7 +49,8 @@ function hasContentInTipTap(content: TipTapContent): boolean {
 
 export async function validateBlogForm(
   data: BlogFormValidationData,
-  isDraft: boolean = false
+  isDraft: boolean = false,
+  postId?: string
 ): Promise<ValidationResult> {
   const errors: ValidationError[] = [];
 
@@ -69,7 +70,7 @@ export async function validateBlogForm(
       if (!slugValidation.isValid) {
         errors.push({ field: 'slug', message: slugValidation.error || 'Invalid slug format' });
       } else {
-        const isUnique = await checkSlugUniqueness(data.slug);
+        const isUnique = await checkSlugUniqueness(data.slug, postId);
         if (!isUnique) {
           errors.push({ field: 'slug', message: 'This slug is already in use' });
         }

@@ -120,3 +120,77 @@ export async function updateBlogPost(
     };
   }
 }
+
+export async function deletePost(postId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase.from('posts').delete().eq('id', postId);
+
+    if (error) {
+      console.error('Error deleting post:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to delete post',
+      };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting post:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'An unexpected error occurred',
+    };
+  }
+}
+
+export async function loadPostForEdit(postId: string): Promise<{
+  success: boolean;
+  data?: BlogPostData;
+  error?: string;
+}> {
+  try {
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .eq('id', postId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error loading post:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load post',
+      };
+    }
+
+    if (!data) {
+      return {
+        success: false,
+        error: 'Post not found',
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        title: data.title || '',
+        slug: data.slug || '',
+        content: data.content || { type: 'doc', content: [] },
+        heroImageLarge: data.hero_image_large || null,
+        heroImageThumbnail: data.hero_image_thumbnail || null,
+        hasSources: data.has_sources || false,
+        sources: data.sources_data || [],
+        hasNotes: data.has_notes || false,
+        notesContent: data.notes_content || '',
+        excerpt: data.excerpt || '',
+        tags: data.tags || [],
+      },
+    };
+  } catch (error) {
+    console.error('Error loading post:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'An unexpected error occurred',
+    };
+  }
+}

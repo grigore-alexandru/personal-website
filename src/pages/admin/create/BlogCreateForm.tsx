@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { AdminLayout } from '../../../components/admin/AdminLayout';
 import { FormInput } from '../../../components/forms/FormInput';
 import { FormCheckbox } from '../../../components/forms/FormCheckbox';
@@ -15,9 +15,9 @@ import { useToast } from '../../../hooks/useToast';
 import { slugify } from '../../../utils/slugify';
 import { saveDraft, loadDraft, removeDraft } from '../../../utils/draftStorage';
 import { validateBlogForm, ValidationError } from '../../../utils/validateBlogForm';
-import { saveBlogPost } from '../../../utils/blogService';
+import { saveBlogPost, updateBlogPost, loadPostForEdit } from '../../../utils/blogService';
 import { Source, TipTapContent } from '../../../types';
-import { Sparkles, Save, Trash2, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Sparkles, Save, Trash2, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 
 interface BlogFormData {
   title: string;
@@ -31,17 +31,26 @@ interface BlogFormData {
   notesContent: string;
 }
 
-const DRAFT_KEY = 'new-blog-post';
+type FormMode = 'create' | 'edit' | 'republish';
+
 const AUTO_SAVE_INTERVAL = 30000;
 
 function generateSourceId(): string {
   return `source-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
-export function BlogCreateForm() {
+interface BlogCreateFormProps {
+  mode?: FormMode;
+}
+
+export function BlogCreateForm({ mode = 'create' }: BlogCreateFormProps) {
   const navigate = useNavigate();
+  const { postId } = useParams<{ postId: string }>();
   const { toasts, showToast, closeToast } = useToast();
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [isLoadingPost, setIsLoadingPost] = useState(false);
+
+  const DRAFT_KEY = mode === 'create' ? 'new-blog-post' : `edit-blog-post-${postId}`;
 
   const [formData, setFormData] = useState<BlogFormData>({
     title: '',
@@ -65,12 +74,47 @@ export function BlogCreateForm() {
   const [lastAutoSave, setLastAutoSave] = useState<Date | null>(null);
 
   useEffect(() => {
-    const savedDraft = loadDraft<BlogFormData>(DRAFT_KEY);
-    if (savedDraft) {
-      setSavedDraftData(savedDraft);
-      setShowRecoveryDialog(true);
+    if (mode === 'edit' || mode === 'republish') {
+      if (!postId) {
+        showToast('error', 'Post ID is required');
+        navigate('/admin/blog');
+        return;
+      }
+
+      loadPost(postId);
+    } else {
+      const savedDraft = loadDraft<BlogFormData>(DRAFT_KEY);
+      if (savedDraft) {
+        setSavedDraftData(savedDraft);
+        setShowRecoveryDialog(true);
+      }
     }
-  }, []);
+  }, [postId, mode]);
+
+  const loadPost = async (id: string) => {
+    setIsLoadingPost(true);
+    try {
+      const result = await loadPostForEdit(id);
+      if (result.success && result.data) {
+        setFormData(result.data);
+
+        if (mode === 'republish') {
+          const newSlug = `${result.data.slug}-${Date.now()}`;
+          setFormData(prev => ({ ...prev, slug: newSlug }));
+          showToast('info', 'Creating a republish copy. Update the slug and title as needed.');
+        }
+      } else {
+        showToast('error', result.error || 'Failed to load post');
+        navigate('/admin/blog');
+      }
+    } catch (error) {
+      console.error('Error loading post:', error);
+      showToast('error', 'Failed to load post');
+      navigate('/admin/blog');
+    } finally {
+      setIsLoadingPost(false);
+    }
+  };
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -102,7 +146,7 @@ export function BlogCreateForm() {
       clearInterval(autoSaveTimerRef.current);
     }
 
-    if (hasUnsavedChanges) {
+    if (hasUnsavedChanges && mode === 'create') {
       autoSaveTimerRef.current = setInterval(() => {
         saveDraft(DRAFT_KEY, formData);
         setLastAutoSave(new Date());
@@ -114,7 +158,7 @@ export function BlogCreateForm() {
         clearInterval(autoSaveTimerRef.current);
       }
     };
-  }, [formData, hasUnsavedChanges]);
+  }, [formData, hasUnsavedChanges, mode, DRAFT_KEY]);
 
   const handleRecoverDraft = () => {
     if (savedDraftData) {
@@ -172,27 +216,20 @@ export function BlogCreateForm() {
     setIsSubmitting(true);
 
     try {
-      const result = await saveBlogPost(
-        {
-          title: formData.title,
-          slug: formData.slug,
-          content: formData.content,
-          heroImageLarge: formData.heroImageLarge,
-          heroImageThumbnail: formData.heroImageThumbnail,
-          hasSources: formData.hasSources,
-          sources: formData.sources,
-          hasNotes: formData.hasNotes,
-          notesContent: formData.notesContent,
-        },
-        true
-      );
+      let result;
+
+      if (mode === 'edit' && postId) {
+        result = await updateBlogPost(postId, formData, true);
+      } else {
+        result = await saveBlogPost(formData, true);
+      }
 
       if (result.success) {
         showToast('success', 'Draft saved successfully');
         setHasUnsavedChanges(false);
 
         setTimeout(() => {
-          navigate('/admin');
+          navigate('/admin/blog');
         }, 1500);
       } else {
         showToast('error', result.error || 'Failed to save draft');
@@ -206,17 +243,11 @@ export function BlogCreateForm() {
   };
 
   const handlePublish = async () => {
-    const validation = await validateBlogForm({
-      title: formData.title,
-      slug: formData.slug,
-      content: formData.content,
-      heroImageLarge: formData.heroImageLarge,
-      heroImageThumbnail: formData.heroImageThumbnail,
-      hasSources: formData.hasSources,
-      sources: formData.sources,
-      hasNotes: formData.hasNotes,
-      notesContent: formData.notesContent,
-    }, false);
+    const validation = await validateBlogForm(
+      formData,
+      false,
+      mode === 'edit' ? postId : undefined
+    );
 
     if (!validation.isValid) {
       setValidationErrors(validation.errors);
@@ -235,23 +266,17 @@ export function BlogCreateForm() {
     setIsSubmitting(true);
 
     try {
-      const result = await saveBlogPost(
-        {
-          title: formData.title,
-          slug: formData.slug,
-          content: formData.content,
-          heroImageLarge: formData.heroImageLarge,
-          heroImageThumbnail: formData.heroImageThumbnail,
-          hasSources: formData.hasSources,
-          sources: formData.sources,
-          hasNotes: formData.hasNotes,
-          notesContent: formData.notesContent,
-        },
-        false
-      );
+      let result;
+
+      if (mode === 'edit' && postId) {
+        result = await updateBlogPost(postId, formData, false);
+      } else {
+        result = await saveBlogPost(formData, false);
+      }
 
       if (result.success) {
-        showToast('success', 'Post published successfully');
+        const successMessage = mode === 'edit' ? 'Post updated successfully' : 'Post published successfully';
+        showToast('success', successMessage);
         setHasUnsavedChanges(false);
         removeDraft(DRAFT_KEY);
 
@@ -259,7 +284,7 @@ export function BlogCreateForm() {
           if (result.slug) {
             navigate(`/blog/${result.slug}`);
           } else {
-            navigate('/admin');
+            navigate('/admin/blog');
           }
         }, 1500);
       } else {
@@ -292,6 +317,28 @@ export function BlogCreateForm() {
     showToast('success', 'Changes discarded');
   };
 
+  const getPageTitle = () => {
+    if (mode === 'edit') return 'Edit Post';
+    if (mode === 'republish') return 'Republish Post';
+    return 'Create New Post';
+  };
+
+  const getSectionTitle = () => {
+    if (mode === 'edit') return 'Edit Post';
+    if (mode === 'republish') return 'Republish Post';
+    return 'Create New Post';
+  };
+
+  if (isLoadingPost) {
+    return (
+      <AdminLayout currentSection={getSectionTitle()}>
+        <div className="flex items-center justify-center py-20">
+          <Loader2 size={40} className="text-gray-400 animate-spin" />
+        </div>
+      </AdminLayout>
+    );
+  }
+
   const editorContent = (
     <div className="space-y-8">
       {validationErrors.length > 0 && (
@@ -315,7 +362,7 @@ export function BlogCreateForm() {
       )}
 
       <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-8">
-        <h1 className="text-3xl font-bold text-black mb-8">Create New Post</h1>
+        <h1 className="text-3xl font-bold text-black mb-8">{getPageTitle()}</h1>
 
         <div className="space-y-6">
           <div>
@@ -449,7 +496,7 @@ export function BlogCreateForm() {
   );
 
   return (
-    <AdminLayout currentSection="Create New Post">
+    <AdminLayout currentSection={getSectionTitle()}>
       <ToastContainer toasts={toasts} onClose={closeToast} />
 
       <div className="mb-6 flex items-center justify-between">
@@ -461,7 +508,7 @@ export function BlogCreateForm() {
           >
             {isPreviewMode ? 'Hide Preview' : 'Show Preview'}
           </Button>
-          {lastAutoSave && (
+          {lastAutoSave && mode === 'create' && (
             <span className="text-sm text-neutral-500">
               Last auto-saved: {lastAutoSave.toLocaleTimeString()}
             </span>
@@ -517,7 +564,7 @@ export function BlogCreateForm() {
             loading={isSubmitting}
             disabled={isSubmitting}
           >
-            Publish
+            {mode === 'edit' ? 'Update' : 'Publish'}
           </Button>
         </div>
       </div>
