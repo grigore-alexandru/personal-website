@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Loader2, Trash2, RefreshCw } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { AdminLayout } from '../../components/admin/AdminLayout';
 import { AdminBlogCard } from '../../components/admin/AdminBlogCard';
 import { loadAllPostsForAdmin, BlogPost } from '../../utils/blogLoader';
@@ -13,28 +13,16 @@ export function BlogManagementPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
-  const [menuOpen, setMenuOpen] = useState<string | null>(null);
-  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const [publishModalOpen, setPublishModalOpen] = useState(false);
+  const [postToPublish, setPostToPublish] = useState<{ id: string; title: string } | null>(null);
   const navigate = useNavigate();
   const { showToast } = useToast();
 
   useEffect(() => {
     loadPosts();
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setMenuOpen(null);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const loadPosts = async () => {
@@ -54,7 +42,15 @@ export function BlogManagementPage() {
     navigate(`/admin/blog/edit/${postId}`);
   };
 
-  const handleToggleStatus = async (postId: string, currentIsDraft: boolean) => {
+  const handleToggleStatus = async (postId: string, currentIsDraft: boolean): Promise<void> => {
+    const post = posts.find((p) => p.id === postId);
+
+    if (currentIsDraft && post) {
+      setPostToPublish({ id: postId, title: post.title });
+      setPublishModalOpen(true);
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('posts')
@@ -76,22 +72,44 @@ export function BlogManagementPage() {
     } catch (error) {
       console.error('Error toggling post status:', error);
       showToast('Failed to update post status', 'error');
+      throw error;
     }
   };
 
-  const handleMenuClick = (postId: string, event: React.MouseEvent) => {
-    const rect = (event.target as HTMLElement).getBoundingClientRect();
-    setMenuPosition({
-      top: rect.bottom + window.scrollY,
-      left: rect.left + window.scrollX - 150,
-    });
-    setMenuOpen(menuOpen === postId ? null : postId);
+  const confirmPublish = async () => {
+    if (!postToPublish) return;
+
+    try {
+      const { error } = await supabase
+        .from('posts')
+        .update({
+          is_draft: false,
+          published_at: new Date().toISOString()
+        })
+        .eq('id', postToPublish.id);
+
+      if (error) throw error;
+
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postToPublish.id
+            ? { ...post, isDraft: false, publishedAt: new Date().toISOString() }
+            : post
+        )
+      );
+
+      showToast('Post published successfully!', 'success');
+      setPublishModalOpen(false);
+      setPostToPublish(null);
+    } catch (error) {
+      console.error('Error publishing post:', error);
+      showToast('Failed to publish post', 'error');
+    }
   };
 
   const handleDelete = (postId: string) => {
     setPostToDelete(postId);
     setDeleteModalOpen(true);
-    setMenuOpen(null);
   };
 
   const confirmDelete = async () => {
@@ -117,34 +135,31 @@ export function BlogManagementPage() {
 
   const handleRepublish = (postId: string) => {
     navigate(`/admin/blog/republish/${postId}`);
-    setMenuOpen(null);
   };
-
-  const currentPost = posts.find((p) => p.id === menuOpen);
 
   return (
     <AdminLayout currentSection="Blog Management">
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold text-black mb-2">Blog Posts</h2>
-          <p className="text-neutral-600">Manage your blog posts and drafts</p>
+          <p className="text-gray-600">Manage your blog posts and drafts</p>
         </div>
         <button
           onClick={() => navigate('/admin/blog/create')}
-          className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-neutral-800 transition-colors font-medium"
+          className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-medium"
         >
           <Plus size={20} />
           <span>New Post</span>
         </button>
       </div>
 
-      <div className="mb-6 flex items-center gap-2 border-b border-neutral-200">
+      <div className="mb-6 flex items-center gap-2 border-b border-gray-200">
         <button
           onClick={() => setActiveFilter('all')}
           className={`px-4 py-2 font-medium transition-colors ${
             activeFilter === 'all'
               ? 'text-black border-b-2 border-black'
-              : 'text-neutral-500 hover:text-black'
+              : 'text-gray-500 hover:text-black'
           }`}
         >
           All ({posts.length})
@@ -154,7 +169,7 @@ export function BlogManagementPage() {
           className={`px-4 py-2 font-medium transition-colors ${
             activeFilter === 'published'
               ? 'text-black border-b-2 border-black'
-              : 'text-neutral-500 hover:text-black'
+              : 'text-gray-500 hover:text-black'
           }`}
         >
           Published ({posts.filter((p) => !p.isDraft).length})
@@ -164,7 +179,7 @@ export function BlogManagementPage() {
           className={`px-4 py-2 font-medium transition-colors ${
             activeFilter === 'drafts'
               ? 'text-black border-b-2 border-black'
-              : 'text-neutral-500 hover:text-black'
+              : 'text-gray-500 hover:text-black'
           }`}
         >
           Drafts ({posts.filter((p) => p.isDraft).length})
@@ -173,11 +188,11 @@ export function BlogManagementPage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 size={40} className="text-neutral-400 animate-spin" />
+          <Loader2 size={40} className="text-gray-400 animate-spin" />
         </div>
       ) : filteredPosts.length === 0 ? (
         <div className="text-center py-20">
-          <p className="text-neutral-500 text-lg mb-4">
+          <p className="text-gray-500 text-lg mb-4">
             {activeFilter === 'all'
               ? 'No posts yet'
               : activeFilter === 'published'
@@ -186,52 +201,55 @@ export function BlogManagementPage() {
           </p>
           <button
             onClick={() => navigate('/admin/blog/create')}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-neutral-800 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
           >
             <Plus size={20} />
             <span>Create Your First Post</span>
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6">
           {filteredPosts.map((post) => (
             <AdminBlogCard
               key={post.id}
               post={post}
               onEdit={handleEdit}
               onToggleStatus={handleToggleStatus}
-              onMenuClick={handleMenuClick}
+              onDelete={handleDelete}
+              onRepublish={handleRepublish}
             />
           ))}
         </div>
       )}
 
-      {menuOpen && menuPosition && (
-        <div
-          ref={menuRef}
-          style={{
-            position: 'absolute',
-            top: menuPosition.top,
-            left: menuPosition.left,
-          }}
-          className="bg-white border border-neutral-200 rounded-lg shadow-lg py-1 w-40 z-50"
-        >
-          <button
-            onClick={() => handleDelete(menuOpen)}
-            className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-          >
-            <Trash2 size={16} />
-            Delete
-          </button>
-          {currentPost && !currentPost.isDraft && (
-            <button
-              onClick={() => handleRepublish(menuOpen)}
-              className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50 flex items-center gap-2"
-            >
-              <RefreshCw size={16} />
-              Republish
-            </button>
-          )}
+      {publishModalOpen && postToPublish && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-black mb-2">Publish Post</h3>
+            <p className="text-gray-600 mb-4">
+              Are you sure you want to publish "{postToPublish.title}"?
+            </p>
+            <p className="text-sm text-gray-500 mb-6">
+              This will set the published date to now and make the post visible to the public.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setPublishModalOpen(false);
+                  setPostToPublish(null);
+                }}
+                className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmPublish}
+                className="flex-1 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-medium"
+              >
+                Publish
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -239,14 +257,14 @@ export function BlogManagementPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
             <h3 className="text-xl font-bold text-black mb-2">Delete Post</h3>
-            <p className="text-neutral-600 mb-6">
+            <p className="text-gray-600 mb-6">
               Are you sure you want to delete this post? This action cannot be undone.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteModalOpen(false)}
                 disabled={isDeleting}
-                className="flex-1 px-4 py-2 border border-neutral-200 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors font-medium disabled:opacity-50"
+                className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium disabled:opacity-50"
               >
                 Cancel
               </button>
