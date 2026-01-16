@@ -50,12 +50,12 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
           </p>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-4 mb-4">
-          {post.heroImageUrl && (
+        <div className="flex flex-col md:flex-row gap-4">
+          {post.heroImageThumbnail && (
             <div className="w-full md:w-2/5 flex-shrink-0">
               <div className="relative w-full pt-[60%] bg-gray-100 rounded-lg overflow-hidden">
                 <img
-                  src={post.heroImageUrl}
+                  src={post.heroImageThumbnail}
                   alt={post.title}
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
@@ -63,10 +63,10 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
             </div>
           )}
 
-          <div className="flex-1 flex flex-col justify-center">
+          <div className="flex-1 flex flex-col justify-between">
             {post.excerpt && (
               <p
-                className="text-gray-700"
+                className="text-gray-700 mb-4"
                 style={{
                   fontSize: designTokens.typography.sizes.sm,
                   fontFamily: designTokens.typography.fontFamily,
@@ -77,22 +77,22 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
                 {truncateExcerpt(post.excerpt)}
               </p>
             )}
-          </div>
-        </div>
 
-        <div className="flex items-center justify-end">
-          <Link
-            to={`/blog/${post.slug}`}
-            className="inline-flex items-center gap-2 px-4 py-2 text-black font-medium rounded-lg hover:bg-gray-50 transition-colors duration-200"
-            style={{
-              fontSize: designTokens.typography.sizes.sm,
-              fontFamily: designTokens.typography.fontFamily,
-              fontWeight: designTokens.typography.weights.medium,
-            }}
-          >
-            Read More
-            <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
-          </Link>
+            <div className="flex items-center justify-end">
+              <Link
+                to={`/blog/${post.slug}`}
+                className="inline-flex items-center gap-2 px-4 py-2 text-black font-medium rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                style={{
+                  fontSize: designTokens.typography.sizes.sm,
+                  fontFamily: designTokens.typography.fontFamily,
+                  fontWeight: designTokens.typography.weights.medium,
+                }}
+              >
+                Read More
+                <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </article>

@@ -151,11 +151,11 @@ const BlogPostPage: React.FC = () => {
         </p>
 
         {/* Hero Image */}
-        {post.heroImageUrl && (
+        {post.heroImageLarge && (
           <div className="mb-12 md:mb-16">
             <div className="relative w-full overflow-hidden rounded-lg shadow-sm">
               <img
-                src={post.heroImageUrl}
+                src={post.heroImageLarge}
                 alt={post.title}
                 className="w-full h-auto object-cover"
                 style={{
