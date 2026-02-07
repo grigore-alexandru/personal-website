@@ -21,6 +21,11 @@ export interface Recommendation {
   text: TipTapContent;
 }
 
+export interface ContentThumbnail {
+  thum_image: string;
+  thum_gif: string;
+}
+
 export interface Content {
   id: string;
   type_id: string;
@@ -30,6 +35,7 @@ export interface Content {
   url: string;
   platform: 'youtube' | 'vimeo' | 'mega' | 'instagram' | null;
   format: 'landscape' | 'portrait';
+  thumbnail: ContentThumbnail | null;
   created_at: string;
 }
 

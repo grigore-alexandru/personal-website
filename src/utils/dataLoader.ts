@@ -61,6 +61,7 @@ function mapProjectRow(row: any): Project {
         url: pc.content.url,
         platform: pc.content.platform,
         format: pc.content.format,
+        thumbnail: pc.content.thumbnail ?? null,
         created_at: pc.content.created_at,
       },
     }));
