@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { Search, Film } from 'lucide-react';
 import { Project, Filter, ProjectType } from '../types';
 import { loadProjects } from '../utils/dataLoader';
 import { loadProjectTypes } from '../utils/portfolioService';
+import CustomDropdown from '../components/forms/CustomDropdown';
 import MasonryGrid from '../components/MasonryGrid';
+import { designTokens } from '../styles/tokens';
 
 const PortfolioPage: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState<Filter[]>([
-    { id: 'all', label: 'All', active: true },
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [typeOptions, setTypeOptions] = useState<{ value: string; label: string }[]>([
+    { value: 'all', label: 'All Types' },
   ]);
 
   useEffect(() => {
@@ -26,15 +28,13 @@ const PortfolioPage: React.FC = () => {
         setProjects(projectsData);
         setFilteredProjects(projectsData);
 
-        const typeFilters: Filter[] = [
-          { id: 'all', label: 'All', active: true },
+        setTypeOptions([
+          { value: 'all', label: 'All Types' },
           ...typesData.map((t: ProjectType) => ({
-            id: t.slug,
+            value: t.slug,
             label: t.name,
-            active: false,
           })),
-        ];
-        setFilters(typeFilters);
+        ]);
       } catch (error) {
         console.error('Error loading projects:', error);
       } finally {
@@ -46,7 +46,6 @@ const PortfolioPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const activeFilter = filters.find(f => f.active);
     let filtered = projects;
 
     if (searchQuery.trim()) {
@@ -58,81 +57,72 @@ const PortfolioPage: React.FC = () => {
       );
     }
 
-    if (activeFilter && activeFilter.id !== 'all') {
+    if (typeFilter !== 'all') {
       filtered = filtered.filter(project =>
-        project.project_type.slug === activeFilter.id
+        project.project_type.slug === typeFilter
       );
     }
 
     setFilteredProjects(filtered);
-  }, [filters, projects, searchQuery]);
+  }, [projects, searchQuery, typeFilter]);
 
-  const handleFilterChange = (filterId: string) => {
-    setFilters(prev => prev.map(f => ({ ...f, active: f.id === filterId })));
+  const clearFilters = () => {
+    setSearchQuery('');
+    setTypeFilter('all');
   };
 
-  const activeCount = filteredProjects.length;
+  const hasActiveFilters = searchQuery.trim() !== '' || typeFilter !== 'all';
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="max-w-screen-xl mx-auto px-6 pt-8 pb-6">
-        <div className="flex items-center gap-3 max-w-xl mx-auto">
-          <div className="relative flex-1">
+      <section className="max-w-4xl mx-auto px-6 pt-24 pb-8">
+        <div className="flex flex-col sm:flex-row gap-3 mb-8">
+          <div className="relative flex-1 flex items-center">
             <Search
-              size={18}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none"
+              size={20}
+              className="absolute left-3 text-gray-400"
             />
             <input
               type="text"
-              placeholder="Search projects..."
+              placeholder="Search projects, clients, or types..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-lg text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-300 focus:border-neutral-300 transition-colors"
+              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+              style={{
+                fontFamily: designTokens.typography.fontFamily,
+                fontSize: designTokens.typography.sizes.sm,
+              }}
             />
           </div>
-          <button
-            onClick={() => setShowFilters(prev => !prev)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-              showFilters
-                ? 'bg-neutral-900 text-white'
-                : 'bg-neutral-50 border border-neutral-200 text-neutral-600 hover:bg-neutral-100'
-            }`}
-          >
-            <SlidersHorizontal size={16} />
-            <span className="hidden sm:inline">Filter</span>
-          </button>
+
+          <CustomDropdown
+            options={typeOptions}
+            value={typeFilter}
+            onChange={(val) => setTypeFilter(val)}
+            icon={<Film size={18} className="text-gray-400" />}
+            className="sm:w-48"
+          />
         </div>
 
-        <div
-          className={`overflow-hidden transition-all duration-300 ease-out ${
-            showFilters ? 'max-h-40 opacity-100 mt-4' : 'max-h-0 opacity-0 mt-0'
-          }`}
-        >
-          <div className="flex flex-wrap justify-center gap-2">
-            {filters.map((filter) => (
-              <button
-                key={filter.id}
-                onClick={() => handleFilterChange(filter.id)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-medium tracking-wide transition-all duration-200 ${
-                  filter.active
-                    ? 'bg-neutral-900 text-white'
-                    : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200 hover:text-neutral-700'
-                }`}
-              >
-                {filter.label}
-              </button>
-            ))}
+        {hasActiveFilters && (
+          <div className="mb-6 flex justify-end">
+            <button
+              onClick={clearFilters}
+              className="text-sm text-gray-600 hover:text-black underline"
+              style={{
+                fontFamily: designTokens.typography.fontFamily,
+                fontSize: designTokens.typography.sizes.sm,
+              }}
+            >
+              Clear filters
+            </button>
           </div>
-        </div>
-
-        {!loading && (
-          <p className="text-center text-[11px] text-neutral-400 tracking-widest uppercase mt-4">
-            {activeCount} project{activeCount !== 1 ? 's' : ''}
-          </p>
         )}
-      </div>
+      </section>
 
-      <MasonryGrid projects={filteredProjects} loading={loading} />
+      <section className="pb-16">
+        <MasonryGrid projects={filteredProjects} loading={loading} />
+      </section>
     </div>
   );
 };

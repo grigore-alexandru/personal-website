@@ -2,12 +2,15 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Project } from '../types';
 import { generateProjectUrl } from '../utils/dataLoader';
+import { designTokens } from '../styles/tokens';
 
 interface CardProps {
   project: Project;
 }
 
 const Card: React.FC<CardProps> = ({ project }) => {
+  const year = new Date(project.created_at).getFullYear();
+
   return (
     <Link
       to={generateProjectUrl(project)}
@@ -17,21 +20,44 @@ const Card: React.FC<CardProps> = ({ project }) => {
         <img
           src={project.hero_image_thumbnail}
           alt={project.title}
-          className="w-full h-full object-cover saturate-50 group-hover:saturate-100 group-hover:scale-105 transition-all duration-300 ease-out"
+          className="w-full h-full object-cover saturate-[0.2] group-hover:saturate-100 group-hover:scale-105 transition-all duration-300 ease-out"
           loading="lazy"
         />
       </div>
 
-      <div className="px-1 pt-3 pb-1">
-        <h3 className="text-[15px] font-medium text-neutral-900 leading-snug tracking-[-0.01em]">
+      <div style={{ padding: designTokens.spacing.scale.sm }}>
+        <h3
+          style={{
+            fontFamily: designTokens.typography.fontFamily,
+            fontSize: designTokens.typography.sizes.md,
+            fontWeight: designTokens.typography.weights.bold,
+            lineHeight: designTokens.typography.lineHeights.heading,
+            color: designTokens.colors.textPrimary,
+            marginBottom: '8px',
+          }}
+        >
           {project.title}
         </h3>
-        <p className="text-[13px] text-neutral-400 mt-1 tracking-wide">
-          {project.client_name}
-        </p>
-        <span className="inline-block mt-2 px-2.5 py-0.5 text-[10px] uppercase tracking-[0.08em] font-medium text-neutral-500 bg-neutral-100 rounded-full">
-          {project.project_type.name}
-        </span>
+        <div className="flex items-center justify-between">
+          <span
+            style={{
+              fontFamily: designTokens.typography.fontFamily,
+              fontSize: designTokens.typography.sizes.xs,
+              color: designTokens.colors.textSecondary,
+            }}
+          >
+            {project.client_name}
+          </span>
+          <span
+            style={{
+              fontFamily: designTokens.typography.fontFamily,
+              fontSize: designTokens.typography.sizes.xs,
+              color: designTokens.colors.textSecondary,
+            }}
+          >
+            {project.project_type.name} &middot; {year}
+          </span>
+        </div>
       </div>
     </Link>
   );
