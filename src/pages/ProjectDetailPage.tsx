@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
 import { Project } from '../types';
 import { loadProject, loadProjects } from '../utils/dataLoader';
 import { designTokens } from '../styles/tokens';
@@ -17,7 +16,10 @@ const ProjectDetailPage: React.FC = () => {
   const [project, setProject] = useState<Project | null>(null);
   const [allProjects, setAllProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showBackButton, setShowBackButton] = useState(false);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [slug]);
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -40,15 +42,6 @@ const ProjectDetailPage: React.FC = () => {
 
     fetchProject();
   }, [slug]);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowBackButton(window.scrollY > 100);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   if (loading) {
     return (
@@ -90,15 +83,6 @@ const ProjectDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white pb-20">
-      {showBackButton && (
-        <Link
-          to="/portfolio"
-          className="fixed bottom-20 left-8 z-50 w-12 h-12 bg-black text-white rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors"
-        >
-          <ArrowLeft size={20} />
-        </Link>
-      )}
-
       <ProjectHero
         bgUrl={project.hero_image_large}
         title={project.title}
