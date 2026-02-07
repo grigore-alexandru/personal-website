@@ -3,15 +3,17 @@ import React, { useEffect, useRef, useState } from 'react';
 interface AnimatedNumberProps {
   value: number;
   format: (n: number) => string;
-  duration?: number; // in ms
+  duration?: number;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 const AnimatedNumber: React.FC<AnimatedNumberProps> = ({
   value,
   format,
   duration = 1500,
-  className
+  className,
+  style,
 }) => {
   const [displayValue, setDisplayValue] = useState(0);
   const raf = useRef<number | null>(null);
@@ -37,7 +39,7 @@ const AnimatedNumber: React.FC<AnimatedNumberProps> = ({
     };
   }, [value, duration]);
 
-  return <span className={className}>{format(displayValue)}</span>;
+  return <span className={className} style={style}>{format(displayValue)}</span>;
 };
 
 export default AnimatedNumber;

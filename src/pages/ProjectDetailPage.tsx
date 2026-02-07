@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Project } from '../types';
-import { loadProject, loadProjects, generateProjectUrl, extractTextFromTipTap, parseMetricValue } from '../utils/dataLoader';
-import ProjectHero from '../components/ProjectHero';
-import StatsPanel from '../components/StatsPanel';
-import VideoCarousel from '../components/VideoCarousel';
-import Testimonial from '../components/Testimonial';
+import { loadProject, loadProjects } from '../utils/dataLoader';
 import { designTokens } from '../styles/tokens';
+import ProjectHero from '../components/ProjectHero';
+import ImpactMetrics from '../components/project/ImpactMetrics';
+import TipTapRenderer from '../components/project/TipTapRenderer';
+import MediaCarousel from '../components/project/MediaCarousel';
+import TasksList from '../components/project/TasksList';
+import Recommendation from '../components/project/Recommendation';
+import ProjectNavigation from '../components/project/ProjectNavigation';
 
 const ProjectDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -23,7 +26,7 @@ const ProjectDetailPage: React.FC = () => {
       try {
         const [projectData, projectsData] = await Promise.all([
           loadProject(slug),
-          loadProjects()
+          loadProjects(),
         ]);
 
         setProject(projectData);
@@ -51,7 +54,7 @@ const ProjectDetailPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-white">
         <div className="pt-20 flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black" />
         </div>
       </div>
     );
@@ -65,7 +68,7 @@ const ProjectDetailPage: React.FC = () => {
             <h1 className="text-2xl font-bold text-black mb-4">Project Not Found</h1>
             <Link
               to="/portfolio"
-              className="text-blue-600 hover:text-blue-800 underline"
+              className="text-gray-600 hover:text-black underline"
             >
               Return to Portfolio
             </Link>
@@ -75,25 +78,22 @@ const ProjectDetailPage: React.FC = () => {
     );
   }
 
-  const currentIndex = allProjects.findIndex(p => p.id === project.id);
+  const currentIndex = allProjects.findIndex((p) => p.id === project.id);
   const prevProject = currentIndex > 0 ? allProjects[currentIndex - 1] : null;
-  const nextProject = currentIndex < allProjects.length - 1 ? allProjects[currentIndex + 1] : null;
+  const nextProject =
+    currentIndex < allProjects.length - 1 ? allProjects[currentIndex + 1] : null;
 
-  const contentItems = project.project_content.map(pc => pc.content);
-
-  const views = parseMetricValue(project.impact_metrics?.find(m => m.label === 'Views')?.value);
-  const impressions = parseMetricValue(project.impact_metrics?.find(m => m.label === 'Impressions')?.value);
-  const channelsStr = project.impact_metrics?.find(m => m.label === 'Channels')?.value || '';
-  const channels = channelsStr ? channelsStr.split(', ').filter(Boolean) : [];
-
-  const descriptionText = extractTextFromTipTap(project.description);
+  const hasMetrics = project.impact_metrics && project.impact_metrics.length > 0;
+  const hasContent = project.project_content.length > 0;
+  const hasTasks = project.tasks && project.tasks.length > 0;
+  const hasRecommendation = project.recommendation !== null;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white pb-20">
       {showBackButton && (
         <Link
           to="/portfolio"
-          className="fixed bottom-8 left-8 z-50 w-12 h-12 bg-black text-white rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors"
+          className="fixed bottom-20 left-8 z-50 w-12 h-12 bg-black text-white rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors"
         >
           <ArrowLeft size={20} />
         </Link>
@@ -107,109 +107,88 @@ const ProjectDetailPage: React.FC = () => {
         date={project.created_at}
       />
 
-      <div className="-mt-1">
-        <StatsPanel
-          views={views}
-          channels={channels}
-          impressions={impressions}
-        />
-      </div>
+      {hasMetrics && <ImpactMetrics metrics={project.impact_metrics!} />}
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-12 py-4">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <section className="py-12 md:py-16">
           <h2
-            className="text-black font-bold mb-6 text-center"
+            className="mb-8"
             style={{
-              fontSize: designTokens.typography.sizes.xl,
               fontFamily: designTokens.typography.fontFamily,
+              fontSize: designTokens.typography.sizes.lg,
               fontWeight: designTokens.typography.weights.bold,
               lineHeight: designTokens.typography.lineHeights.heading,
+              color: designTokens.colors.textPrimary,
             }}
           >
             About the Project
           </h2>
-          <p
-            className="text-gray-700 leading-relaxed"
-            style={{
-              fontSize: designTokens.typography.sizes.md,
-              fontFamily: designTokens.typography.fontFamily,
-              fontWeight: designTokens.typography.weights.regular,
-              lineHeight: designTokens.typography.lineHeights.body,
-            }}
-          >
-            {descriptionText}
-          </p>
+          <TipTapRenderer content={project.description} />
         </section>
 
-        {contentItems.length > 0 && (
-          <section className="py-12 md:py-16">
+        {hasContent && (
+          <section className="py-12 md:py-16 border-t border-gray-100">
             <h2
-              className="text-black font-bold mb-6 text-center"
+              className="mb-8"
               style={{
-                fontSize: designTokens.typography.sizes.xl,
                 fontFamily: designTokens.typography.fontFamily,
+                fontSize: designTokens.typography.sizes.lg,
                 fontWeight: designTokens.typography.weights.bold,
                 lineHeight: designTokens.typography.lineHeights.heading,
+                color: designTokens.colors.textPrimary,
               }}
             >
-              Watch the Project
+              Gallery
             </h2>
-            <VideoCarousel items={contentItems} />
+            <MediaCarousel items={project.project_content} />
           </section>
         )}
 
-        {project.recommendation && (
-          <section className="py-12 md:py-16">
+        {hasTasks && (
+          <section className="py-12 md:py-16 border-t border-gray-100">
             <h2
-              className="text-black font-bold mb-6 text-center"
+              className="mb-8"
               style={{
-                fontSize: designTokens.typography.sizes.xl,
                 fontFamily: designTokens.typography.fontFamily,
+                fontSize: designTokens.typography.sizes.lg,
                 fontWeight: designTokens.typography.weights.bold,
                 lineHeight: designTokens.typography.lineHeights.heading,
+                color: designTokens.colors.textPrimary,
               }}
             >
-              Client Testimonial
+              Tasks
             </h2>
-            <Testimonial
-              client={project.recommendation.name}
-              text={extractTextFromTipTap(project.recommendation.text)}
-              role={project.recommendation.role || undefined}
+            <TasksList tasks={project.tasks} />
+          </section>
+        )}
+
+        {hasRecommendation && (
+          <section className="py-12 md:py-16 border-t border-gray-100">
+            <h2
+              className="mb-8"
+              style={{
+                fontFamily: designTokens.typography.fontFamily,
+                fontSize: designTokens.typography.sizes.lg,
+                fontWeight: designTokens.typography.weights.bold,
+                lineHeight: designTokens.typography.lineHeights.heading,
+                color: designTokens.colors.textPrimary,
+              }}
+            >
+              Recommendation
+            </h2>
+            <Recommendation
+              name={project.recommendation!.name}
+              role={project.recommendation!.role || undefined}
+              text={project.recommendation!.text}
             />
           </section>
         )}
-
-        <section className="py-12 md:py-16">
-          <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-            {prevProject ? (
-              <Link
-                to={generateProjectUrl(prevProject)}
-                className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors"
-              >
-                <ArrowLeft size={20} />
-                <span>Previous Project</span>
-              </Link>
-            ) : <div />}
-
-            <Link
-              to="/portfolio"
-              className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
-            >
-              View All Projects
-            </Link>
-
-            {nextProject ? (
-              <Link
-                to={generateProjectUrl(nextProject)}
-                className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors"
-              >
-                <span>Next Project</span>
-                <ArrowRight size={20} />
-              </Link>
-            ) : <div />}
-          </div>
-        </section>
       </div>
+
+      <ProjectNavigation
+        prevProject={prevProject}
+        nextProject={nextProject}
+      />
     </div>
   );
 };
