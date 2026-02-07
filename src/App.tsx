@@ -11,6 +11,7 @@ import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { PortfolioManagementPage } from './pages/admin/PortfolioManagementPage';
 import { BlogManagementPage } from './pages/admin/BlogManagementPage';
 import { BlogCreateForm } from './pages/admin/create/BlogCreateForm';
+import { ProjectCreateForm } from './pages/admin/create/ProjectCreateForm';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import PublicLayout from './components/PublicLayout';
 
@@ -53,6 +54,22 @@ function App() {
           element={
             <ProtectedRoute>
               <PortfolioManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/portfolio/project/create"
+          element={
+            <ProtectedRoute>
+              <ProjectCreateForm mode="create" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/portfolio/project/edit/:projectId"
+          element={
+            <ProtectedRoute>
+              <ProjectCreateForm mode="edit" />
             </ProtectedRoute>
           }
         />
