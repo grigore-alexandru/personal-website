@@ -1,60 +1,62 @@
 import React, { useEffect, useState } from 'react';
 import { Project } from '../types';
 import Card from './Card';
-import { designTokens } from '../styles/tokens';
 
-interface MasonryGridProps {
+interface ProjectGridProps {
   projects: Project[];
   loading?: boolean;
 }
 
-const MasonryGrid: React.FC<MasonryGridProps> = ({ projects, loading = false }) => {
-  const [visibleProjects, setVisibleProjects] = useState<Project[]>([]);
+const ProjectGrid: React.FC<ProjectGridProps> = ({ projects, loading = false }) => {
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (loading) return;
-
-    // Staggered animation for cards
-    const timer = setTimeout(() => {
-      setVisibleProjects(projects);
-    }, 200);
-
-    return () => clearTimeout(timer);
+    if (loading) {
+      setVisible(false);
+      return;
+    }
+    const id = requestAnimationFrame(() => setVisible(true));
+    return () => cancelAnimationFrame(id);
   }, [projects, loading]);
 
   if (loading) {
     return (
-      <div className="max-w-screen-xl mx-auto px-6 py-12">
-        <div className="columns-1 md:columns-2 lg:columns-3 gap-6">
-          {Array.from({ length: 6 }).map((_, index) => (
-            <div
-              key={index}
-              className="break-inside-avoid mb-6 bg-gray-200 rounded-lg animate-pulse"
-              style={{ height: `${300 + (index % 3) * 50}px` }}
-            />
+      <div className="max-w-screen-xl mx-auto px-6 pb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-lg overflow-hidden">
+              <div className="bg-neutral-200 animate-pulse" style={{ aspectRatio: '16 / 10' }} />
+              <div className="pt-3 space-y-2">
+                <div className="h-4 w-3/4 bg-neutral-200 rounded animate-pulse" />
+                <div className="h-3 w-1/2 bg-neutral-100 rounded animate-pulse" />
+              </div>
+            </div>
           ))}
         </div>
       </div>
     );
   }
 
+  if (!projects.length) {
+    return (
+      <div className="max-w-screen-xl mx-auto px-6 py-24 text-center">
+        <p className="text-neutral-400 text-sm tracking-wide">No projects match your criteria.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-screen-xl mx-auto px-6 py-12">
-      <div 
-        className="columns-1 md:columns-2 lg:columns-3"
-        style={{ 
-          gap: designTokens.spacing.scale.md,
-          columnGap: designTokens.spacing.scale.md,
-        }}
-      >
-        {visibleProjects.map((project, index) => (
+    <div className="max-w-screen-xl mx-auto px-6 pb-16">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {projects.map((project, index) => (
           <div
-            key={`${project.title}-${project.client_name}`}
-            className="break-inside-avoid mb-6 opacity-0 animate-fade-in"
-            style={{
-              animationDelay: `${index * 100}ms`,
-              animationFillMode: 'forwards',
-            }}
+            key={project.id}
+            className={`transition-all duration-500 ease-out ${
+              visible
+                ? 'opacity-100 translate-y-0'
+                : 'opacity-0 translate-y-4'
+            }`}
+            style={{ transitionDelay: visible ? `${index * 60}ms` : '0ms' }}
           >
             <Card project={project} />
           </div>
@@ -64,4 +66,4 @@ const MasonryGrid: React.FC<MasonryGridProps> = ({ projects, loading = false }) 
   );
 };
 
-export default MasonryGrid;
+export default ProjectGrid;
