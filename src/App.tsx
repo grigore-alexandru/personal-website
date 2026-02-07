@@ -31,12 +31,13 @@ function App() {
         <Route path="/" element={<PublicLayout><HomePage /></PublicLayout>} />
         <Route path="/about" element={<PublicLayout><UnderConstructionPage /></PublicLayout>} />
         <Route path="/portfolio" element={<PublicLayout><PortfolioPage /></PublicLayout>} />
-        <Route path="/portfolio/:clientSlug/:projectSlug" element={<PublicLayout><ProjectDetailPage /></PublicLayout>} />
+        <Route path="/portfolio/project/:slug" element={<PublicLayout><ProjectDetailPage /></PublicLayout>} />
         <Route path="/blog" element={<PublicLayout><BlogListPage /></PublicLayout>} />
         <Route path="/blog/:slug" element={<PublicLayout><BlogPostPage /></PublicLayout>} />
 
         <Route path="/what-i-do/video-production/" element={<Navigate to="/portfolio" replace />} />
         <Route path="/what-i-do/video-production/:clientSlug/:projectSlug" element={<Navigate to="/portfolio" replace />} />
+        <Route path="/portfolio/:clientSlug/:projectSlug" element={<Navigate to="/portfolio" replace />} />
 
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route

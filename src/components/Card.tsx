@@ -22,7 +22,7 @@ const Card: React.FC<CardProps> = ({ project }) => {
       {/* Image Container */}
       <div className="relative overflow-hidden" style={{ aspectRatio: '16/9' }}>
         <img
-          src={project.poster}
+          src={project.hero_image_thumbnail}
           alt={project.title}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           loading="lazy"
@@ -51,7 +51,7 @@ const Card: React.FC<CardProps> = ({ project }) => {
               letterSpacing: designTokens.typography.letterSpacings.wide,
             }}
           >
-            {project.type} • {project.client_name}
+            {project.project_type.name} • {project.client_name}
           </p>
         </div>
       </div>
@@ -67,7 +67,7 @@ const Card: React.FC<CardProps> = ({ project }) => {
               letterSpacing: designTokens.typography.letterSpacings.wide,
             }}
           >
-            {project.type}
+            {project.project_type.name}
           </span>
           <span 
             className="text-xs text-gray-400"
@@ -76,7 +76,7 @@ const Card: React.FC<CardProps> = ({ project }) => {
               fontWeight: designTokens.typography.weights.regular,
             }}
           >
-            {new Date(project.date).getFullYear()}
+            {new Date(project.created_at).getFullYear()}
           </span>
         </div>
         

@@ -2,16 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Project } from '../types';
-import { loadProject, loadProjects } from '../utils/dataLoader';
+import { loadProject, loadProjects, generateProjectUrl, extractTextFromTipTap, parseMetricValue } from '../utils/dataLoader';
 import ProjectHero from '../components/ProjectHero';
-import MetaTriplet from '../components/MetaTriplet';
 import StatsPanel from '../components/StatsPanel';
 import VideoCarousel from '../components/VideoCarousel';
 import Testimonial from '../components/Testimonial';
 import { designTokens } from '../styles/tokens';
 
 const ProjectDetailPage: React.FC = () => {
-  const { clientSlug, projectSlug } = useParams<{ clientSlug: string; projectSlug: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [allProjects, setAllProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,11 +18,11 @@ const ProjectDetailPage: React.FC = () => {
 
   useEffect(() => {
     const fetchProject = async () => {
-      if (!clientSlug || !projectSlug) return;
+      if (!slug) return;
 
       try {
         const [projectData, projectsData] = await Promise.all([
-          loadProject(clientSlug, projectSlug),
+          loadProject(slug),
           loadProjects()
         ]);
 
@@ -37,7 +36,7 @@ const ProjectDetailPage: React.FC = () => {
     };
 
     fetchProject();
-  }, [clientSlug, projectSlug]);
+  }, [slug]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -76,13 +75,21 @@ const ProjectDetailPage: React.FC = () => {
     );
   }
 
-  const currentIndex = allProjects.findIndex(p => p.title === project.title);
+  const currentIndex = allProjects.findIndex(p => p.id === project.id);
   const prevProject = currentIndex > 0 ? allProjects[currentIndex - 1] : null;
   const nextProject = currentIndex < allProjects.length - 1 ? allProjects[currentIndex + 1] : null;
 
+  const contentItems = project.project_content.map(pc => pc.content);
+
+  const views = parseMetricValue(project.impact_metrics?.find(m => m.label === 'Views')?.value);
+  const impressions = parseMetricValue(project.impact_metrics?.find(m => m.label === 'Impressions')?.value);
+  const channelsStr = project.impact_metrics?.find(m => m.label === 'Channels')?.value || '';
+  const channels = channelsStr ? channelsStr.split(', ').filter(Boolean) : [];
+
+  const descriptionText = extractTextFromTipTap(project.description);
+
   return (
     <div className="min-h-screen bg-white">
-      {/* Back Button */}
       {showBackButton && (
         <Link
           to="/portfolio"
@@ -92,29 +99,25 @@ const ProjectDetailPage: React.FC = () => {
         </Link>
       )}
 
-      {/* Project Hero */}
-      <ProjectHero 
-        bgUrl={project.poster} 
+      <ProjectHero
+        bgUrl={project.hero_image_large}
         title={project.title}
-        type={project.type}
+        type={project.project_type.name}
         client={project.client_name}
-        date={project.date}
+        date={project.created_at}
       />
 
-      {/* Stats Panel */}
       <div className="-mt-1">
-        <StatsPanel 
-          views={project.reach.views}
-          channels={project.reach.channels}
-          impressions={project.reach.impressions}
+        <StatsPanel
+          views={views}
+          channels={channels}
+          impressions={impressions}
         />
       </div>
 
-      {/* Project Content Container */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-12 py-4">
-        {/* About Section */}
         <section className="py-12 md:py-16">
-          <h2 
+          <h2
             className="text-black font-bold mb-6 text-center"
             style={{
               fontSize: designTokens.typography.sizes.xl,
@@ -125,7 +128,7 @@ const ProjectDetailPage: React.FC = () => {
           >
             About the Project
           </h2>
-          <p 
+          <p
             className="text-gray-700 leading-relaxed"
             style={{
               fontSize: designTokens.typography.sizes.md,
@@ -134,52 +137,53 @@ const ProjectDetailPage: React.FC = () => {
               lineHeight: designTokens.typography.lineHeights.body,
             }}
           >
-            {project.description}
+            {descriptionText}
           </p>
         </section>
 
-        {/* Video Carousel */}
-        <section className="py-12 md:py-16">
-          <h2 
-            className="text-black font-bold mb-6 text-center"
-            style={{
-              fontSize: designTokens.typography.sizes.xl,
-              fontFamily: designTokens.typography.fontFamily,
-              fontWeight: designTokens.typography.weights.bold,
-              lineHeight: designTokens.typography.lineHeights.heading,
-            }}
-          >
-            Watch the Project
-          </h2>
-          <VideoCarousel videos={project.videos} />
-        </section>
+        {contentItems.length > 0 && (
+          <section className="py-12 md:py-16">
+            <h2
+              className="text-black font-bold mb-6 text-center"
+              style={{
+                fontSize: designTokens.typography.sizes.xl,
+                fontFamily: designTokens.typography.fontFamily,
+                fontWeight: designTokens.typography.weights.bold,
+                lineHeight: designTokens.typography.lineHeights.heading,
+              }}
+            >
+              Watch the Project
+            </h2>
+            <VideoCarousel items={contentItems} />
+          </section>
+        )}
 
-        {/* Testimonials */}
-        <section className="py-12 md:py-16">
-          <h2 
-            className="text-black font-bold mb-6 text-center"
-            style={{
-              fontSize: designTokens.typography.sizes.xl,
-              fontFamily: designTokens.typography.fontFamily,
-              fontWeight: designTokens.typography.weights.bold,
-              lineHeight: designTokens.typography.lineHeights.heading,
-            }}
-          >
-            Client Testimonial
-          </h2>
-          <Testimonial 
-            client={project.testimonial.client}
-            text={project.testimonial.text}
-            role={project.testimonial.role}
-          />
-        </section>
+        {project.recommendation && (
+          <section className="py-12 md:py-16">
+            <h2
+              className="text-black font-bold mb-6 text-center"
+              style={{
+                fontSize: designTokens.typography.sizes.xl,
+                fontFamily: designTokens.typography.fontFamily,
+                fontWeight: designTokens.typography.weights.bold,
+                lineHeight: designTokens.typography.lineHeights.heading,
+              }}
+            >
+              Client Testimonial
+            </h2>
+            <Testimonial
+              client={project.recommendation.name}
+              text={extractTextFromTipTap(project.recommendation.text)}
+              role={project.recommendation.role || undefined}
+            />
+          </section>
+        )}
 
-        {/* Navigation */}
         <section className="py-12 md:py-16">
           <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
             {prevProject ? (
               <Link
-                to={`/portfolio/${prevProject.client_name.toLowerCase().replace(/\s+/g, '-')}/${prevProject.title.toLowerCase().replace(/\s+/g, '-')}`}
+                to={generateProjectUrl(prevProject)}
                 className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors"
               >
                 <ArrowLeft size={20} />
@@ -196,7 +200,7 @@ const ProjectDetailPage: React.FC = () => {
 
             {nextProject ? (
               <Link
-                to={`/portfolio/${nextProject.client_name.toLowerCase().replace(/\s+/g, '-')}/${nextProject.title.toLowerCase().replace(/\s+/g, '-')}`}
+                to={generateProjectUrl(nextProject)}
                 className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors"
               >
                 <span>Next Project</span>
