@@ -169,19 +169,20 @@ export async function processAndUploadHeroImage(
 
 export async function deleteHeroImages(
   largeUrl: string | null,
-  thumbnailUrl: string | null
+  thumbnailUrl: string | null,
+  bucketName: string = 'blog-images'
 ): Promise<void> {
   const filesToDelete: string[] = [];
 
   if (largeUrl) {
-    const largePath = largeUrl.split('/blog-images/')[1];
+    const largePath = largeUrl.split(`/${bucketName}/`)[1];
     if (largePath) {
       filesToDelete.push(largePath);
     }
   }
 
   if (thumbnailUrl) {
-    const thumbPath = thumbnailUrl.split('/blog-images/')[1];
+    const thumbPath = thumbnailUrl.split(`/${bucketName}/`)[1];
     if (thumbPath) {
       filesToDelete.push(thumbPath);
     }
@@ -189,7 +190,7 @@ export async function deleteHeroImages(
 
   if (filesToDelete.length > 0) {
     const { error } = await supabase.storage
-      .from('blog-images')
+      .from(bucketName)
       .remove(filesToDelete);
 
     if (error) {
