@@ -100,7 +100,7 @@ const PortfolioPage: React.FC = () => {
             value={typeFilter}
             onChange={(val) => setTypeFilter(val)}
             icon={<Film size={18} className="text-gray-400" />}
-            className="sm:w-48"
+            className="sm:w-64"
           />
         </div>
 
