@@ -171,10 +171,3 @@ a:focus {
     background: #fff !important;
   }
 }
-
-/* First Landscape Item Grid Spanning */
-@media (min-width: 768px) {
-  [class*="md:col-span-2"] {
-    height: 100%;
-  }
-}
