@@ -13,6 +13,7 @@ import { BlogManagementPage } from './pages/admin/BlogManagementPage';
 import { ContentManagementPage } from './pages/admin/ContentManagementPage';
 import { BlogCreateForm } from './pages/admin/create/BlogCreateForm';
 import { ProjectCreateForm } from './pages/admin/create/ProjectCreateForm';
+import { ContentCreateForm } from './pages/admin/create/ContentCreateForm';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import PublicLayout from './components/PublicLayout';
 
@@ -111,6 +112,22 @@ function App() {
           element={
             <ProtectedRoute>
               <ContentManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/content/create"
+          element={
+            <ProtectedRoute>
+              <ContentCreateForm mode="create" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/content/edit/:contentId"
+          element={
+            <ProtectedRoute>
+              <ContentCreateForm mode="edit" />
             </ProtectedRoute>
           }
         />
