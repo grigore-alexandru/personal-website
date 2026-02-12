@@ -21,9 +21,21 @@ export interface Recommendation {
   text: TipTapContent;
 }
 
-export interface ContentThumbnail {
-  thum_image: string;
-  thum_gif: string;
+export interface ContentThumbnailVideo {
+  poster: string;
+  video: string;
+}
+
+export interface ContentThumbnailImage {
+  full: string;
+  compressed: string;
+}
+
+export type ContentThumbnail = ContentThumbnailVideo | ContentThumbnailImage;
+
+export interface ContentContributor {
+  name: string;
+  role: string;
 }
 
 export interface Content {
@@ -31,11 +43,16 @@ export interface Content {
   type_id: string;
   content_type: ContentType;
   title: string;
+  slug: string;
   caption: string | null;
   url: string;
   platform: 'youtube' | 'vimeo' | 'mega' | 'instagram' | null;
   format: 'landscape' | 'portrait';
   thumbnail: ContentThumbnail | null;
+  is_draft: boolean;
+  order_index: number;
+  contributors: ContentContributor[] | null;
+  published_at: string | null;
   created_at: string;
 }
 
@@ -101,4 +118,13 @@ export interface BlogFormData {
   sources: Source[];
   hasNotes: boolean;
   notesContent: string;
+}
+
+export interface ContentWithProject extends Content {
+  project_info?: {
+    project_id: string;
+    project_title: string;
+    client_name: string;
+    project_type_name: string;
+  } | null;
 }
