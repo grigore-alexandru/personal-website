@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Edit, MoreVertical, Loader2, Video, Image as ImageIcon, GripVertical } from 'lucide-react';
+import { designTokens } from '../../styles/tokens';
 
 interface AdminContentCardProps {
   content: {
@@ -61,7 +62,7 @@ export function AdminContentCard({
       onDragOver={onDragOver}
       onDrop={(e) => onDrop(e, content.id)}
       onDragEnd={onDragEnd}
-      className={`relative bg-white border rounded-lg overflow-hidden transition-all duration-300 group cursor-move ${
+      className={`relative bg-white border rounded-lg overflow-hidden transition-all duration-300 group cursor-move flex flex-col h-full ${
         isDragging ? 'opacity-50 scale-95' : ''
       } ${isDragOver ? 'border-black border-2 bg-gray-50' : 'border-gray-200 hover:shadow-lg hover:border-gray-300'}`}
     >
@@ -71,8 +72,18 @@ export function AdminContentCard({
         </div>
       </div>
 
-      <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
-        <div className="bg-white bg-opacity-90 backdrop-blur-sm rounded-lg border border-gray-200 px-2 py-1 flex items-center gap-1">
+      <div className="absolute top-2 right-2 z-10 flex items-center gap-2">
+        <span
+          className={`text-xs px-2 py-1 rounded-full font-bold ${
+            content.is_draft
+              ? 'bg-yellow-100 text-yellow-800 border border-yellow-300'
+              : 'bg-green-100 text-green-800 border border-green-300'
+          }`}
+        >
+          {content.is_draft ? 'DRAFT' : 'PUBLISHED'}
+        </span>
+
+        <div className="bg-white rounded-lg border border-gray-200 px-2 py-1 flex items-center gap-1">
           {isToggling ? (
             <Loader2 size={14} className="text-gray-400 animate-spin" />
           ) : (
@@ -119,18 +130,7 @@ export function AdminContentCard({
         </div>
       </div>
 
-      <div className="absolute bottom-2 left-2 z-10 flex items-center gap-1">
-        <div className="bg-white bg-opacity-90 backdrop-blur-sm rounded px-2 py-1 flex items-center gap-1">
-          {isVideo ? (
-            <Video size={12} className="text-purple-600" />
-          ) : (
-            <ImageIcon size={12} className="text-blue-600" />
-          )}
-          <span className="text-xs font-medium text-gray-700">{isVideo ? 'Video' : 'Image'}</span>
-        </div>
-      </div>
-
-      <div className="relative w-full pt-[75%] bg-gray-100">
+      <div className="relative w-full pt-[100%] bg-gray-100 flex-shrink-0">
         {thumbnailUrl ? (
           <img
             src={thumbnailUrl}
@@ -138,11 +138,11 @@ export function AdminContentCard({
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
             {isVideo ? (
-              <Video size={32} className="text-gray-300" />
+              <Video size={40} className="text-gray-300" />
             ) : (
-              <ImageIcon size={32} className="text-gray-300" />
+              <ImageIcon size={40} className="text-gray-300" />
             )}
           </div>
         )}
@@ -152,42 +152,44 @@ export function AdminContentCard({
         </div>
       </div>
 
-      <div className="p-3">
-        <h3 className="font-bold text-sm text-black mb-1 truncate group-hover:text-gray-700 transition-colors">
-          {content.title}
-        </h3>
+      <div className="flex-1 flex flex-col p-3">
+        <div className="flex items-center gap-1.5 mb-2">
+          {isVideo ? (
+            <Video size={14} className="text-purple-600 flex-shrink-0" />
+          ) : (
+            <ImageIcon size={14} className="text-blue-600 flex-shrink-0" />
+          )}
+          <h3
+            className="font-bold text-gray-900 truncate"
+            style={{
+              fontSize: designTokens.typography.sizes.xs,
+              fontFamily: designTokens.typography.fontFamily,
+              fontWeight: designTokens.typography.weights.bold,
+            }}
+          >
+            {content.title}
+          </h3>
+        </div>
 
         <div className="flex flex-wrap gap-1 mb-2">
-          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-medium">
+          <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-medium whitespace-nowrap">
             {content.type_name}
           </span>
-          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+          <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-medium whitespace-nowrap">
             {content.format}
           </span>
           {content.platform && (
-            <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium capitalize">
+            <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-medium capitalize whitespace-nowrap">
               {content.platform}
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          <span
-            className={`text-xs px-2 py-1 rounded-full font-bold ${
-              content.is_draft
-                ? 'bg-yellow-100 text-yellow-800 border border-yellow-300'
-                : 'bg-green-100 text-green-800 border border-green-300'
-            }`}
-          >
-            {content.is_draft ? 'DRAFT' : 'PUBLISHED'}
-          </span>
-        </div>
-
         <button
           onClick={() => onEdit(content.id)}
-          className="w-full mt-3 inline-flex items-center justify-center gap-2 px-3 py-2 text-white bg-black font-medium rounded-lg hover:bg-gray-800 transition-colors duration-200 text-sm"
+          className="w-full mt-auto inline-flex items-center justify-center gap-1.5 px-2 py-1.5 text-white bg-black font-medium rounded hover:bg-gray-800 transition-colors duration-200 text-xs"
         >
-          <Edit size={14} />
+          <Edit size={12} />
           Edit
         </button>
       </div>
