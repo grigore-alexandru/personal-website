@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { Content, ContentType, ContentThumbnail, ContentContributor } from '../types';
+import { Content, ContentType, ContentThumbnail, ContentContributor, ContentWithProject } from '../types';
 import { deleteVideoThumbnails } from './contentVideoProcessing';
 import { deleteContentImages } from './contentImageProcessing';
 
@@ -356,4 +356,55 @@ export async function checkContentSlugUniqueness(
     console.error('Error checking content slug uniqueness:', err);
     return false;
   }
+}
+
+export async function loadPublishedContentWithProjects(): Promise<ContentWithProject[]> {
+  const { data: contentData, error: contentError } = await supabase
+    .from('content')
+    .select('*, content_type:content_types(*)')
+    .eq('is_draft', false)
+    .order('order_index', { ascending: true });
+
+  if (contentError) {
+    console.error('Error loading published content:', contentError);
+    return [];
+  }
+
+  const { data: projectContentData, error: projectContentError } = await supabase
+    .from('project_content')
+    .select(`
+      content_id,
+      project:projects!inner(
+        id,
+        title,
+        client_name,
+        is_draft,
+        project_type:project_types(name)
+      )
+    `)
+    .eq('project.is_draft', false);
+
+  if (projectContentError) {
+    console.error('Error loading project associations:', projectContentError);
+    return (contentData || []) as unknown as ContentWithProject[];
+  }
+
+  const projectInfoByContent = new Map<string, any>();
+
+  for (const pc of projectContentData || []) {
+    if (pc.project && !projectInfoByContent.has(pc.content_id)) {
+      const project = pc.project as any;
+      projectInfoByContent.set(pc.content_id, {
+        project_id: project.id,
+        project_title: project.title,
+        client_name: project.client_name,
+        project_type_name: project.project_type?.name || 'Unknown',
+      });
+    }
+  }
+
+  return (contentData || []).map((content) => ({
+    ...(content as unknown as Content),
+    project_info: projectInfoByContent.get(content.id) || null,
+  }));
 }
