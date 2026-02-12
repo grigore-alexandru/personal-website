@@ -53,7 +53,7 @@ const ProjectNavigation: React.FC<ProjectNavigationProps> = ({
         </div>
 
         <Link
-          to="/portfolio"
+          to="/portfolio/projects"
           className="px-5 py-2 bg-black text-white rounded-full hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
           style={{
             fontFamily: designTokens.typography.fontFamily,

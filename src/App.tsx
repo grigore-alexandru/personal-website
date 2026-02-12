@@ -2,7 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import UnderConstructionPage from './pages/UnderConstructionPage';
-import PortfolioPage from './pages/PortfolioPage';
+import PortfolioLandingPage from './pages/PortfolioLandingPage';
+import ProjectsListPage from './pages/ProjectsListPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
 import { ContentPortfolioPage } from './pages/ContentPortfolioPage';
 import { ContentDetailPage } from './pages/ContentDetailPage';
@@ -35,16 +36,17 @@ function App() {
       <Routes>
         <Route path="/" element={<PublicLayout><HomePage /></PublicLayout>} />
         <Route path="/about" element={<PublicLayout><UnderConstructionPage /></PublicLayout>} />
-        <Route path="/portfolio" element={<PublicLayout><PortfolioPage /></PublicLayout>} />
+        <Route path="/portfolio" element={<PublicLayout><PortfolioLandingPage /></PublicLayout>} />
+        <Route path="/portfolio/projects" element={<PublicLayout><ProjectsListPage /></PublicLayout>} />
         <Route path="/portfolio/project/:slug" element={<PublicLayout><ProjectDetailPage /></PublicLayout>} />
         <Route path="/portfolio/content" element={<PublicLayout><ContentPortfolioPage /></PublicLayout>} />
         <Route path="/portfolio/content/:slug" element={<PublicLayout><ContentDetailPage /></PublicLayout>} />
         <Route path="/blog" element={<PublicLayout><BlogListPage /></PublicLayout>} />
         <Route path="/blog/:slug" element={<PublicLayout><BlogPostPage /></PublicLayout>} />
 
-        <Route path="/what-i-do/video-production/" element={<Navigate to="/portfolio" replace />} />
-        <Route path="/what-i-do/video-production/:clientSlug/:projectSlug" element={<Navigate to="/portfolio" replace />} />
-        <Route path="/portfolio/:clientSlug/:projectSlug" element={<Navigate to="/portfolio" replace />} />
+        <Route path="/what-i-do/video-production/" element={<Navigate to="/portfolio/projects" replace />} />
+        <Route path="/what-i-do/video-production/:clientSlug/:projectSlug" element={<Navigate to="/portfolio/projects" replace />} />
+        <Route path="/portfolio/:clientSlug/:projectSlug" element={<Navigate to="/portfolio/projects" replace />} />
 
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route
