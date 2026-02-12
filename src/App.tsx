@@ -10,6 +10,7 @@ import AdminLoginPage from './pages/admin/AdminLoginPage';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { PortfolioManagementPage } from './pages/admin/PortfolioManagementPage';
 import { BlogManagementPage } from './pages/admin/BlogManagementPage';
+import { ContentManagementPage } from './pages/admin/ContentManagementPage';
 import { BlogCreateForm } from './pages/admin/create/BlogCreateForm';
 import { ProjectCreateForm } from './pages/admin/create/ProjectCreateForm';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -102,6 +103,14 @@ function App() {
           element={
             <ProtectedRoute>
               <BlogCreateForm mode="republish" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/content"
+          element={
+            <ProtectedRoute>
+              <ContentManagementPage />
             </ProtectedRoute>
           }
         />

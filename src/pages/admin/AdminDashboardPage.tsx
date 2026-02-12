@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { FileText, Video, Settings } from 'lucide-react';
+import { FileText, Video, Settings, Image } from 'lucide-react';
 import { AdminLayout } from '../../components/admin/AdminLayout';
 
 export function AdminDashboardPage() {
@@ -22,6 +22,14 @@ export function AdminDashboardPage() {
       color: 'bg-green-500',
       hoverColor: 'hover:bg-green-600',
     },
+    {
+      title: 'Content Management',
+      description: 'Manage media content, videos, and images',
+      icon: Image,
+      path: '/admin/content',
+      color: 'bg-purple-500',
+      hoverColor: 'hover:bg-purple-600',
+    },
   ];
 
   return (
@@ -32,7 +40,7 @@ export function AdminDashboardPage() {
           <p className="text-neutral-600">Select a section to manage your content</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {navigationCards.map((card) => {
             const Icon = card.icon;
             return (
