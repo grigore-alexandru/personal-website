@@ -1,51 +1,53 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import YouTube from 'react-youtube';
 import { ProjectContentItem } from '../../types';
 import { designTokens } from '../../styles/tokens';
 
-const getEmbedUrl = (url: string, platform: string | null): string => {
-  if (!url) return '';
+// --- Helper Functions ---
 
-  // 1. Handle YouTube
-  if (platform === 'youtube' || url.includes('youtube.com') || url.includes('youtu.be')) {
-    let videoId: string | null = null;
+const getYoutubeDetails = (url: string): { videoId: string | null; start: number | undefined } => {
+  if (!url) return { videoId: null, start: undefined };
+  
+  let videoId: string | null = null;
 
-    // Handle YouTube Shorts: youtube.com/shorts/VIDEO_ID
-    if (url.includes('/shorts/')) {
-      const shortsMatch = url.match(/\/shorts\/([a-zA-Z0-9_-]{11})/);
-      if (shortsMatch) {
-        videoId = shortsMatch[1];
-      }
-    }
-
-    // Handle standard YouTube URLs
-    if (!videoId) {
-      const regExp = /^.*(?:youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-      const match = url.match(regExp);
-      videoId = match && match[1].length === 11 ? match[1] : null;
-    }
-
-    if (videoId) {
-      // Extract timestamp if present (t=30s or t=30)
-      const timeMatch = url.match(/[?&]t=(\d+)/);
-      const startTime = timeMatch ? `&start=${timeMatch[1]}` : '';
-      return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1${startTime}`;
+  // Handle YouTube Shorts: youtube.com/shorts/VIDEO_ID
+  if (url.includes('/shorts/')) {
+    const shortsMatch = url.match(/\/shorts\/([a-zA-Z0-9_-]{11})/);
+    if (shortsMatch) {
+      videoId = shortsMatch[1];
     }
   }
 
-  // 2. Handle Vimeo
-  if (platform === 'vimeo' || url.includes('vimeo.com')) {
-    const match = url.match(/vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)(?:$|\/|\?)/);
-    const videoId = match ? match[1] : null;
-    if (videoId) {
-      return `https://player.vimeo.com/video/${videoId}?badge=0&autopause=0&player_id=0&app_id=58479`;
-    }
+  // Handle standard YouTube URLs
+  if (!videoId) {
+    const regExp = /^.*(?:youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    videoId = match && match[1].length === 11 ? match[1] : null;
   }
 
-  // 3. Fallback: Return original URL (for Mega or other embed-ready links)
-  return url;
+  // Extract timestamp if present (t=30s or t=30)
+  let start: number | undefined;
+  const timeMatch = url.match(/[?&]t=(\d+)/);
+  if (timeMatch) {
+    start = parseInt(timeMatch[1], 10);
+  }
+
+  return { videoId, start };
 };
+
+const getVimeoEmbedUrl = (url: string): string | null => {
+  if (!url) return null;
+  const match = url.match(/vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)(?:$|\/|\?)/);
+  const videoId = match ? match[1] : null;
+  if (videoId) {
+    return `https://player.vimeo.com/video/${videoId}?badge=0&autopause=0&player_id=0&app_id=58479`;
+  }
+  return url; // Fallback
+};
+
+// --- Component ---
 
 interface MediaCarouselProps {
   items: ProjectContentItem[];
@@ -108,15 +110,16 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ items }) => {
   if (!items.length) return null;
 
   const active = items[currentIndex].content;
-  // Fallback: If platform is null/undefined, treat as image unless format implies otherwise? 
-  // Ideally, rely on content_type if available. 
-  const isImage = active.content_type?.slug === 'image' || (!active.platform && !active.format); 
+  
+  // Determine Content Type
+  const isImage = active.content_type?.slug === 'image' || (!active.platform && !active.format);
   const isPortrait = active.format === 'portrait';
+  const isYoutube = !isImage && (active.platform === 'youtube' || active.url.includes('youtube.com') || active.url.includes('youtu.be'));
+  const isVimeo = !isImage && !isYoutube && (active.platform === 'vimeo' || active.url.includes('vimeo.com'));
 
-  // --- USE THE HELPER HERE ---
-  const embedUrl = !isImage && active.platform !== 'instagram' 
-    ? getEmbedUrl(active.url, active.platform) 
-    : '';
+  // Prepare Embed Data
+  const youtubeDetails = isYoutube ? getYoutubeDetails(active.url) : { videoId: null, start: undefined };
+  const vimeoUrl = isVimeo ? getVimeoEmbedUrl(active.url) : active.url;
 
   const slideVariants = {
     enter: (dir: number) => ({
@@ -173,14 +176,18 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ items }) => {
                 className="w-full h-full flex items-center justify-center"
               />
             ) : (
+              // --- Video Container (YouTube / Vimeo / Fallback) ---
               <div className="w-full h-full relative">
+                {/* Loading State */}
                 {iframeLoading && !iframeError && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-neutral-900">
+                  <div className="absolute inset-0 flex items-center justify-center bg-neutral-900 z-10">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
                   </div>
                 )}
+                
+                {/* Error State */}
                 {iframeError ? (
-                  <div className="absolute inset-0 flex items-center justify-center bg-neutral-900 text-white px-4">
+                  <div className="absolute inset-0 flex items-center justify-center bg-neutral-900 text-white px-4 z-10">
                     <div className="text-center">
                       <p className="mb-2">Unable to load video</p>
                       <a
@@ -193,9 +200,32 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ items }) => {
                       </a>
                     </div>
                   </div>
+                ) : isYoutube && youtubeDetails.videoId ? (
+                   // --- React YouTube Component ---
+                   <YouTube
+                     videoId={youtubeDetails.videoId}
+                     className="w-full h-full"
+                     iframeClassName="w-full h-full"
+                     opts={{
+                       height: '100%',
+                       width: '100%',
+                       playerVars: {
+                         autoplay: 0,
+                         modestbranding: 1,
+                         rel: 0,
+                         start: youtubeDetails.start,
+                       },
+                     }}
+                     onReady={() => setIframeLoading(false)}
+                     onError={() => {
+                       setIframeError(true);
+                       setIframeLoading(false);
+                     }}
+                   />
                 ) : (
+                  // --- Fallback Iframe (Vimeo / Others) ---
                   <iframe
-                    src={embedUrl}
+                    src={vimeoUrl || ''}
                     title={active.title}
                     className="w-full h-full"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
