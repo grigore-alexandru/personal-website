@@ -6,6 +6,7 @@ import { FormTextarea } from '../forms/FormTextarea';
 import { Button } from '../forms/Button';
 import { Tooltip } from '../ui/Tooltip';
 import { ValidationError as ValidationErrorComponent } from '../ui/ValidationError';
+import { VideoThumbnailHoverPreview } from './VideoThumbnailHoverPreview';
 import { slugify } from '../../utils/slugify';
 import { validateSlug } from '../../utils/validateSlug';
 import {
@@ -271,7 +272,8 @@ export function ContentCreateModal({ open, onClose, onSuccess, onError }: Conten
       format: formData.format,
       caption: formData.caption || undefined,
       thumbnail: formData.type === 'video' ? formData.videoThumbnail : formData.imageThumbnail,
-      published_at: formData.publishedDate ? new Date(formData.publishedDate).toISOString() : undefined,
+      is_draft: false,
+      published_at: formData.publishedDate ? new Date(formData.publishedDate).toISOString() : new Date().toISOString(),
       contributors: formData.hasContributors && formData.contributors.length > 0 ? formData.contributors : undefined,
     });
 
@@ -438,9 +440,9 @@ export function ContentCreateModal({ open, onClose, onSuccess, onError }: Conten
                     </button>
                   </div>
                 ) : (
-                  <div className="border border-gray-300 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-medium text-gray-900">Video uploaded successfully</p>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-gray-900">Video Thumbnail (hover to preview)</p>
                       <button
                         type="button"
                         onClick={handleReplaceVideo}
@@ -449,13 +451,10 @@ export function ContentCreateModal({ open, onClose, onSuccess, onError }: Conten
                         Replace
                       </button>
                     </div>
-                    {formData.videoThumbnail.poster && (
-                      <img
-                        src={formData.videoThumbnail.poster}
-                        alt="Video poster"
-                        className="w-full h-32 object-cover rounded"
-                      />
-                    )}
+                    <VideoThumbnailHoverPreview
+                      thumbnail={formData.videoThumbnail}
+                      className="aspect-video"
+                    />
                   </div>
                 )}
                 {validationErrors.find((e) => e.field === 'videoThumbnail') && (

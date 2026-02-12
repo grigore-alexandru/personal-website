@@ -9,6 +9,7 @@ import { Button } from '../../../components/forms/Button';
 import { Tooltip } from '../../../components/ui/Tooltip';
 import { ToastContainer } from '../../../components/ui/Toast';
 import { ValidationError as ValidationErrorComponent } from '../../../components/ui/ValidationError';
+import { VideoThumbnailHoverPreview } from '../../../components/admin/VideoThumbnailHoverPreview';
 import { useToast } from '../../../hooks/useToast';
 import { slugify } from '../../../utils/slugify';
 import { validateSlug } from '../../../utils/validateSlug';
@@ -730,39 +731,21 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
                       </button>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-4">
                       <div>
-                        <p className="text-xs font-medium text-gray-600 mb-2">Poster Frame</p>
-                        <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                          <img
-                            src={formData.videoThumbnail.poster}
-                            alt="Poster"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
+                        <p className="text-xs font-medium text-gray-600 mb-2">Video Thumbnail (hover to preview)</p>
+                        <VideoThumbnailHoverPreview
+                          thumbnail={formData.videoThumbnail}
+                          className="aspect-video"
+                        />
                       </div>
-                      <div>
-                        <p className="text-xs font-medium text-gray-600 mb-2">Looping Preview</p>
-                        <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                          <video
-                            src={formData.videoThumbnail.video}
-                            autoPlay
-                            loop
-                            muted
-                            playsInline
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      </div>
-                      <div className="col-span-2">
-                        <Button
-                          variant="secondary"
-                          onClick={handleReplaceVideo}
-                          disabled={isUploadingVideo}
-                        >
-                          Replace Video
-                        </Button>
-                      </div>
+                      <Button
+                        variant="secondary"
+                        onClick={handleReplaceVideo}
+                        disabled={isUploadingVideo}
+                      >
+                        Replace Video
+                      </Button>
                     </div>
                   )}
                   {validationErrors.find((e) => e.field === 'video') && (
