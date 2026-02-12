@@ -137,7 +137,7 @@ export function GalleryManager({ items, onChange, onSuccess, onError }: GalleryM
         </div>
       )}
 
-      {items.length === 0 && !showNewForm && (
+      {items.length === 0 && (
         <div className="text-center py-8 border-2 border-dashed border-neutral-200 rounded-lg">
           <FolderOpen size={32} className="mx-auto text-neutral-300 mb-2" />
           <p className="text-sm text-neutral-500">No gallery items yet.</p>
