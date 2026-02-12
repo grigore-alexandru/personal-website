@@ -50,13 +50,14 @@ const PortfolioLandingPage: React.FC = () => {
 
   const getGridTemplate = () => {
     if (isExiting) {
-      return exitingPanel === 'left' ? '1fr 0fr 0fr 0fr' : '0fr 0fr 0fr 1fr';
+      return exitingPanel === 'left' ? '1fr 1fr 0fr 0fr' : '0fr 0fr 1fr 1fr';
     }
+    // Reduced the variance from 0.15/0.9 to 0.02 for a 10% feel of the original movement
     if (hoveredPanel === 'left') {
-      return '1.15fr 0.95fr 1fr 0.9fr';
+      return '1.02fr 1.02fr 0.98fr 0.98fr';
     }
     if (hoveredPanel === 'right') {
-      return '0.9fr 1fr 0.95fr 1.15fr';
+      return '0.98fr 0.98fr 1.02fr 1.02fr';
     }
     return '1fr 1fr 1fr 1fr';
   };
@@ -71,11 +72,13 @@ const PortfolioLandingPage: React.FC = () => {
           transition: 'grid-template-columns 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
+        {/* Left Panel - Projects */}
         <div
           className="relative rounded-2xl overflow-hidden cursor-pointer"
           style={{
-            gridColumn: isMobile ? 'span 1' : hoveredPanel === 'left' ? 'span 3' : hoveredPanel === 'right' ? 'span 1' : 'span 2',
-            transition: 'grid-column 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+            // Locked to span 2 to prevent the large layout jump
+            gridColumn: isMobile ? 'span 1' : 'span 2',
+            transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
           }}
           onMouseEnter={() => !isMobile && setHoveredPanel('left')}
           onMouseLeave={() => !isMobile && setHoveredPanel(null)}
@@ -121,11 +124,13 @@ const PortfolioLandingPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Right Panel - Media */}
         <div
           className="relative rounded-2xl overflow-hidden cursor-pointer"
           style={{
-            gridColumn: isMobile ? 'span 1' : hoveredPanel === 'right' ? 'span 3' : hoveredPanel === 'left' ? 'span 1' : 'span 2',
-            transition: 'grid-column 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+            // Locked to span 2 to prevent the large layout jump
+            gridColumn: isMobile ? 'span 1' : 'span 2',
+            transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
           }}
           onMouseEnter={() => !isMobile && setHoveredPanel('right')}
           onMouseLeave={() => !isMobile && setHoveredPanel(null)}
