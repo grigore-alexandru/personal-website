@@ -244,19 +244,16 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
         setUploadStage(stage);
       });
 
-      if (result.success && result.data) {
-        setFormData((prev) => ({
-          ...prev,
-          videoFile: file,
-          videoThumbnail: result.data,
-        }));
-        showToast('success', 'Video thumbnail processed successfully');
-      } else {
-        showToast('error', result.error || 'Failed to process video');
-      }
+      setFormData((prev) => ({
+        ...prev,
+        videoFile: file,
+        videoThumbnail: result,
+      }));
+      showToast('success', 'Video thumbnail processed successfully');
     } catch (error) {
       console.error('Video processing error:', error);
-      showToast('error', 'An error occurred while processing the video');
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred while processing the video';
+      showToast('error', errorMessage);
     } finally {
       setIsUploadingVideo(false);
       setUploadStage('');
@@ -281,19 +278,16 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
         setUploadStage(stage);
       });
 
-      if (result.success && result.data) {
-        setFormData((prev) => ({
-          ...prev,
-          imageFile: file,
-          imageThumbnail: result.data,
-        }));
-        showToast('success', 'Image processed successfully');
-      } else {
-        showToast('error', result.error || 'Failed to process image');
-      }
+      setFormData((prev) => ({
+        ...prev,
+        imageFile: file,
+        imageThumbnail: result,
+      }));
+      showToast('success', 'Image processed successfully');
     } catch (error) {
       console.error('Image processing error:', error);
-      showToast('error', 'An error occurred while processing the image');
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred while processing the image';
+      showToast('error', errorMessage);
     } finally {
       setIsUploadingImage(false);
       setUploadStage('');
