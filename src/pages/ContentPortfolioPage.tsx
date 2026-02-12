@@ -210,11 +210,10 @@ export function ContentPortfolioPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 lg:gap-6 auto-rows-[1fr]">
             {filteredContent.map((item, index) => {
               const isPortrait = item.format === 'portrait';
-              const isFirstLandscape = !isPortrait && filteredContent.slice(0, index).every(i => i.format === 'portrait');
               return (
                 <div
                   key={item.id}
-                  className={`${isPortrait ? 'md:row-span-2' : ''} ${isFirstLandscape ? 'md:col-span-2' : ''}`}
+                  className={isPortrait ? 'md:row-span-2' : ''}
                   style={{
                     opacity: 0,
                     transform: 'translateY(20px)',
