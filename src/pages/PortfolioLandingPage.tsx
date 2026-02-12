@@ -53,10 +53,10 @@ const PortfolioLandingPage: React.FC = () => {
       return exitingPanel === 'left' ? '1fr 0fr 0fr 0fr' : '0fr 0fr 0fr 1fr';
     }
     if (hoveredPanel === 'left') {
-      return '1fr 1fr 1fr 0.33fr';
+      return '1.15fr 0.95fr 1fr 0.9fr';
     }
     if (hoveredPanel === 'right') {
-      return '0.33fr 1fr 1fr 1fr';
+      return '0.9fr 1fr 0.95fr 1.15fr';
     }
     return '1fr 1fr 1fr 1fr';
   };
