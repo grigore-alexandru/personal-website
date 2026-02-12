@@ -50,11 +50,10 @@ const PortfolioLandingPage: React.FC = () => {
 
   const getGridTemplate = () => {
     if (isExiting) {
-      // Logic for the full-screen expansion on click
       return exitingPanel === 'left' ? '1fr 1fr 0fr 0fr' : '0fr 0fr 1fr 1fr';
     }
     
-    // Balanced "Slight" expansion: 1.06fr / 0.94fr 
+    // Balanced subtle expansion (6%)
     if (hoveredPanel === 'left') {
       return '1.06fr 1.06fr 0.94fr 0.94fr';
     }
@@ -64,6 +63,9 @@ const PortfolioLandingPage: React.FC = () => {
     return '1fr 1fr 1fr 1fr';
   };
 
+  // Common transition settings for smooth image/video effects
+  const mediaTransition = 'filter 0.5s ease, opacity 0.5s ease, transform 0.5s ease';
+
   return (
     <div className="relative w-full overflow-hidden" style={{ height: 'calc(100vh - 80px)' }}>
       <div
@@ -71,13 +73,12 @@ const PortfolioLandingPage: React.FC = () => {
         style={{
           gridTemplateColumns: isMobile ? '1fr' : getGridTemplate(),
           gridTemplateRows: isMobile ? '1fr 1fr' : '1fr',
-          // Smooth easing for a premium feel
           transition: 'grid-template-columns 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
         {/* Left Panel - Projects */}
         <div
-          className="relative rounded-2xl overflow-hidden cursor-pointer"
+          className="relative rounded-2xl overflow-hidden cursor-pointer group"
           style={{
             gridColumn: isMobile ? 'span 1' : 'span 2',
             transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -91,7 +92,9 @@ const PortfolioLandingPage: React.FC = () => {
             style={{
               backgroundImage: `url('https://lqbyvubbzexujviflunv.supabase.co/storage/v1/object/sign/website-media/PORTFOLIO_PROJECTS_IMAGE.jpeg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iNTIzNTU4Yi1iZjk0LTRiMTItYmQ1Yy1kOGM4MzExZDQ5ZWYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ3ZWJzaXRlLW1lZGlhL1BPUlRGT0xJT19QUk9KRUNUU19JTUFHRS5qcGVnIiwiaWF0IjoxNzcwOTIyNjQzLCJleHAiOjE4MDI0NTg2NDN9.aOODZRS-dsK1i_55i-6Ailz2NiuOQSCP0YIR3-zreQA')`,
               filter: hoveredPanel === 'left' ? 'saturate(1)' : 'saturate(0.3)',
-              transition: 'filter 0.5s ease',
+              // Added scale transform for zoom effect
+              transform: hoveredPanel === 'left' ? 'scale(1.05)' : 'scale(1)',
+              transition: mediaTransition,
             }}
           />
 
@@ -128,7 +131,7 @@ const PortfolioLandingPage: React.FC = () => {
 
         {/* Right Panel - Media */}
         <div
-          className="relative rounded-2xl overflow-hidden cursor-pointer"
+          className="relative rounded-2xl overflow-hidden cursor-pointer group"
           style={{
             gridColumn: isMobile ? 'span 1' : 'span 2',
             transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -137,23 +140,29 @@ const PortfolioLandingPage: React.FC = () => {
           onMouseLeave={() => !isMobile && setHoveredPanel(null)}
           onClick={() => handleNavigate('/portfolio/content', 'right')}
         >
+          {/* Placeholder Image */}
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{
               backgroundImage: `url('https://lqbyvubbzexujviflunv.supabase.co/storage/v1/object/sign/website-media/PORTFOLIO_MEDIA_IMAGE_2.1.1.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iNTIzNTU4Yi1iZjk0LTRiMTItYmQ1Yy1kOGM4MzExZDQ5ZWYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ3ZWJzaXRlLW1lZGlhL1BPUlRGT0xJT19NRURJQV9JTUFHRV8yLjEuMS5qcGciLCJpYXQiOjE3NzA5MjI1OTMsImV4cCI6MTgzMzk5NDU5M30.kdwHBmdS5npljIVlfYtC_4rOSogjwl7MXAIwZeCk8aE')`,
               filter: hoveredPanel === 'right' ? 'saturate(1.1)' : 'saturate(0.3)',
-              transition: 'filter 0.5s ease',
               opacity: hoveredPanel === 'right' ? 0 : 1,
+              // Added scale transform for zoom effect
+              transform: hoveredPanel === 'right' ? 'scale(1.05)' : 'scale(1)',
+              transition: mediaTransition,
             }}
           />
 
+          {/* Video Element */}
           <video
             ref={videoRef}
             className="absolute inset-0 w-full h-full object-cover"
             style={{
               filter: hoveredPanel === 'right' ? 'saturate(1.1)' : 'saturate(0.3)',
-              transition: 'filter 0.5s ease',
               opacity: hoveredPanel === 'right' ? 1 : 0,
+              // Added scale transform for zoom effect
+              transform: hoveredPanel === 'right' ? 'scale(1.05)' : 'scale(1)',
+              transition: mediaTransition,
             }}
             src="https://lqbyvubbzexujviflunv.supabase.co/storage/v1/object/sign/website-media/PORTFOLIO_MEDIA_VIDEO.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iNTIzNTU4Yi1iZjk0LTRiMTItYmQ1Yy1kOGM4MzExZDQ5ZWYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ3ZWJzaXRlLW1lZGlhL1BPUlRGT0xJT19NRURJQV9WSURFTy5tcDQiLCJpYXQiOjE3NzA5MjI2MzAsImV4cCI6MTgwMjQ1ODYzMH0.Z2kP5B44DyVjS23XQO5TJfijAQyAFBYNGglbpN3jZAc"
             muted
