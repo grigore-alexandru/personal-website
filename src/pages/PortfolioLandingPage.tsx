@@ -50,14 +50,16 @@ const PortfolioLandingPage: React.FC = () => {
 
   const getGridTemplate = () => {
     if (isExiting) {
+      // Logic for the full-screen expansion on click
       return exitingPanel === 'left' ? '1fr 1fr 0fr 0fr' : '0fr 0fr 1fr 1fr';
     }
-    // Reduced the variance from 0.15/0.9 to 0.02 for a 10% feel of the original movement
+    
+    // Balanced "Slight" expansion: 1.06fr / 0.94fr 
     if (hoveredPanel === 'left') {
-      return '1.02fr 1.02fr 0.98fr 0.98fr';
+      return '1.06fr 1.06fr 0.94fr 0.94fr';
     }
     if (hoveredPanel === 'right') {
-      return '0.98fr 0.98fr 1.02fr 1.02fr';
+      return '0.94fr 0.94fr 1.06fr 1.06fr';
     }
     return '1fr 1fr 1fr 1fr';
   };
@@ -69,6 +71,7 @@ const PortfolioLandingPage: React.FC = () => {
         style={{
           gridTemplateColumns: isMobile ? '1fr' : getGridTemplate(),
           gridTemplateRows: isMobile ? '1fr 1fr' : '1fr',
+          // Smooth easing for a premium feel
           transition: 'grid-template-columns 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
@@ -76,7 +79,6 @@ const PortfolioLandingPage: React.FC = () => {
         <div
           className="relative rounded-2xl overflow-hidden cursor-pointer"
           style={{
-            // Locked to span 2 to prevent the large layout jump
             gridColumn: isMobile ? 'span 1' : 'span 2',
             transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
           }}
@@ -128,7 +130,6 @@ const PortfolioLandingPage: React.FC = () => {
         <div
           className="relative rounded-2xl overflow-hidden cursor-pointer"
           style={{
-            // Locked to span 2 to prevent the large layout jump
             gridColumn: isMobile ? 'span 1' : 'span 2',
             transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
           }}
