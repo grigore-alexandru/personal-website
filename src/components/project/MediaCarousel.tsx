@@ -4,6 +4,34 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ProjectContentItem } from '../../types';
 import { designTokens } from '../../styles/tokens';
 
+// --- NEW HELPER FUNCTION ---
+const getEmbedUrl = (url: string, platform: string | null): string => {
+  if (!url) return '';
+
+  // 1. Handle YouTube
+  if (platform === 'youtube' || url.includes('youtube.com') || url.includes('youtu.be')) {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    const videoId = match && match[2].length === 11 ? match[2] : null;
+    if (videoId) {
+      return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`;
+    }
+  }
+
+  // 2. Handle Vimeo
+  if (platform === 'vimeo' || url.includes('vimeo.com')) {
+    // Extract ID (matches numbers at end of URL)
+    const match = url.match(/vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)(?:$|\/|\?)/);
+    const videoId = match ? match[1] : null;
+    if (videoId) {
+      return `https://player.vimeo.com/video/${videoId}?badge=0&autopause=0&player_id=0&app_id=58479`;
+    }
+  }
+
+  // 3. Fallback: Return original URL (for Mega or other embed-ready links)
+  return url;
+};
+
 interface MediaCarouselProps {
   items: ProjectContentItem[];
 }
@@ -57,8 +85,15 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ items }) => {
   if (!items.length) return null;
 
   const active = items[currentIndex].content;
-  const isImage = active.content_type?.slug === 'image' || !active.platform;
+  // Fallback: If platform is null/undefined, treat as image unless format implies otherwise? 
+  // Ideally, rely on content_type if available. 
+  const isImage = active.content_type?.slug === 'image' || (!active.platform && !active.format); 
   const isPortrait = active.format === 'portrait';
+
+  // --- USE THE HELPER HERE ---
+  const embedUrl = !isImage && active.platform !== 'instagram' 
+    ? getEmbedUrl(active.url, active.platform) 
+    : '';
 
   const slideVariants = {
     enter: (dir: number) => ({
@@ -116,7 +151,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ items }) => {
               />
             ) : (
               <iframe
-                src={active.url}
+                src={embedUrl} // <--- UPDATED THIS LINE
                 title={active.title}
                 className="w-full h-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -190,11 +225,5 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ items }) => {
     </div>
   );
 };
-
-declare global {
-  interface Window {
-    instgrm?: { Embeds: { process: () => void } };
-  }
-}
 
 export default MediaCarousel;
