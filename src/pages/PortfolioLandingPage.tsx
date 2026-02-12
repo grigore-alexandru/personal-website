@@ -157,3 +157,5 @@ const PortfolioLandingPage: React.FC = () => {
     </div>
   );
 };
+
+export default PortfolioLandingPage;
