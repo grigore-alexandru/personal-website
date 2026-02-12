@@ -131,7 +131,10 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
 
         <div className="flex-1 overflow-y-auto">
           <div className="grid grid-cols-1 lg:grid-cols-[60%_40%] gap-6 p-6">
-            <div className="relative bg-gray-100 rounded-lg overflow-hidden" style={{ aspectRatio: isPortrait ? '9/16' : '16/9' }}>
+            <div
+              className="relative bg-gray-100 rounded-lg overflow-hidden animate-slideIn"
+              style={{ aspectRatio: isPortrait ? '9/16' : '16/9' }}
+            >
               {isImage ? (
                 <>
                   <img
@@ -209,7 +212,7 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
               )}
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-6 animate-slideIn">
               <div>
                 <h3
                   className="text-2xl font-bold text-gray-900 mb-2"
@@ -305,22 +308,41 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
         }
 
         @keyframes scaleIn {
-          from {
+          0% {
             opacity: 0;
-            transform: scale(0.95);
+            transform: scale(0.85);
           }
-          to {
+          50% {
+            opacity: 0.5;
+          }
+          100% {
             opacity: 1;
             transform: scale(1);
           }
         }
 
+        @keyframes slideInContent {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
         .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
+          animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .animate-scaleIn {
-          animation: scaleIn 0.3s ease-out;
+          animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .animate-slideIn {
+          animation: slideInContent 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.15s forwards;
+          opacity: 0;
         }
       `}</style>
     </div>

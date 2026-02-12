@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, X } from 'lucide-react';
 import { ContentWithProject } from '../types';
 import { loadPublishedContentWithProjects } from '../utils/contentService';
-import { ContentCard } from '../components/ContentCard';
+import { ContentGridItem } from '../components/ContentGridItem';
 import Header from '../components/Header';
 
 type MediaFilter = 'all' | 'videos' | 'photos';
@@ -211,14 +211,13 @@ export function ContentPortfolioPage() {
             {filteredContent.map((item, index) => (
               <div
                 key={item.id}
-                className="break-inside-avoid mb-6"
                 style={{
                   opacity: 0,
                   transform: 'translateY(20px)',
                   animation: `fadeInUp 0.6s ease-out ${index * 0.05}s forwards`,
                 }}
               >
-                <ContentCard content={item} onClick={() => handleContentClick(item)} />
+                <ContentGridItem content={item} onClick={() => handleContentClick(item)} />
               </div>
             ))}
           </div>
