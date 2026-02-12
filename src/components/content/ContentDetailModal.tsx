@@ -118,11 +118,16 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
         ref={modalRef}
         className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden animate-scaleIn flex flex-col"
       >
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900 line-clamp-1">{content.title}</h2>
+        <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b border-gray-200 bg-white">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-1">{content.title}</h2>
+            {year && (
+              <p className="text-sm text-gray-600">{year}</p>
+            )}
+          </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0 ml-4"
             aria-label="Close modal"
           >
             <X className="w-5 h-5 text-gray-600" />
@@ -130,10 +135,13 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-[60%_40%] gap-6 p-6">
+          <div className="p-6 space-y-6">
             <div
-              className="relative bg-gray-100 rounded-lg overflow-hidden animate-slideIn"
-              style={{ aspectRatio: isPortrait ? '9/16' : '16/9' }}
+              className="relative bg-gray-100 rounded-lg overflow-hidden animate-slideIn mx-auto"
+              style={{
+                aspectRatio: isPortrait ? '9/16' : '16/9',
+                maxWidth: isPortrait ? '300px' : '100%',
+              }}
             >
               {isImage ? (
                 <>
@@ -212,87 +220,70 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
               )}
             </div>
 
-            <div className="space-y-6 animate-slideIn">
-              <div>
-                <h3
-                  className="text-2xl font-bold text-gray-900 mb-2"
-                  style={{
-                    fontFamily: designTokens.typography.fontFamily,
-                    fontWeight: designTokens.typography.weights.bold,
-                  }}
-                >
-                  {content.title}
-                </h3>
-
-                {year && (
-                  <p className="text-gray-600 text-sm mb-4">
-                    {year}
+            {content.project_info && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-3 border-b border-gray-200 animate-slideIn">
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                    Client
                   </p>
-                )}
+                  <p className="text-base text-gray-900 font-medium">
+                    {content.project_info.client_name}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                    Type
+                  </p>
+                  <p className="text-base text-gray-900 font-medium">
+                    {content.project_info.project_type_name}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                    Project
+                  </p>
+                  <p className="text-base text-gray-900 font-medium">
+                    {content.project_info.project_title || '—'}
+                  </p>
+                </div>
               </div>
+            )}
 
-              {content.project_info ? (
-                <>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                      Client
-                    </p>
-                    <p className="text-lg text-gray-900">
-                      {content.project_info.client_name}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                      Type
-                    </p>
-                    <p className="text-lg text-gray-900">
-                      {content.project_info.project_type_name}
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <p className="text-sm text-gray-600">
-                    Not assigned to any project
-                  </p>
+            {content.contributors && content.contributors.length > 0 && (
+              <div className="animate-slideIn">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                  Collaborators
+                </p>
+                <div className="space-y-2">
+                  {content.contributors.map((contributor, index) => (
+                    <div
+                      key={index}
+                      className="flex justify-between items-center py-2"
+                    >
+                      <span className="font-medium text-gray-900">
+                        {contributor.name}
+                      </span>
+                      <span className="text-gray-600 text-sm">
+                        {contributor.role}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              )}
+              </div>
+            )}
 
-              {content.caption && (
-                <div>
-                  <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                    Caption
-                  </p>
-                  <p className="text-gray-700 leading-relaxed">
-                    {content.caption}
-                  </p>
-                </div>
-              )}
-
-              {content.contributors && content.contributors.length > 0 && (
-                <div>
-                  <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                    Contributors
-                  </p>
-                  <div className="space-y-2">
-                    {content.contributors.map((contributor, index) => (
-                      <div
-                        key={index}
-                        className="flex justify-between items-center py-2 border-b border-gray-200 last:border-0"
-                      >
-                        <span className="font-medium text-gray-900">
-                          {contributor.name}
-                        </span>
-                        <span className="text-gray-600 text-sm">
-                          {contributor.role}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+            {content.caption && (
+              <div className="animate-slideIn">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                  Caption
+                </p>
+                <p className="text-gray-700 leading-relaxed">
+                  {content.caption}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
