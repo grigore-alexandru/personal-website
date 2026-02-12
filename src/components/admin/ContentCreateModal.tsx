@@ -163,7 +163,8 @@ export function ContentCreateModal({ open, onClose, onSuccess, onError }: Conten
     setUploadStage('Processing image...');
 
     try {
-      const result = await processAndUploadContentImage(file, (stage) => {
+      const isPortrait = formData.format === 'portrait';
+      const result = await processAndUploadContentImage(file, isPortrait, (stage) => {
         setUploadStage(stage);
       });
 
@@ -453,7 +454,7 @@ export function ContentCreateModal({ open, onClose, onSuccess, onError }: Conten
                     </div>
                     <VideoThumbnailHoverPreview
                       thumbnail={formData.videoThumbnail}
-                      className="aspect-video"
+                      format={formData.format}
                     />
                   </div>
                 )}

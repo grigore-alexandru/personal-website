@@ -3,10 +3,11 @@ import { ContentThumbnailVideo } from '../../types';
 
 interface VideoThumbnailHoverPreviewProps {
   thumbnail: ContentThumbnailVideo;
+  format?: 'portrait' | 'landscape';
   className?: string;
 }
 
-export function VideoThumbnailHoverPreview({ thumbnail, className = '' }: VideoThumbnailHoverPreviewProps) {
+export function VideoThumbnailHoverPreview({ thumbnail, format = 'landscape', className = '' }: VideoThumbnailHoverPreviewProps) {
   const [isHovering, setIsHovering] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -26,9 +27,11 @@ export function VideoThumbnailHoverPreview({ thumbnail, className = '' }: VideoT
     }
   };
 
+  const aspectRatioClass = format === 'portrait' ? 'aspect-[3/4]' : 'aspect-video';
+
   return (
     <div
-      className={`relative bg-gray-100 rounded-lg overflow-hidden ${className}`}
+      className={`relative bg-gray-100 rounded-lg overflow-hidden ${aspectRatioClass} ${className}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -38,7 +41,6 @@ export function VideoThumbnailHoverPreview({ thumbnail, className = '' }: VideoT
         className={`w-full h-full object-cover transition-opacity duration-200 ${
           isHovering ? 'opacity-0' : 'opacity-100'
         }`}
-        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
       />
       <video
         ref={videoRef}
@@ -46,10 +48,9 @@ export function VideoThumbnailHoverPreview({ thumbnail, className = '' }: VideoT
         loop
         muted
         playsInline
-        className={`w-full h-full object-cover transition-opacity duration-200 ${
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-200 ${
           isHovering ? 'opacity-100' : 'opacity-0'
         }`}
-        style={{ position: 'relative', display: 'block' }}
       />
     </div>
   );

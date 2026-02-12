@@ -1,8 +1,10 @@
 import { supabase } from '../lib/supabase';
 
 const MAX_FILE_SIZE = 7 * 1024 * 1024;
-const FULL_IMAGE_MAX_WIDTH = 1920;
-const THUMBNAIL_MAX_WIDTH = 400;
+const FULL_IMAGE_MAX_WIDTH_LANDSCAPE = 1920;
+const FULL_IMAGE_MAX_WIDTH_PORTRAIT = 1080;
+const THUMBNAIL_MAX_WIDTH_LANDSCAPE = 400;
+const THUMBNAIL_MAX_WIDTH_PORTRAIT = 270;
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
 
 export interface ProcessedContentImages {
@@ -129,6 +131,7 @@ async function uploadToContentMedia(
 
 export async function processAndUploadContentImage(
   file: File,
+  isPortrait: boolean = false,
   onProgress?: (stage: string) => void
 ): Promise<ProcessedContentImages> {
   const validation = validateContentImage(file);
@@ -140,11 +143,14 @@ export async function processAndUploadContentImage(
     onProgress?.('Loading image...');
     const img = await loadImage(file);
 
+    const fullMaxWidth = isPortrait ? FULL_IMAGE_MAX_WIDTH_PORTRAIT : FULL_IMAGE_MAX_WIDTH_LANDSCAPE;
+    const thumbnailMaxWidth = isPortrait ? THUMBNAIL_MAX_WIDTH_PORTRAIT : THUMBNAIL_MAX_WIDTH_LANDSCAPE;
+
     onProgress?.('Processing full resolution...');
-    const fullBlob = await resizeImage(img, FULL_IMAGE_MAX_WIDTH, 0.85);
+    const fullBlob = await resizeImage(img, fullMaxWidth, 0.85);
 
     onProgress?.('Processing compressed thumbnail...');
-    const thumbnailBlob = await resizeImage(img, THUMBNAIL_MAX_WIDTH, 0.55);
+    const thumbnailBlob = await resizeImage(img, thumbnailMaxWidth, 0.55);
 
     const baseFileName = file.name.replace(/\.[^/.]+$/, '');
 

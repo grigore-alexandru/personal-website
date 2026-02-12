@@ -115,7 +115,8 @@ function extractPosterFrame(
 
 async function compressVideoThumbnail(
   file: File,
-  maxDuration: number
+  maxDuration: number,
+  isPortrait: boolean = false
 ): Promise<Blob> {
   return new Promise(async (resolve, reject) => {
     const video = document.createElement('video');
@@ -262,7 +263,7 @@ export async function processAndUploadVideoThumbnail(
     const posterBlob = await extractPosterFrame(video, isPortrait);
 
     onProgress?.('Compressing thumbnail video...');
-    const thumbnailBlob = await compressVideoThumbnail(file, MAX_THUMBNAIL_DURATION);
+    const thumbnailBlob = await compressVideoThumbnail(file, MAX_THUMBNAIL_DURATION, isPortrait);
 
     const baseFileName = file.name.replace(/\.[^/.]+$/, '');
 
