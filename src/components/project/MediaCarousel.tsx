@@ -4,23 +4,38 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ProjectContentItem } from '../../types';
 import { designTokens } from '../../styles/tokens';
 
-// --- NEW HELPER FUNCTION ---
 const getEmbedUrl = (url: string, platform: string | null): string => {
   if (!url) return '';
 
   // 1. Handle YouTube
   if (platform === 'youtube' || url.includes('youtube.com') || url.includes('youtu.be')) {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-    const videoId = match && match[2].length === 11 ? match[2] : null;
+    let videoId: string | null = null;
+
+    // Handle YouTube Shorts: youtube.com/shorts/VIDEO_ID
+    if (url.includes('/shorts/')) {
+      const shortsMatch = url.match(/\/shorts\/([a-zA-Z0-9_-]{11})/);
+      if (shortsMatch) {
+        videoId = shortsMatch[1];
+      }
+    }
+
+    // Handle standard YouTube URLs
+    if (!videoId) {
+      const regExp = /^.*(?:youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+      const match = url.match(regExp);
+      videoId = match && match[1].length === 11 ? match[1] : null;
+    }
+
     if (videoId) {
-      return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`;
+      // Extract timestamp if present (t=30s or t=30)
+      const timeMatch = url.match(/[?&]t=(\d+)/);
+      const startTime = timeMatch ? `&start=${timeMatch[1]}` : '';
+      return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1${startTime}`;
     }
   }
 
   // 2. Handle Vimeo
   if (platform === 'vimeo' || url.includes('vimeo.com')) {
-    // Extract ID (matches numbers at end of URL)
     const match = url.match(/vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)(?:$|\/|\?)/);
     const videoId = match ? match[1] : null;
     if (videoId) {
@@ -39,23 +54,31 @@ interface MediaCarouselProps {
 const MediaCarousel: React.FC<MediaCarouselProps> = ({ items }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
+  const [iframeError, setIframeError] = useState(false);
+  const [iframeLoading, setIframeLoading] = useState(true);
   const instaRef = useRef<HTMLDivElement>(null);
 
   const goTo = useCallback((index: number) => {
     setDirection(index > currentIndex ? 1 : -1);
     setCurrentIndex(index);
+    setIframeError(false);
+    setIframeLoading(true);
   }, [currentIndex]);
 
   const goToPrevious = useCallback(() => {
     const newIndex = currentIndex === 0 ? items.length - 1 : currentIndex - 1;
     setDirection(-1);
     setCurrentIndex(newIndex);
+    setIframeError(false);
+    setIframeLoading(true);
   }, [currentIndex, items.length]);
 
   const goToNext = useCallback(() => {
     const newIndex = currentIndex === items.length - 1 ? 0 : currentIndex + 1;
     setDirection(1);
     setCurrentIndex(newIndex);
+    setIframeError(false);
+    setIframeLoading(true);
   }, [currentIndex, items.length]);
 
   useEffect(() => {
@@ -150,13 +173,41 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ items }) => {
                 className="w-full h-full flex items-center justify-center"
               />
             ) : (
-              <iframe
-                src={embedUrl} // <--- UPDATED THIS LINE
-                title={active.title}
-                className="w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
+              <div className="w-full h-full relative">
+                {iframeLoading && !iframeError && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-neutral-900">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
+                  </div>
+                )}
+                {iframeError ? (
+                  <div className="absolute inset-0 flex items-center justify-center bg-neutral-900 text-white px-4">
+                    <div className="text-center">
+                      <p className="mb-2">Unable to load video</p>
+                      <a
+                        href={active.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm underline hover:text-gray-300"
+                      >
+                        Open in new tab
+                      </a>
+                    </div>
+                  </div>
+                ) : (
+                  <iframe
+                    src={embedUrl}
+                    title={active.title}
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    onLoad={() => setIframeLoading(false)}
+                    onError={() => {
+                      setIframeError(true);
+                      setIframeLoading(false);
+                    }}
+                  />
+                )}
+              </div>
             )}
           </motion.div>
         </AnimatePresence>
@@ -225,5 +276,11 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ items }) => {
     </div>
   );
 };
+
+declare global {
+  interface Window {
+    instgrm?: { Embeds: { process: () => void } };
+  }
+}
 
 export default MediaCarousel;
