@@ -165,9 +165,16 @@ a:focus {
   .no-print {
     display: none !important;
   }
-  
+
   * {
     color: #000 !important;
     background: #fff !important;
+  }
+}
+
+/* First Landscape Item Grid Spanning */
+@media (min-width: 768px) {
+  [class*="md:col-span-2"] {
+    height: 100%;
   }
 }
