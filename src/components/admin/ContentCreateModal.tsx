@@ -224,7 +224,7 @@ export function ContentCreateModal({ open, onClose, onSuccess, onError }: Conten
       errors.push({ field: 'slug', message: 'Slug is required' });
     } else {
       const slugValidation = validateSlug(formData.slug);
-      if (!slugValidation.valid) {
+      if (!slugValidation.isValid) {
         errors.push({ field: 'slug', message: slugValidation.error });
       } else {
         const isUnique = await checkContentSlugUniqueness(formData.slug);
