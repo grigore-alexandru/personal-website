@@ -408,3 +408,49 @@ export async function loadPublishedContentWithProjects(): Promise<ContentWithPro
     project_info: projectInfoByContent.get(content.id) || null,
   }));
 }
+
+export async function loadContentBySlug(slug: string): Promise<ContentWithProject | null> {
+  const { data: contentData, error: contentError } = await supabase
+    .from('content')
+    .select('*, content_type:content_types(*)')
+    .eq('slug', slug)
+    .eq('is_draft', false)
+    .maybeSingle();
+
+  if (contentError || !contentData) {
+    console.error('Error loading content by slug:', contentError);
+    return null;
+  }
+
+  const { data: projectContentData, error: projectContentError } = await supabase
+    .from('project_content')
+    .select(`
+      content_id,
+      project:projects!inner(
+        id,
+        title,
+        client_name,
+        is_draft,
+        project_type:project_types(name)
+      )
+    `)
+    .eq('content_id', contentData.id)
+    .eq('project.is_draft', false)
+    .maybeSingle();
+
+  if (projectContentError) {
+    console.error('Error loading project association:', projectContentError);
+  }
+
+  const projectInfo = projectContentData?.project ? {
+    project_id: (projectContentData.project as any).id,
+    project_title: (projectContentData.project as any).title,
+    client_name: (projectContentData.project as any).client_name,
+    project_type_name: (projectContentData.project as any).project_type?.name || 'Unknown',
+  } : null;
+
+  return {
+    ...(contentData as unknown as Content),
+    project_info: projectInfo,
+  };
+}

@@ -5,6 +5,7 @@ import UnderConstructionPage from './pages/UnderConstructionPage';
 import PortfolioPage from './pages/PortfolioPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
 import { ContentPortfolioPage } from './pages/ContentPortfolioPage';
+import { ContentDetailPage } from './pages/ContentDetailPage';
 import BlogListPage from './pages/BlogListPage';
 import BlogPostPage from './pages/BlogPostPage';
 import AdminLoginPage from './pages/admin/AdminLoginPage';
@@ -37,6 +38,7 @@ function App() {
         <Route path="/portfolio" element={<PublicLayout><PortfolioPage /></PublicLayout>} />
         <Route path="/portfolio/project/:slug" element={<PublicLayout><ProjectDetailPage /></PublicLayout>} />
         <Route path="/portfolio/content" element={<PublicLayout><ContentPortfolioPage /></PublicLayout>} />
+        <Route path="/portfolio/content/:slug" element={<PublicLayout><ContentDetailPage /></PublicLayout>} />
         <Route path="/blog" element={<PublicLayout><BlogListPage /></PublicLayout>} />
         <Route path="/blog/:slug" element={<PublicLayout><BlogPostPage /></PublicLayout>} />
 

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, X } from 'lucide-react';
 import { ContentWithProject } from '../types';
 import { loadPublishedContentWithProjects } from '../utils/contentService';
@@ -8,6 +9,7 @@ import Header from '../components/Header';
 type MediaFilter = 'all' | 'videos' | 'photos';
 
 export function ContentPortfolioPage() {
+  const navigate = useNavigate();
   const [content, setContent] = useState<ContentWithProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [mediaFilter, setMediaFilter] = useState<MediaFilter>('all');
@@ -81,7 +83,7 @@ export function ContentPortfolioPage() {
   };
 
   const handleContentClick = (item: ContentWithProject) => {
-    console.log('Content clicked:', item);
+    navigate(`/portfolio/content/${item.slug}`);
   };
 
   return (
