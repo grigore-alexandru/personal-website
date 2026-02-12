@@ -1,21 +1,23 @@
 import { InputHTMLAttributes, forwardRef } from 'react';
 
 interface FormInputProps extends InputHTMLAttributes<HTMLInputElement> {
-  label: string;
+  label?: string;
   error?: string;
   helperText?: string;
 }
 
 export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
   ({ label, error, helperText, className = '', id, ...props }, ref) => {
-    const inputId = id || label.toLowerCase().replace(/\s+/g, '-');
+    const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
 
     return (
       <div className="w-full">
-        <label htmlFor={inputId} className="block text-sm font-medium text-black mb-2">
-          {label}
-          {props.required && <span className="text-red-500 ml-1">*</span>}
-        </label>
+        {label && (
+          <label htmlFor={inputId} className="block text-sm font-medium text-black mb-2">
+            {label}
+            {props.required && <span className="text-red-500 ml-1">*</span>}
+          </label>
+        )}
         <input
           ref={ref}
           id={inputId}

@@ -216,7 +216,8 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
     return '';
   };
 
-  const handleUrlChange = (value: string) => {
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
     setFormData((prev) => ({
       ...prev,
       url: value,
@@ -576,7 +577,7 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
               <FormInput
                 label="Title"
                 value={formData.title}
-                onChange={(value) => setFormData({ ...formData, title: value })}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 required
                 placeholder="Enter content title"
                 maxLength={200}
@@ -598,7 +599,7 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
                 </div>
                 <FormInput
                   value={formData.slug}
-                  onChange={(value) => setFormData({ ...formData, slug: value.toLowerCase() })}
+                  onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase() })}
                   required
                   placeholder="content-slug"
                   error={validationErrors.find((e) => e.field === 'slug')?.message}
@@ -608,7 +609,7 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
               <FormTextarea
                 label="Caption"
                 value={formData.caption}
-                onChange={(value) => setFormData({ ...formData, caption: value })}
+                onChange={(e) => setFormData({ ...formData, caption: e.target.value })}
                 placeholder="Optional caption for this content"
                 rows={3}
               />
@@ -884,13 +885,13 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
                     <div className="flex-1 grid grid-cols-2 gap-3">
                       <FormInput
                         value={contributor.name}
-                        onChange={(value) => updateContributor(idx, 'name', value)}
+                        onChange={(e) => updateContributor(idx, 'name', e.target.value)}
                         placeholder="Name"
                         error={validationErrors.find((e) => e.field === `contributor-${idx}`)?.message}
                       />
                       <FormInput
                         value={contributor.role}
-                        onChange={(value) => updateContributor(idx, 'role', value)}
+                        onChange={(e) => updateContributor(idx, 'role', e.target.value)}
                         placeholder="Role"
                       />
                     </div>
