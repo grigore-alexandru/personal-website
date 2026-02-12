@@ -31,16 +31,14 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
     }
   };
 
-  const mediaAspectClass = isPortrait ? 'aspect-[9/16]' : 'aspect-video';
-
   const year = content.published_at
     ? new Date(content.published_at).getFullYear()
     : null;
 
   return (
     <div
-      className={`break-inside-avoid mb-6 group relative bg-gray-100 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg ${mediaAspectClass} ${
-        isPortrait ? 'mx-auto max-w-xs' : 'w-full'
+      className={`group relative bg-gray-100 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg w-full h-full ${
+        isPortrait ? '' : 'aspect-[16/10]'
       }`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}

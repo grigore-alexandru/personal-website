@@ -187,18 +187,18 @@ export function ContentPortfolioPage() {
         </div>
 
         {loading ? (
-          <div className="columns-1 md:columns-2 lg:columns-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 lg:gap-6 auto-rows-[1fr]">
             {Array.from({ length: 9 }).map((_, i) => (
               <div
                 key={i}
-                className="break-inside-avoid mb-6 animate-pulse"
+                className="animate-pulse"
                 style={{
                   opacity: 1 - i * 0.1,
                   transform: `translateY(${i * 5}px)`,
                   animation: `fadeInUp 0.6s ease-out ${i * 0.1}s forwards`,
                 }}
               >
-                <div className="bg-gray-200 rounded-lg aspect-video" />
+                <div className="bg-gray-200 rounded-lg aspect-[16/10]" />
               </div>
             ))}
           </div>
@@ -207,19 +207,23 @@ export function ContentPortfolioPage() {
             <p className="text-gray-500 text-lg">No content found matching your filters</p>
           </div>
         ) : (
-          <div className="columns-1 md:columns-2 lg:columns-3 gap-6">
-            {filteredContent.map((item, index) => (
-              <div
-                key={item.id}
-                style={{
-                  opacity: 0,
-                  transform: 'translateY(20px)',
-                  animation: `fadeInUp 0.6s ease-out ${index * 0.05}s forwards`,
-                }}
-              >
-                <ContentGridItem content={item} onClick={() => handleContentClick(item)} />
-              </div>
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 lg:gap-6 auto-rows-[1fr]">
+            {filteredContent.map((item, index) => {
+              const isPortrait = item.format === 'portrait';
+              return (
+                <div
+                  key={item.id}
+                  className={isPortrait ? 'md:row-span-2' : ''}
+                  style={{
+                    opacity: 0,
+                    transform: 'translateY(20px)',
+                    animation: `fadeInUp 0.6s ease-out ${index * 0.05}s forwards`,
+                  }}
+                >
+                  <ContentGridItem content={item} onClick={() => handleContentClick(item)} />
+                </div>
+              );
+            })}
           </div>
         )}
       </main>
