@@ -33,6 +33,10 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
 
   const mediaAspectClass = isPortrait ? 'aspect-[9/16]' : 'aspect-video';
 
+  const year = content.published_at
+    ? new Date(content.published_at).getFullYear()
+    : null;
+
   return (
     <div
       className={`break-inside-avoid mb-6 group relative bg-gray-100 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg ${mediaAspectClass} ${
@@ -85,6 +89,30 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
           <span className="text-gray-400 text-sm">No thumbnail</span>
         </div>
       )}
+
+      <div
+        className={`absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-black/80 via-black/40 to-transparent transition-all duration-300 ${
+          isHovering
+            ? 'opacity-100 translate-y-0'
+            : 'opacity-0 translate-y-4'
+        }`}
+      >
+        <div className="absolute bottom-0 left-0 right-0 p-4">
+          <h3 className="font-semibold text-white text-lg mb-2 line-clamp-2">
+            {content.title}
+          </h3>
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-gray-300">
+              {content.project_info?.client_name || 'Independent'}
+            </span>
+            {year && (
+              <span className="text-gray-300">
+                {year}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
