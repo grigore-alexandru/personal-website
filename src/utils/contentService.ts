@@ -181,6 +181,42 @@ export async function loadAllContent(): Promise<Content[]> {
   return (data || []) as unknown as Content[];
 }
 
+export async function loadContentWithProjects(): Promise<(Content & { projects?: Array<{ id: string; title: string }> })[]> {
+  const { data: contentData, error: contentError } = await supabase
+    .from('content')
+    .select('*, content_type:content_types(*)')
+    .order('created_at', { ascending: false });
+
+  if (contentError) {
+    console.error('Error loading content:', contentError);
+    return [];
+  }
+
+  const { data: projectContentData, error: projectContentError } = await supabase
+    .from('project_content')
+    .select('content_id, project:projects(id, title)');
+
+  if (projectContentError) {
+    console.error('Error loading project associations:', projectContentError);
+    return (contentData || []) as unknown as Content[];
+  }
+
+  const projectsByContent = new Map<string, Array<{ id: string; title: string }>>();
+
+  for (const pc of projectContentData || []) {
+    if (pc.project) {
+      const existing = projectsByContent.get(pc.content_id) || [];
+      existing.push(pc.project as { id: string; title: string });
+      projectsByContent.set(pc.content_id, existing);
+    }
+  }
+
+  return (contentData || []).map((content) => ({
+    ...(content as unknown as Content),
+    projects: projectsByContent.get(content.id) || [],
+  }));
+}
+
 export async function deleteContent(
   contentId: string
 ): Promise<{ success: boolean; error?: string }> {

@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Search, X, Check, Film, ImageIcon, Loader2 } from 'lucide-react';
+import { Search, X, Check, Film, ImageIcon, Loader2, Folder } from 'lucide-react';
 import { Content } from '../../types';
-import { loadAllContent } from '../../utils/contentService';
+import { loadContentWithProjects } from '../../utils/contentService';
+
+type ContentWithProjects = Content & { projects?: Array<{ id: string; title: string }> };
 
 interface ContentBrowserProps {
   open: boolean;
@@ -11,7 +13,7 @@ interface ContentBrowserProps {
 }
 
 export function ContentBrowser({ open, onClose, onSelect, excludeIds }: ContentBrowserProps) {
-  const [allContent, setAllContent] = useState<Content[]>([]);
+  const [allContent, setAllContent] = useState<ContentWithProjects[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | 'video' | 'image'>('all');
@@ -27,7 +29,7 @@ export function ContentBrowser({ open, onClose, onSelect, excludeIds }: ContentB
 
   const loadContent = async () => {
     setLoading(true);
-    const data = await loadAllContent();
+    const data = await loadContentWithProjects();
     setAllContent(data);
     setLoading(false);
   };
@@ -120,6 +122,7 @@ export function ContentBrowser({ open, onClose, onSelect, excludeIds }: ContentB
                 const isSelected = selected.has(item.id);
                 const isVideo = item.content_type?.slug === 'video';
                 const previewUrl = getPreviewUrl(item);
+                const hasProjects = item.projects && item.projects.length > 0;
 
                 return (
                   <button
@@ -130,7 +133,7 @@ export function ContentBrowser({ open, onClose, onSelect, excludeIds }: ContentB
                       isSelected
                         ? 'border-black ring-2 ring-black/20'
                         : 'border-neutral-200 hover:border-neutral-400'
-                    }`}
+                    } ${!hasProjects ? 'opacity-50 grayscale-[30%]' : ''}`}
                   >
                     <div className="aspect-video bg-neutral-100 relative">
                       {previewUrl ? (
@@ -158,17 +161,48 @@ export function ContentBrowser({ open, onClose, onSelect, excludeIds }: ContentB
                         </div>
                       )}
 
-                      <span className={`absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                        isVideo ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
-                      }`}>
-                        {isVideo ? 'Video' : 'Image'}
-                      </span>
+                      <div className="absolute top-2 left-2 flex gap-1">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                          isVideo ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
+                        }`}>
+                          {isVideo ? 'Video' : 'Image'}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="p-2">
                       <p className="text-xs font-medium text-neutral-900 truncate">{item.title}</p>
-                      {item.platform && (
-                        <p className="text-[10px] text-neutral-500 capitalize mt-0.5">{item.platform}</p>
+                      <div className="flex items-center gap-1 mt-1 flex-wrap">
+                        {item.platform && (
+                          <p className="text-[10px] text-neutral-500 capitalize">{item.platform}</p>
+                        )}
+                        {hasProjects && (
+                          <>
+                            {item.platform && <span className="text-neutral-300">•</span>}
+                            <div className="flex items-center gap-1">
+                              <Folder size={10} className="text-neutral-400" />
+                              <span className="text-[10px] text-neutral-600 font-medium">
+                                {item.projects!.length} project{item.projects!.length !== 1 ? 's' : ''}
+                              </span>
+                            </div>
+                          </>
+                        )}
+                        {!hasProjects && (
+                          <span className="text-[10px] text-neutral-400 italic">Unassigned</span>
+                        )}
+                      </div>
+                      {hasProjects && item.projects!.length <= 2 && (
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {item.projects!.map((project) => (
+                            <span
+                              key={project.id}
+                              className="text-[9px] px-1.5 py-0.5 bg-neutral-100 text-neutral-700 rounded truncate max-w-full"
+                              title={project.title}
+                            >
+                              {project.title}
+                            </span>
+                          ))}
+                        </div>
                       )}
                     </div>
                   </button>

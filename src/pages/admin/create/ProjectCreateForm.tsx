@@ -22,13 +22,11 @@ import {
   loadProjectTypes,
 } from '../../../utils/portfolioService';
 import {
-  createContent,
   addContentToProject,
   removeContentFromProject,
   reorderProjectContent,
-  loadContentTypes,
 } from '../../../utils/contentService';
-import { TipTapContent, ImpactMetric, Recommendation, ProjectType, ContentType, Content } from '../../../types';
+import { TipTapContent, ImpactMetric, Recommendation, ProjectType } from '../../../types';
 
 interface ProjectFormData {
   title: string;
@@ -81,7 +79,6 @@ export function ProjectCreateForm({ mode = 'create' }: ProjectCreateFormProps) {
 
   const [formData, setFormData] = useState<ProjectFormData>({ ...initialFormData });
   const [projectTypes, setProjectTypes] = useState<ProjectType[]>([]);
-  const [contentTypes, setContentTypes] = useState<ContentType[]>([]);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingProject, setIsLoadingProject] = useState(false);
@@ -106,9 +103,8 @@ export function ProjectCreateForm({ mode = 'create' }: ProjectCreateFormProps) {
   }, [hasUnsavedChanges]);
 
   const loadFormDependencies = async () => {
-    const [types, cTypes] = await Promise.all([loadProjectTypes(), loadContentTypes()]);
+    const types = await loadProjectTypes();
     setProjectTypes(types);
-    setContentTypes(cTypes);
   };
 
   const loadExistingProject = async (id: string) => {
@@ -190,29 +186,6 @@ export function ProjectCreateForm({ mode = 'create' }: ProjectCreateFormProps) {
     handleChange('heroImageThumbnail', '');
   };
 
-  const handleCreateContent = async (data: {
-    type_id: string;
-    title: string;
-    url: string;
-    platform?: string;
-    format: string;
-    caption?: string;
-  }): Promise<Content | null> => {
-    const result = await createContent({
-      type_id: data.type_id,
-      title: data.title,
-      url: data.url,
-      platform: data.platform as any,
-      format: data.format as any,
-      caption: data.caption,
-    });
-    if (result.success && result.data) {
-      showToast('success', 'Content created');
-      return result.data;
-    }
-    showToast('error', result.error || 'Failed to create content');
-    return null;
-  };
 
   const syncGalleryContent = async (projectId: string) => {
     const currentIds = formData.galleryItems.map((i) => i.content_id);
@@ -491,8 +464,8 @@ export function ProjectCreateForm({ mode = 'create' }: ProjectCreateFormProps) {
           <GalleryManager
             items={formData.galleryItems}
             onChange={(items) => handleChange('galleryItems', items)}
-            contentTypes={contentTypes}
-            onCreateContent={handleCreateContent}
+            onSuccess={(message) => showToast('success', message)}
+            onError={(message) => showToast('error', message)}
           />
         </div>
 
