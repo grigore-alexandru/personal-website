@@ -44,6 +44,21 @@ export const MediaCompressor: React.FC = () => {
   useEffect(() => {
     const load = async () => {
       setFfmpegLoading(true);
+
+      if (typeof SharedArrayBuffer === 'undefined') {
+        console.error('SharedArrayBuffer is not available');
+        setError('Video compression requires a modern browser with SharedArrayBuffer support. Try Chrome, Edge, or Firefox. If deployed, ensure Cross-Origin headers are set.');
+        setFfmpegLoading(false);
+        return;
+      }
+
+      if (!crossOriginIsolated) {
+        console.error('Not in cross-origin isolated context');
+        setError('Video compression requires secure Cross-Origin isolation. This works in development and will work after deployment with proper headers.');
+        setFfmpegLoading(false);
+        return;
+      }
+
       try {
         const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
         const ffmpeg = ffmpegRef.current;
@@ -59,7 +74,7 @@ export const MediaCompressor: React.FC = () => {
         setFfmpegLoaded(true);
       } catch (err) {
         console.error('FFmpeg load error:', err);
-        setError('Video compression unavailable. Check browser compatibility.');
+        setError(`Video compression failed to load: ${err instanceof Error ? err.message : 'Unknown error'}. Image compression will still work.`);
       } finally {
         setFfmpegLoading(false);
       }
@@ -242,10 +257,14 @@ export const MediaCompressor: React.FC = () => {
         </div>
       </div>
 
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-          <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
-          <span className="text-red-800 text-sm">{error}</span>
+      {error && !result && (
+        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
+          <AlertCircle className="text-amber-600 flex-shrink-0 mt-0.5" size={20} />
+          <div className="text-amber-800 text-sm">
+            <p className="font-bold mb-1">Notice</p>
+            <p>{error}</p>
+            {!ffmpegLoaded && <p className="mt-2 text-xs text-amber-700">Image compression is still fully available.</p>}
+          </div>
         </div>
       )}
 
