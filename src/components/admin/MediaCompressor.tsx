@@ -47,14 +47,14 @@ export const MediaCompressor: React.FC = () => {
 
       if (typeof SharedArrayBuffer === 'undefined') {
         console.error('SharedArrayBuffer is not available');
-        setError('Video compression requires a modern browser with SharedArrayBuffer support. Try Chrome, Edge, or Firefox. If deployed, ensure Cross-Origin headers are set.');
+        setError('Video compression requires SharedArrayBuffer support. This browser or environment does not support it. Image compression works in all browsers.');
         setFfmpegLoading(false);
         return;
       }
 
       if (!crossOriginIsolated) {
         console.error('Not in cross-origin isolated context');
-        setError('Video compression is only available in development mode. Image compression works everywhere.');
+        setError('Video compression requires special browser security settings (Cross-Origin Isolation). Image compression is fully functional and recommended for most uses.');
         setFfmpegLoading(false);
         return;
       }
@@ -74,7 +74,7 @@ export const MediaCompressor: React.FC = () => {
         setFfmpegLoaded(true);
       } catch (err) {
         console.error('FFmpeg load error:', err);
-        setError(`Video compression failed to load: ${err instanceof Error ? err.message : 'Unknown error'}. Image compression will still work.`);
+        setError(`Video compression could not be initialized. Image compression is fully functional and recommended for portfolio images.`);
       } finally {
         setFfmpegLoading(false);
       }
