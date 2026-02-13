@@ -1,5 +1,5 @@
 import { LogOut, User } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { signOut } from '../../utils/authService';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -7,9 +7,43 @@ interface AdminHeaderProps {
   currentSection?: string;
 }
 
+interface NavItem {
+  label: string;
+  path: string;
+  sections: string[];
+}
+
 export function AdminHeader({ currentSection = 'Dashboard' }: AdminHeaderProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+
+  const navItems: NavItem[] = [
+    {
+      label: 'Blog',
+      path: '/admin/blog',
+      sections: ['Blog Management', 'Dashboard']
+    },
+    {
+      label: 'Portfolio',
+      path: '/admin/portfolio',
+      sections: ['Portfolio Management']
+    },
+    {
+      label: 'Content',
+      path: '/admin/content',
+      sections: ['Content Management']
+    },
+    {
+      label: 'Compressor',
+      path: '/admin/compressor',
+      sections: ['Media Compressor']
+    }
+  ];
+
+  const isNavItemActive = (item: NavItem) => {
+    return item.sections.includes(currentSection) || location.pathname.startsWith(item.path);
+  };
 
   const handleLogout = async () => {
     await signOut();
@@ -21,30 +55,28 @@ export function AdminHeader({ currentSection = 'Dashboard' }: AdminHeaderProps) 
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-8">
-            <div>
+            <button
+              onClick={() => navigate('/admin')}
+              className="hover:opacity-80 transition-opacity cursor-pointer"
+            >
               <h1 className="text-2xl font-bold text-black">Admin Panel</h1>
               <p className="text-sm text-neutral-600 mt-1">{currentSection}</p>
-            </div>
+            </button>
 
-            <nav className="hidden md:flex items-center gap-6">
-              <button
-                disabled
-                className="text-sm text-neutral-400 cursor-not-allowed"
-              >
-                Posts
-              </button>
-              <button
-                disabled
-                className="text-sm text-neutral-400 cursor-not-allowed"
-              >
-                Projects
-              </button>
-              <button
-                disabled
-                className="text-sm text-neutral-400 cursor-not-allowed"
-              >
-                Settings
-              </button>
+            <nav className="hidden md:flex items-center gap-1">
+              {navItems.map((item) => (
+                <button
+                  key={item.path}
+                  onClick={() => navigate(item.path)}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                    isNavItemActive(item)
+                      ? 'bg-black text-white'
+                      : 'text-neutral-700 hover:bg-neutral-100'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
             </nav>
           </div>
 
