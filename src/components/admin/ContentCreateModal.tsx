@@ -70,9 +70,11 @@ interface ContentCreateModalProps {
   onClose: () => void;
   onSuccess: (content: Content) => void;
   onError: (message: string) => void;
+  contentSource: 'portfolio' | 'blog';
 }
 
-export function ContentCreateModal({ open, onClose, onSuccess, onError }: ContentCreateModalProps) {
+export function ContentCreateModal({ open, onClose, onSuccess, onError, contentSource }: ContentCreateModalProps) {
+  const bucket = contentSource === 'portfolio' ? 'portfolio-images' : 'blog-images';
   const [formData, setFormData] = useState<ContentFormData>({ ...initialFormData });
   const [contentTypes, setContentTypes] = useState<ContentType[]>([]);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
@@ -132,7 +134,7 @@ export function ContentCreateModal({ open, onClose, onSuccess, onError }: Conten
       const isPortrait = formData.format === 'portrait';
       const result = await processAndUploadVideoThumbnail(file, isPortrait, (stage) => {
         setUploadStage(stage);
-      });
+      }, bucket);
 
       setFormData((prev) => ({
         ...prev,
@@ -166,7 +168,7 @@ export function ContentCreateModal({ open, onClose, onSuccess, onError }: Conten
       const isPortrait = formData.format === 'portrait';
       const result = await processAndUploadContentImage(file, isPortrait, (stage) => {
         setUploadStage(stage);
-      });
+      }, bucket);
 
       setFormData((prev) => ({
         ...prev,

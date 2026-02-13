@@ -406,6 +406,7 @@ export function BlogCreateForm({ mode = 'create' }: BlogCreateFormProps) {
               largeUrl={formData.heroImageLarge}
               thumbnailUrl={formData.heroImageThumbnail}
               disabled={isSubmitting}
+              bucket="blog-images"
             />
             {validationErrors.find(e => e.field === 'heroImage') && (
               <p className="text-sm text-red-600 mt-2">

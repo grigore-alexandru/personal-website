@@ -466,6 +466,7 @@ export function ProjectCreateForm({ mode = 'create' }: ProjectCreateFormProps) {
             onChange={(items) => handleChange('galleryItems', items)}
             onSuccess={(message) => showToast('success', message)}
             onError={(message) => showToast('error', message)}
+            contentSource="portfolio"
           />
         </div>
 

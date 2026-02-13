@@ -104,7 +104,8 @@ async function loadImage(file: File): Promise<HTMLImageElement> {
 async function uploadToContentMedia(
   blob: Blob,
   fileName: string,
-  subfolder: string
+  subfolder: string,
+  bucket: string = 'portfolio-images'
 ): Promise<string> {
   const timestamp = Date.now();
   const randomString = Math.random().toString(36).substring(7);
@@ -112,7 +113,7 @@ async function uploadToContentMedia(
   const storagePath = `${subfolder}/${timestamp}-${randomString}-${fileName}.${fileExtension}`;
 
   const { data, error } = await supabase.storage
-    .from('content-media')
+    .from(bucket)
     .upload(storagePath, blob, {
       contentType: 'image/jpeg',
       upsert: false,
@@ -123,7 +124,7 @@ async function uploadToContentMedia(
   }
 
   const { data: publicUrlData } = supabase.storage
-    .from('content-media')
+    .from(bucket)
     .getPublicUrl(data.path);
 
   return publicUrlData.publicUrl;
@@ -132,7 +133,8 @@ async function uploadToContentMedia(
 export async function processAndUploadContentImage(
   file: File,
   isPortrait: boolean = false,
-  onProgress?: (stage: string) => void
+  onProgress?: (stage: string) => void,
+  bucket: string = 'portfolio-images'
 ): Promise<ProcessedContentImages> {
   const validation = validateContentImage(file);
   if (!validation.valid) {
@@ -155,13 +157,14 @@ export async function processAndUploadContentImage(
     const baseFileName = file.name.replace(/\.[^/.]+$/, '');
 
     onProgress?.('Uploading full image...');
-    const fullUrl = await uploadToContentMedia(fullBlob, `${baseFileName}-full`, 'images/full');
+    const fullUrl = await uploadToContentMedia(fullBlob, `${baseFileName}-full`, 'gallery/full', bucket);
 
     onProgress?.('Uploading thumbnail...');
     const compressedUrl = await uploadToContentMedia(
       thumbnailBlob,
       `${baseFileName}-thumb`,
-      'images/thumb'
+      'gallery/thumbnails',
+      bucket
     );
 
     onProgress?.('Complete!');
@@ -182,29 +185,38 @@ export async function deleteContentImages(
   fullUrl: string | null,
   compressedUrl: string | null
 ): Promise<void> {
-  const filesToDelete: string[] = [];
+  const extractBucketAndPath = (url: string): { bucket: string; path: string } | null => {
+    const buckets = ['portfolio-images', 'blog-images', 'content-media'];
+    for (const bucket of buckets) {
+      const parts = url.split(`/${bucket}/`);
+      if (parts.length === 2) {
+        return { bucket, path: parts[1] };
+      }
+    }
+    return null;
+  };
 
   if (fullUrl) {
-    const fullPath = fullUrl.split('/content-media/')[1];
-    if (fullPath) {
-      filesToDelete.push(fullPath);
+    const result = extractBucketAndPath(fullUrl);
+    if (result) {
+      const { error } = await supabase.storage
+        .from(result.bucket)
+        .remove([result.path]);
+      if (error) {
+        console.error('Failed to delete full image:', error);
+      }
     }
   }
 
   if (compressedUrl) {
-    const thumbPath = compressedUrl.split('/content-media/')[1];
-    if (thumbPath) {
-      filesToDelete.push(thumbPath);
-    }
-  }
-
-  if (filesToDelete.length > 0) {
-    const { error } = await supabase.storage
-      .from('content-media')
-      .remove(filesToDelete);
-
-    if (error) {
-      console.error('Failed to delete content images:', error);
+    const result = extractBucketAndPath(compressedUrl);
+    if (result) {
+      const { error } = await supabase.storage
+        .from(result.bucket)
+        .remove([result.path]);
+      if (error) {
+        console.error('Failed to delete thumbnail:', error);
+      }
     }
   }
 }

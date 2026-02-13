@@ -15,9 +15,10 @@ interface GalleryManagerProps {
   onChange: (items: GalleryItem[]) => void;
   onSuccess: (message: string) => void;
   onError: (message: string) => void;
+  contentSource: 'portfolio' | 'blog';
 }
 
-export function GalleryManager({ items, onChange, onSuccess, onError }: GalleryManagerProps) {
+export function GalleryManager({ items, onChange, onSuccess, onError, contentSource }: GalleryManagerProps) {
   const [browserOpen, setBrowserOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
@@ -175,6 +176,7 @@ export function GalleryManager({ items, onChange, onSuccess, onError }: GalleryM
         onClose={() => setCreateModalOpen(false)}
         onSuccess={handleContentCreated}
         onError={onError}
+        contentSource={contentSource}
       />
     </div>
   );
