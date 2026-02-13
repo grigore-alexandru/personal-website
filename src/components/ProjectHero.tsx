@@ -25,10 +25,10 @@ const ProjectHero: React.FC<ProjectHeroProps> = ({ bgUrl, title, type, client, d
   return (
     <section className="relative h-screen overflow-hidden">
       {/* Parallax Background */}
-      <div 
+      <div
         className="absolute inset-0 bg-cover bg-center"
         style={{
-          backgroundImage: `url(${bgUrl})`,
+          backgroundImage: `url("${bgUrl}")`,
           transform: `translateY(${scrollY * 0.5}px)`,
           scale: '1.1',
         }}
