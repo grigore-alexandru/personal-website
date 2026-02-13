@@ -11,6 +11,9 @@ const PortfolioLandingPage: React.FC = () => {
   const [exitingPanel, setExitingPanel] = useState<'left' | 'right' | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [videoLoaded, setVideoLoaded] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -18,6 +21,24 @@ const PortfolioLandingPage: React.FC = () => {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  useEffect(() => {
+    const projectImage = new Image();
+    projectImage.src = 'https://lqbyvubbzexujviflunv.supabase.co/storage/v1/object/sign/website-media/PORTFOLIO_PROJECTS_IMAGE.jpeg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iNTIzNTU4Yi1iZjk0LTRiMTItYmQ1Yy1kOGM4MzExZDQ5ZWYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ3ZWJzaXRlLW1lZGlhL1BPUlRGT0xJT19QUk9KRUNUU19JTUFHRS5qcGVnIiwiaWF0IjoxNzcwOTIyNjQzLCJleHAiOjE4MDI0NTg2NDN9.aOODZRS-dsK1i_55i-6Ailz2NiuOQSCP0YIR3-zreQA';
+    projectImage.onload = () => setImageLoaded(true);
+
+    const video = document.createElement('video');
+    video.src = 'https://lqbyvubbzexujviflunv.supabase.co/storage/v1/object/sign/website-media/PORTFOLIO_MEDIA_VIDEO.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iNTIzNTU4Yi1iZjk0LTRiMTItYmQ1Yy1kOGM4MzExZDQ5ZWYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ3ZWJzaXRlLW1lZGlhL1BPUlRGT0xJT19NRURJQV9WSURFTy5tcDQiLCJpYXQiOjE3NzA5MjI2MzAsImV4cCI6MTgwMjQ1ODYzMH0.Z2kP5B44DyVjS23XQO5TJfijAQyAFBYNGglbpN3jZAc';
+    video.preload = 'auto';
+    video.onloadeddata = () => setVideoLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (imageLoaded && videoLoaded) {
+      const timer = setTimeout(() => setIsLoading(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [imageLoaded, videoLoaded]);
 
   useEffect(() => {
     if (videoRef.current && hoveredPanel === 'right' && !isMobile) {
@@ -59,10 +80,78 @@ const PortfolioLandingPage: React.FC = () => {
     return 'scale(1)';
   };
 
+  if (isLoading) {
+    return (
+      <div className="relative w-full overflow-hidden" style={{ height: 'calc(100vh - 80px)' }}>
+        <div
+          className="grid gap-4 p-4 h-full md:gap-6 md:p-6"
+          style={{
+            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr 1fr',
+            gridTemplateRows: isMobile ? '1fr 1fr' : '1fr',
+            opacity: 1,
+            transition: 'opacity 0.3s ease-out',
+          }}
+        >
+          {/* Left Skeleton Panel */}
+          <div
+            className="relative rounded-2xl overflow-hidden bg-gray-200 animate-pulse"
+            style={{
+              gridColumn: isMobile ? 'span 1' : 'span 2',
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <div
+                className="bg-gray-300 rounded mb-4"
+                style={{
+                  width: isMobile ? '150px' : '200px',
+                  height: isMobile ? '50px' : '70px',
+                }}
+              />
+              <div
+                className="bg-gray-300 rounded-full"
+                style={{
+                  width: '120px',
+                  height: '45px',
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Right Skeleton Panel */}
+          <div
+            className="relative rounded-2xl overflow-hidden bg-gray-200 animate-pulse"
+            style={{
+              gridColumn: isMobile ? 'span 1' : 'span 2',
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <div
+                className="bg-gray-300 rounded mb-4"
+                style={{
+                  width: isMobile ? '150px' : '200px',
+                  height: isMobile ? '50px' : '70px',
+                }}
+              />
+              <div
+                className="bg-gray-300 rounded-full"
+                style={{
+                  width: '120px',
+                  height: '45px',
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full overflow-hidden" style={{ height: 'calc(100vh - 80px)' }}>
       <div
-        className="grid gap-4 p-4 h-full md:gap-6 md:p-6"
+        className="grid gap-4 p-4 h-full md:gap-6 md:p-6 animate-fade-in"
         style={{
           gridTemplateColumns: isMobile ? '1fr' : getGridTemplate(),
           gridTemplateRows: isMobile ? '1fr 1fr' : '1fr',
@@ -130,7 +219,7 @@ const PortfolioLandingPage: React.FC = () => {
               transition: 'all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1)',
             }}
             src="https://lqbyvubbzexujviflunv.supabase.co/storage/v1/object/sign/website-media/PORTFOLIO_MEDIA_VIDEO.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iNTIzNTU4Yi1iZjk0LTRiMTItYmQ1Yy1kOGM4MzExZDQ5ZWYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ3ZWJzaXRlLW1lZGlhL1BPUlRGT0xJT19NRURJQV9WSURFTy5tcDQiLCJpYXQiOjE3NzA5MjI2MzAsImV4cCI6MTgwMjQ1ODYzMH0.Z2kP5B44DyVjS23XQO5TJfijAQyAFBYNGglbpN3jZAc"
-            muted loop playsInline preload="auto"
+            muted loop playsInline preload="metadata"
           />
 
           <div 
