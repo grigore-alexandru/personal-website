@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { FileText, Video, Settings, Image } from 'lucide-react';
+import { FileText, Video, Settings, Image, Minimize2 } from 'lucide-react';
 import { AdminLayout } from '../../components/admin/AdminLayout';
 
 export function AdminDashboardPage() {
@@ -29,6 +29,14 @@ export function AdminDashboardPage() {
       path: '/admin/content',
       color: 'bg-purple-500',
       hoverColor: 'hover:bg-purple-600',
+    },
+    {
+      title: 'Media Compressor',
+      description: 'Compress images and videos for optimal performance',
+      icon: Minimize2,
+      path: '/admin/compressor',
+      color: 'bg-orange-500',
+      hoverColor: 'hover:bg-orange-600',
     },
   ];
 
