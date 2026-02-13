@@ -10,6 +10,7 @@ import MediaCarousel from '../components/project/MediaCarousel';
 import TasksList from '../components/project/TasksList';
 import Recommendation from '../components/project/Recommendation';
 import ProjectNavigation from '../components/project/ProjectNavigation';
+import { ProjectDetailHeroSkeleton, MetricsSkeleton, ContentBlockSkeleton, GallerySkeleton } from '../components/ui/SkeletonLoader';
 
 const ProjectDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -46,9 +47,10 @@ const ProjectDetailPage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-white">
-        <div className="pt-20 flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black" />
-        </div>
+        <ProjectDetailHeroSkeleton />
+        <MetricsSkeleton />
+        <ContentBlockSkeleton />
+        <GallerySkeleton />
       </div>
     );
   }

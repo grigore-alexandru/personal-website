@@ -42,7 +42,8 @@ export function validateHeroImage(file: File): ImageValidationResult {
 function resizeImage(
   img: HTMLImageElement,
   maxWidth: number,
-  quality: number
+  quality: number,
+  format: 'image/webp' | 'image/jpeg' = 'image/webp'
 ): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const canvas = document.createElement('canvas');
@@ -74,7 +75,7 @@ function resizeImage(
           reject(new Error('Failed to create blob from canvas'));
         }
       },
-      'image/jpeg',
+      format,
       quality
     );
   });
@@ -102,17 +103,18 @@ async function loadImage(file: File): Promise<HTMLImageElement> {
 async function uploadToStorage(
   blob: Blob,
   fileName: string,
-  bucket: string
+  bucket: string,
+  contentType: string = 'image/webp'
 ): Promise<string> {
   const timestamp = Date.now();
   const randomString = Math.random().toString(36).substring(7);
-  const fileExtension = 'jpg';
+  const fileExtension = contentType === 'image/webp' ? 'webp' : 'jpg';
   const storagePath = `hero-images/${timestamp}-${randomString}-${fileName}.${fileExtension}`;
 
   const { data, error } = await supabase.storage
     .from(bucket)
     .upload(storagePath, blob, {
-      contentType: 'image/jpeg',
+      contentType,
       upsert: false,
     });
 
@@ -142,18 +144,18 @@ export async function processAndUploadHeroImage(
     const img = await loadImage(file);
 
     onProgress?.('Processing large version...');
-    const largeBlob = await resizeImage(img, LARGE_IMAGE_MAX_WIDTH, 0.85);
+    const largeBlob = await resizeImage(img, LARGE_IMAGE_MAX_WIDTH, 0.85, 'image/webp');
 
     onProgress?.('Processing thumbnail...');
-    const thumbnailBlob = await resizeImage(img, THUMBNAIL_MAX_WIDTH, 0.75);
+    const thumbnailBlob = await resizeImage(img, THUMBNAIL_MAX_WIDTH, 0.65, 'image/webp');
 
     const baseFileName = file.name.replace(/\.[^/.]+$/, '');
 
     onProgress?.('Uploading large image...');
-    const largeUrl = await uploadToStorage(largeBlob, `${baseFileName}-large`, bucket);
+    const largeUrl = await uploadToStorage(largeBlob, `${baseFileName}-large`, bucket, 'image/webp');
 
     onProgress?.('Uploading thumbnail...');
-    const thumbnailUrl = await uploadToStorage(thumbnailBlob, `${baseFileName}-thumb`, bucket);
+    const thumbnailUrl = await uploadToStorage(thumbnailBlob, `${baseFileName}-thumb`, bucket, 'image/webp');
 
     onProgress?.('Complete!');
 

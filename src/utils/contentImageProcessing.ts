@@ -44,7 +44,8 @@ export function validateContentImage(file: File): ImageValidationResult {
 function resizeImage(
   img: HTMLImageElement,
   maxWidth: number,
-  quality: number
+  quality: number,
+  format: 'image/webp' | 'image/jpeg' = 'image/webp'
 ): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const canvas = document.createElement('canvas');
@@ -76,7 +77,7 @@ function resizeImage(
           reject(new Error('Failed to create blob from canvas'));
         }
       },
-      'image/jpeg',
+      format,
       quality
     );
   });
@@ -105,17 +106,18 @@ async function uploadToContentMedia(
   blob: Blob,
   fileName: string,
   subfolder: string,
-  bucket: string = 'portfolio-images'
+  bucket: string = 'portfolio-images',
+  contentType: string = 'image/webp'
 ): Promise<string> {
   const timestamp = Date.now();
   const randomString = Math.random().toString(36).substring(7);
-  const fileExtension = 'jpg';
+  const fileExtension = contentType === 'image/webp' ? 'webp' : 'jpg';
   const storagePath = `${subfolder}/${timestamp}-${randomString}-${fileName}.${fileExtension}`;
 
   const { data, error } = await supabase.storage
     .from(bucket)
     .upload(storagePath, blob, {
-      contentType: 'image/jpeg',
+      contentType,
       upsert: false,
     });
 
@@ -149,22 +151,23 @@ export async function processAndUploadContentImage(
     const thumbnailMaxWidth = isPortrait ? THUMBNAIL_MAX_WIDTH_PORTRAIT : THUMBNAIL_MAX_WIDTH_LANDSCAPE;
 
     onProgress?.('Processing full resolution...');
-    const fullBlob = await resizeImage(img, fullMaxWidth, 0.85);
+    const fullBlob = await resizeImage(img, fullMaxWidth, 0.85, 'image/webp');
 
     onProgress?.('Processing compressed thumbnail...');
-    const thumbnailBlob = await resizeImage(img, thumbnailMaxWidth, 0.55);
+    const thumbnailBlob = await resizeImage(img, thumbnailMaxWidth, 0.50, 'image/webp');
 
     const baseFileName = file.name.replace(/\.[^/.]+$/, '');
 
     onProgress?.('Uploading full image...');
-    const fullUrl = await uploadToContentMedia(fullBlob, `${baseFileName}-full`, 'gallery/full', bucket);
+    const fullUrl = await uploadToContentMedia(fullBlob, `${baseFileName}-full`, 'gallery/full', bucket, 'image/webp');
 
     onProgress?.('Uploading thumbnail...');
     const compressedUrl = await uploadToContentMedia(
       thumbnailBlob,
       `${baseFileName}-thumb`,
       'gallery/thumbnails',
-      bucket
+      bucket,
+      'image/webp'
     );
 
     onProgress?.('Complete!');

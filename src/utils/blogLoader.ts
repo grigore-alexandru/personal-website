@@ -24,6 +24,20 @@ export interface BlogPost {
   updatedAt?: string;
 }
 
+export const countAllPosts = async (): Promise<number> => {
+  const { count, error } = await supabase
+    .from('posts')
+    .select('*', { count: 'exact', head: true })
+    .eq('is_draft', false);
+
+  if (error) {
+    console.error('Error counting posts:', error);
+    return 0;
+  }
+
+  return count || 0;
+};
+
 export const loadPost = async (slug: string): Promise<BlogPost | null> => {
   const { data, error } = await supabase
     .from('posts')
@@ -55,12 +69,16 @@ export const loadPost = async (slug: string): Promise<BlogPost | null> => {
   };
 };
 
-export const loadAllPosts = async (): Promise<BlogPost[]> => {
+export const loadAllPosts = async (
+  limit: number = 20,
+  offset: number = 0
+): Promise<BlogPost[]> => {
   const { data, error } = await supabase
     .from('posts')
-    .select('*')
+    .select('id, title, slug, excerpt, tags, hero_image_large, hero_image_thumbnail, has_sources, sources_data, has_notes, notes_content, published_at, content')
     .eq('is_draft', false)
-    .order('published_at', { ascending: false });
+    .order('published_at', { ascending: false })
+    .range(offset, offset + limit - 1);
 
   if (error) {
     console.error('Error loading posts:', error);

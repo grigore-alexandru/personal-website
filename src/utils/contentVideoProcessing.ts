@@ -6,7 +6,7 @@ const MAX_THUMBNAIL_DURATION = 4;
 const POSTER_MAX_WIDTH_LANDSCAPE = 480;
 const POSTER_MAX_WIDTH_PORTRAIT = 270;
 const THUMBNAIL_VIDEO_MAX_WIDTH = 480;
-const THUMBNAIL_VIDEO_BITRATE = 500000; // 500kbps
+const THUMBNAIL_VIDEO_BITRATE = 350000; // 350kbps
 
 export interface ProcessedVideoThumbnail {
   poster: string;
@@ -102,8 +102,8 @@ function extractPosterFrame(
             reject(new Error('Failed to create poster blob'));
           }
         },
-        'image/jpeg',
-        0.85
+        'image/webp',
+        0.80
       );
     };
 
@@ -225,7 +225,14 @@ async function uploadToContentMedia(
 ): Promise<string> {
   const timestamp = Date.now();
   const randomString = Math.random().toString(36).substring(7);
-  const extension = contentType.includes('video') ? 'webm' : 'jpg';
+  let extension = 'bin';
+  if (contentType.includes('video')) {
+    extension = 'webm';
+  } else if (contentType.includes('webp')) {
+    extension = 'webp';
+  } else if (contentType.includes('jpeg') || contentType.includes('jpg')) {
+    extension = 'jpg';
+  }
   const storagePath = `${subfolder}/${timestamp}-${randomString}-${fileName}.${extension}`;
 
   const { data, error } = await supabase.storage
@@ -274,7 +281,7 @@ export async function processAndUploadVideoThumbnail(
       posterBlob,
       `${baseFileName}-poster`,
       'video-posters',
-      'image/jpeg',
+      'image/webp',
       bucket
     );
 

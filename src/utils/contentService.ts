@@ -358,12 +358,30 @@ export async function checkContentSlugUniqueness(
   }
 }
 
-export async function loadPublishedContentWithProjects(): Promise<ContentWithProject[]> {
+export async function countPublishedContent(): Promise<number> {
+  const { count, error } = await supabase
+    .from('content')
+    .select('*', { count: 'exact', head: true })
+    .eq('is_draft', false);
+
+  if (error) {
+    console.error('Error counting published content:', error);
+    return 0;
+  }
+
+  return count || 0;
+}
+
+export async function loadPublishedContentWithProjects(
+  limit: number = 30,
+  offset: number = 0
+): Promise<ContentWithProject[]> {
   const { data: contentData, error: contentError } = await supabase
     .from('content')
     .select('*, content_type:content_types(*)')
     .eq('is_draft', false)
-    .order('order_index', { ascending: true });
+    .order('order_index', { ascending: true })
+    .range(offset, offset + limit - 1);
 
   if (contentError) {
     console.error('Error loading published content:', contentError);

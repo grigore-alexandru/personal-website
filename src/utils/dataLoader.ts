@@ -10,12 +10,16 @@ const PROJECT_SELECT = `
   )
 `;
 
-export const loadProjects = async (): Promise<Project[]> => {
+export const loadProjects = async (
+  limit: number = 24,
+  offset: number = 0
+): Promise<Project[]> => {
   const { data, error } = await supabase
     .from('projects')
     .select(PROJECT_SELECT)
     .eq('is_draft', false)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
 
   if (error) {
     console.error('Error loading projects:', error);
@@ -25,6 +29,20 @@ export const loadProjects = async (): Promise<Project[]> => {
   if (!data) return [];
 
   return data.map(mapProjectRow);
+};
+
+export const countProjects = async (): Promise<number> => {
+  const { count, error } = await supabase
+    .from('projects')
+    .select('*', { count: 'exact', head: true })
+    .eq('is_draft', false);
+
+  if (error) {
+    console.error('Error counting projects:', error);
+    return 0;
+  }
+
+  return count || 0;
 };
 
 export const loadProject = async (slug: string): Promise<Project | null> => {

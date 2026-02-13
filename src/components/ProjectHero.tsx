@@ -12,6 +12,14 @@ interface ProjectHeroProps {
 
 const ProjectHero: React.FC<ProjectHeroProps> = ({ bgUrl, title, type, client, date }) => {
   const [scrollY, setScrollY] = useState(0);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  useEffect(() => {
+    const img = new Image();
+    img.fetchPriority = 'high';
+    img.src = bgUrl;
+    img.onload = () => setImageLoaded(true);
+  }, [bgUrl]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,13 +34,19 @@ const ProjectHero: React.FC<ProjectHeroProps> = ({ bgUrl, title, type, client, d
     <section className="relative h-screen overflow-hidden">
       {/* Parallax Background */}
       <div
-        className="absolute inset-0 bg-cover bg-center"
+        className={`absolute inset-0 bg-cover bg-center transition-opacity duration-500 ${
+          imageLoaded ? 'opacity-100' : 'opacity-0'
+        }`}
         style={{
           backgroundImage: `url("${bgUrl}")`,
           transform: `translateY(${scrollY * 0.5}px)`,
           scale: '1.1',
         }}
       />
+
+      {!imageLoaded && (
+        <div className="absolute inset-0 bg-gray-200 animate-pulse" />
+      )}
       
       {/* Overlay */}
       <div className="absolute inset-0 bg-black bg-opacity-40" />

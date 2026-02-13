@@ -1,13 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { Project } from '../types';
 import Card from './Card';
+import { ProjectCardSkeleton } from './ui/SkeletonLoader';
 
 interface ProjectGridProps {
   projects: Project[];
   loading?: boolean;
+  loadingMore?: boolean;
+  observerTarget?: React.RefObject<HTMLDivElement>;
 }
 
-const ProjectGrid: React.FC<ProjectGridProps> = ({ projects, loading = false }) => {
+const ProjectGrid: React.FC<ProjectGridProps> = ({
+  projects,
+  loading = false,
+  loadingMore = false,
+  observerTarget
+}) => {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -23,13 +31,14 @@ const ProjectGrid: React.FC<ProjectGridProps> = ({ projects, loading = false }) 
     return (
       <div className="max-w-screen-xl mx-auto px-6 pb-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="rounded-lg overflow-hidden">
-              <div className="bg-neutral-200 animate-pulse" style={{ aspectRatio: '16 / 10' }} />
-              <div className="pt-3 space-y-2">
-                <div className="h-4 w-3/4 bg-neutral-200 rounded animate-pulse" />
-                <div className="h-3 w-1/2 bg-neutral-100 rounded animate-pulse" />
-              </div>
+          {Array.from({ length: 9 }).map((_, i) => (
+            <div
+              key={i}
+              style={{
+                animation: `fadeIn 0.3s ease-in-out ${i * 50}ms both`,
+              }}
+            >
+              <ProjectCardSkeleton />
             </div>
           ))}
         </div>
@@ -56,12 +65,29 @@ const ProjectGrid: React.FC<ProjectGridProps> = ({ projects, loading = false }) 
                 ? 'opacity-100 translate-y-0'
                 : 'opacity-0 translate-y-4'
             }`}
-            style={{ transitionDelay: visible ? `${index * 60}ms` : '0ms' }}
+            style={{ transitionDelay: visible ? `${Math.min(index, 12) * 60}ms` : '0ms' }}
           >
             <Card project={project} />
           </div>
         ))}
+
+        {loadingMore && (
+          <>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={`skeleton-${i}`}
+                style={{
+                  animation: `fadeIn 0.3s ease-in-out ${i * 50}ms both`,
+                }}
+              >
+                <ProjectCardSkeleton />
+              </div>
+            ))}
+          </>
+        )}
       </div>
+
+      {observerTarget && <div ref={observerTarget} className="h-4 mt-6" />}
     </div>
   );
 };

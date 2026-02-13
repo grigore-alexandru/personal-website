@@ -7,6 +7,7 @@ import { generateHTML } from '@tiptap/html';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
+import { HeroImageSkeleton, ContentBlockSkeleton } from '../components/ui/SkeletonLoader';
 
 const BlogPostPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -43,8 +44,10 @@ const BlogPostPage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-white">
-        <div className="pt-20 flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+        <div className="max-w-3xl mx-auto px-3 sm:px-4 lg:px-6 pt-12 pb-12 md:pt-16 md:pb-16">
+          <HeroImageSkeleton />
+          <ContentBlockSkeleton />
+          <ContentBlockSkeleton />
         </div>
       </div>
     );
@@ -161,7 +164,9 @@ const BlogPostPage: React.FC = () => {
                 style={{
                   maxHeight: '500px',
                 }}
-                loading="lazy"
+                loading="eager"
+                decoding="async"
+                fetchpriority="high"
               />
             </div>
           </div>

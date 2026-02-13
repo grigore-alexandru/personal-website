@@ -54,6 +54,8 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
                 ? 'opacity-0 scale-105'
                 : 'opacity-100 scale-100 saturate-[0.3]'
             }`}
+            loading="lazy"
+            decoding="async"
           />
           <video
             ref={videoRef}
@@ -66,6 +68,7 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
                 ? 'opacity-100 scale-105 saturate-110'
                 : 'opacity-0 scale-100'
             }`}
+            preload="none"
           />
         </>
       )}
@@ -79,6 +82,8 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
               ? 'scale-105 saturate-110'
               : 'scale-100 saturate-[0.3]'
           }`}
+          loading="lazy"
+          decoding="async"
         />
       )}
 

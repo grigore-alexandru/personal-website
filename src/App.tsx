@@ -1,24 +1,31 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import HomePage from './pages/HomePage';
-import UnderConstructionPage from './pages/UnderConstructionPage';
-import PortfolioLandingPage from './pages/PortfolioLandingPage';
-import ProjectsListPage from './pages/ProjectsListPage';
-import ProjectDetailPage from './pages/ProjectDetailPage';
-import { ContentPortfolioPage } from './pages/ContentPortfolioPage';
-import { ContentDetailPage } from './pages/ContentDetailPage';
-import BlogListPage from './pages/BlogListPage';
-import BlogPostPage from './pages/BlogPostPage';
-import AdminLoginPage from './pages/admin/AdminLoginPage';
-import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
-import { PortfolioManagementPage } from './pages/admin/PortfolioManagementPage';
-import { BlogManagementPage } from './pages/admin/BlogManagementPage';
-import { ContentManagementPage } from './pages/admin/ContentManagementPage';
-import { BlogCreateForm } from './pages/admin/create/BlogCreateForm';
-import { ProjectCreateForm } from './pages/admin/create/ProjectCreateForm';
-import { ContentCreateForm } from './pages/admin/create/ContentCreateForm';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import PublicLayout from './components/PublicLayout';
+
+const HomePage = lazy(() => import('./pages/HomePage'));
+const UnderConstructionPage = lazy(() => import('./pages/UnderConstructionPage'));
+const PortfolioLandingPage = lazy(() => import('./pages/PortfolioLandingPage'));
+const ProjectsListPage = lazy(() => import('./pages/ProjectsListPage'));
+const ProjectDetailPage = lazy(() => import('./pages/ProjectDetailPage'));
+const ContentPortfolioPage = lazy(() => import('./pages/ContentPortfolioPage').then(module => ({ default: module.ContentPortfolioPage })));
+const ContentDetailPage = lazy(() => import('./pages/ContentDetailPage').then(module => ({ default: module.ContentDetailPage })));
+const BlogListPage = lazy(() => import('./pages/BlogListPage'));
+const BlogPostPage = lazy(() => import('./pages/BlogPostPage'));
+const AdminLoginPage = lazy(() => import('./pages/admin/AdminLoginPage'));
+const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage').then(module => ({ default: module.AdminDashboardPage })));
+const PortfolioManagementPage = lazy(() => import('./pages/admin/PortfolioManagementPage').then(module => ({ default: module.PortfolioManagementPage })));
+const BlogManagementPage = lazy(() => import('./pages/admin/BlogManagementPage').then(module => ({ default: module.BlogManagementPage })));
+const ContentManagementPage = lazy(() => import('./pages/admin/ContentManagementPage').then(module => ({ default: module.ContentManagementPage })));
+const BlogCreateForm = lazy(() => import('./pages/admin/create/BlogCreateForm').then(module => ({ default: module.BlogCreateForm })));
+const ProjectCreateForm = lazy(() => import('./pages/admin/create/ProjectCreateForm').then(module => ({ default: module.ProjectCreateForm })));
+const ContentCreateForm = lazy(() => import('./pages/admin/create/ContentCreateForm').then(module => ({ default: module.ContentCreateForm })));
+
+const PageLoader = () => (
+  <div className="min-h-screen bg-white flex items-center justify-center">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+  </div>
+);
 
 declare global {
   interface Window {
@@ -33,8 +40,9 @@ if (typeof window !== 'undefined' && !window.dataLayer) {
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<PublicLayout><HomePage /></PublicLayout>} />
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/" element={<PublicLayout><HomePage /></PublicLayout>} />
         <Route path="/about" element={<PublicLayout><UnderConstructionPage /></PublicLayout>} />
         <Route path="/portfolio" element={<PublicLayout><PortfolioLandingPage /></PublicLayout>} />
         <Route path="/portfolio/projects" element={<PublicLayout><ProjectsListPage /></PublicLayout>} />
@@ -137,7 +145,8 @@ function App() {
             </ProtectedRoute>
           }
         />
-      </Routes>
+        </Routes>
+      </Suspense>
     </Router>
   );
 }

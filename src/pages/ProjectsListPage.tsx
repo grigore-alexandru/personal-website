@@ -1,32 +1,41 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Film } from 'lucide-react';
 import { Project, Filter, ProjectType } from '../types';
-import { loadProjects } from '../utils/dataLoader';
+import { loadProjects, countProjects } from '../utils/dataLoader';
 import { loadProjectTypes } from '../utils/portfolioService';
 import CustomDropdown from '../components/forms/CustomDropdown';
 import MasonryGrid from '../components/MasonryGrid';
 import { designTokens } from '../styles/tokens';
+
+const PROJECTS_PER_PAGE = 24;
 
 const ProjectsListPage: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [typeFilter, setTypeFilter] = useState('all');
   const [typeOptions, setTypeOptions] = useState<{ value: string; label: string }[]>([
     { value: 'all', label: 'All Types' },
   ]);
+  const [hasMore, setHasMore] = useState(true);
+  const [totalProjects, setTotalProjects] = useState(0);
+  const observerTarget = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [projectsData, typesData] = await Promise.all([
-          loadProjects(),
+        const [projectsData, typesData, total] = await Promise.all([
+          loadProjects(PROJECTS_PER_PAGE, 0),
           loadProjectTypes(),
+          countProjects(),
         ]);
 
         setProjects(projectsData);
         setFilteredProjects(projectsData);
+        setTotalProjects(total);
+        setHasMore(projectsData.length < total);
 
         setTypeOptions([
           { value: 'all', label: 'All Types' },
@@ -44,6 +53,43 @@ const ProjectsListPage: React.FC = () => {
 
     fetchData();
   }, []);
+
+  const loadMoreProjects = useCallback(async () => {
+    if (loadingMore || !hasMore || searchQuery.trim() || typeFilter !== 'all') return;
+
+    setLoadingMore(true);
+    try {
+      const newProjects = await loadProjects(PROJECTS_PER_PAGE, projects.length);
+      setProjects(prev => [...prev, ...newProjects]);
+      setHasMore(projects.length + newProjects.length < totalProjects);
+    } catch (error) {
+      console.error('Error loading more projects:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [projects.length, hasMore, loadingMore, totalProjects, searchQuery, typeFilter]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore) {
+          loadMoreProjects();
+        }
+      },
+      { threshold: 0.1, rootMargin: '200px' }
+    );
+
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [hasMore, loadingMore, loadMoreProjects]);
 
   useEffect(() => {
     let filtered = projects;
@@ -121,7 +167,12 @@ const ProjectsListPage: React.FC = () => {
       </section>
 
       <section className="pb-16">
-        <MasonryGrid projects={filteredProjects} loading={loading} />
+        <MasonryGrid
+          projects={filteredProjects}
+          loading={loading}
+          loadingMore={loadingMore && !searchQuery.trim() && typeFilter === 'all'}
+          observerTarget={!searchQuery.trim() && typeFilter === 'all' ? observerTarget : undefined}
+        />
       </section>
     </div>
   );

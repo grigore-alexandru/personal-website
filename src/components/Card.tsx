@@ -22,6 +22,7 @@ const Card: React.FC<CardProps> = ({ project }) => {
           alt={project.title}
           className="w-full h-full object-cover saturate-[0.2] group-hover:saturate-100 group-hover:scale-105 transition-all duration-300 ease-out"
           loading="lazy"
+          decoding="async"
         />
       </div>
 
