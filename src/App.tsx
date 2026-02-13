@@ -20,7 +20,7 @@ const ContentManagementPage = lazy(() => import('./pages/admin/ContentManagement
 const BlogCreateForm = lazy(() => import('./pages/admin/create/BlogCreateForm').then(module => ({ default: module.BlogCreateForm })));
 const ProjectCreateForm = lazy(() => import('./pages/admin/create/ProjectCreateForm').then(module => ({ default: module.ProjectCreateForm })));
 const ContentCreateForm = lazy(() => import('./pages/admin/create/ContentCreateForm').then(module => ({ default: module.ContentCreateForm })));
-const MediaCompressorPage = lazy(() => import('./pages/admin/MediaCompressorPage').then(module => ({ default: module.MediaCompressorPage })));
+const MediaCompressorPage = lazy(() => import('./pages/admin/MediaCompressorPage'));
 
 const PageLoader = () => (
   <div className="min-h-screen bg-white flex items-center justify-center">
