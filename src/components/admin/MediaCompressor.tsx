@@ -54,7 +54,7 @@ export const MediaCompressor: React.FC = () => {
 
       if (!crossOriginIsolated) {
         console.error('Not in cross-origin isolated context');
-        setError('Video compression requires secure Cross-Origin isolation. This works in development and will work after deployment with proper headers.');
+        setError('Video compression is only available in development mode. Image compression works everywhere.');
         setFfmpegLoading(false);
         return;
       }
