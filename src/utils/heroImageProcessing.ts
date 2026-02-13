@@ -101,7 +101,8 @@ async function loadImage(file: File): Promise<HTMLImageElement> {
 
 async function uploadToStorage(
   blob: Blob,
-  fileName: string
+  fileName: string,
+  bucket: string
 ): Promise<string> {
   const timestamp = Date.now();
   const randomString = Math.random().toString(36).substring(7);
@@ -109,7 +110,7 @@ async function uploadToStorage(
   const storagePath = `hero-images/${timestamp}-${randomString}-${fileName}.${fileExtension}`;
 
   const { data, error } = await supabase.storage
-    .from('blog-images')
+    .from(bucket)
     .upload(storagePath, blob, {
       contentType: 'image/jpeg',
       upsert: false,
@@ -120,7 +121,7 @@ async function uploadToStorage(
   }
 
   const { data: publicUrlData } = supabase.storage
-    .from('blog-images')
+    .from(bucket)
     .getPublicUrl(data.path);
 
   return publicUrlData.publicUrl;
@@ -128,7 +129,8 @@ async function uploadToStorage(
 
 export async function processAndUploadHeroImage(
   file: File,
-  onProgress?: (stage: string) => void
+  onProgress?: (stage: string) => void,
+  bucket: string = 'blog-images'
 ): Promise<ProcessedImages> {
   const validation = validateHeroImage(file);
   if (!validation.valid) {
@@ -148,10 +150,10 @@ export async function processAndUploadHeroImage(
     const baseFileName = file.name.replace(/\.[^/.]+$/, '');
 
     onProgress?.('Uploading large image...');
-    const largeUrl = await uploadToStorage(largeBlob, `${baseFileName}-large`);
+    const largeUrl = await uploadToStorage(largeBlob, `${baseFileName}-large`, bucket);
 
     onProgress?.('Uploading thumbnail...');
-    const thumbnailUrl = await uploadToStorage(thumbnailBlob, `${baseFileName}-thumb`);
+    const thumbnailUrl = await uploadToStorage(thumbnailBlob, `${baseFileName}-thumb`, bucket);
 
     onProgress?.('Complete!');
 

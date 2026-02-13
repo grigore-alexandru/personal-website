@@ -8,6 +8,7 @@ interface HeroImageUploadProps {
   largeUrl: string | null;
   thumbnailUrl: string | null;
   disabled?: boolean;
+  bucket?: string;
 }
 
 export function HeroImageUpload({
@@ -16,6 +17,7 @@ export function HeroImageUpload({
   largeUrl,
   thumbnailUrl,
   disabled = false,
+  bucket = 'blog-images',
 }: HeroImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -40,7 +42,8 @@ export function HeroImageUpload({
     try {
       const { largeUrl, thumbnailUrl } = await processAndUploadHeroImage(
         file,
-        (stage) => setUploadProgress(stage)
+        (stage) => setUploadProgress(stage),
+        bucket
       );
 
       onUploadComplete(largeUrl, thumbnailUrl);
