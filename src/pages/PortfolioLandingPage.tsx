@@ -238,11 +238,6 @@ const PortfolioLandingPage: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Optional: Flash Overlay for a tactile feel on click */}
-      {isExiting && (
-        <div className="absolute inset-0 pointer-events-none animate-flash bg-white z-50" style={{ opacity: 0 }} />
-      )}
     </div>
   );
 };
