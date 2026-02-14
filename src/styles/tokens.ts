@@ -7,7 +7,7 @@ export const designTokens = {
     shadow: 'rgba(0,0,0,0.05)',
   },
   typography: {
-    fontFamily: "'Montserrat', sans-serif",
+    fontFamily: "'Poppins', sans-serif",
     weights: {
       light: 300,
       regular: 400,
