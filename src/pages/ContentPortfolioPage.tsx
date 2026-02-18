@@ -1,13 +1,14 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { X, Film, Users } from 'lucide-react';
 import { SearchBar } from '../components/ui/SearchBar';
 import { ContentWithProject } from '../types';
-import { loadPublishedContentWithProjects, countPublishedContent } from '../utils/contentService';
+import { loadPublishedContentWithProjects, countPublishedContent, loadContentBySlug } from '../utils/contentService';
 import { ContentGridItem } from '../components/ContentGridItem';
 import { ContentGridItemSkeleton } from '../components/ui/SkeletonLoader';
 import Header from '../components/Header';
 import CustomDropdown from '../components/forms/CustomDropdown';
+import { ContentDetailModal } from '../components/content/ContentDetailModal';
 import { designTokens } from '../styles/tokens';
 
 type MediaFilter = 'all' | 'videos' | 'photos';
@@ -22,6 +23,8 @@ const MEDIA_OPTIONS = [
 
 export function ContentPortfolioPage() {
   const navigate = useNavigate();
+  const { slug } = useParams<{ slug?: string }>();
+
   const [content, setContent] = useState<ContentWithProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -32,6 +35,10 @@ export function ContentPortfolioPage() {
   const [hasMore, setHasMore] = useState(true);
   const [totalContent, setTotalContent] = useState(0);
   const observerTarget = useRef<HTMLDivElement>(null);
+
+  const [modalContent, setModalContent] = useState<ContentWithProject | null>(null);
+  const [modalLoading, setModalLoading] = useState(false);
+  const savedScrollY = useRef(0);
 
   useEffect(() => {
     loadContent();
@@ -79,6 +86,39 @@ export function ContentPortfolioPage() {
     return () => { if (currentTarget) observer.unobserve(currentTarget); };
   }, [hasMore, loadingMore, loadMoreContent]);
 
+  useEffect(() => {
+    if (!slug) {
+      if (modalContent) {
+        document.body.style.overflow = '';
+        window.scrollTo({ top: savedScrollY.current, behavior: 'instant' });
+        setModalContent(null);
+      }
+      return;
+    }
+
+    const cached = content.find(c => c.slug === slug);
+    if (cached) {
+      savedScrollY.current = window.scrollY;
+      setModalContent(cached);
+      return;
+    }
+
+    let cancelled = false;
+    setModalLoading(true);
+    loadContentBySlug(slug).then(data => {
+      if (cancelled) return;
+      if (data) {
+        savedScrollY.current = window.scrollY;
+        setModalContent(data);
+      } else {
+        navigate('/portfolio/content', { replace: true });
+      }
+      setModalLoading(false);
+    });
+
+    return () => { cancelled = true; };
+  }, [slug, content]);
+
   const typeOptions = useMemo(() => {
     const types = new Set<string>();
     content.forEach((item) => {
@@ -124,6 +164,12 @@ export function ContentPortfolioPage() {
   const handleContentClick = (item: ContentWithProject) => {
     navigate(`/portfolio/content/${item.slug}`);
   };
+
+  const handleModalClose = () => {
+    navigate('/portfolio/content');
+  };
+
+  const isModalOpen = !!slug;
 
   return (
     <div className="min-h-screen bg-white">
@@ -266,6 +312,17 @@ export function ContentPortfolioPage() {
           </>
         )}
       </main>
+
+      {/* ── Detail modal overlay — grid stays mounted ── */}
+      {isModalOpen && (
+        modalLoading ? (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
+          </div>
+        ) : modalContent ? (
+          <ContentDetailModal content={modalContent} onClose={handleModalClose} />
+        ) : null
+      )}
 
       <style>{`
         @keyframes fadeInUp {

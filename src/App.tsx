@@ -9,7 +9,6 @@ const PortfolioLandingPage = lazy(() => import('./pages/PortfolioLandingPage'));
 const ProjectsListPage = lazy(() => import('./pages/ProjectsListPage'));
 const ProjectDetailPage = lazy(() => import('./pages/ProjectDetailPage'));
 const ContentPortfolioPage = lazy(() => import('./pages/ContentPortfolioPage').then(module => ({ default: module.ContentPortfolioPage })));
-const ContentDetailPage = lazy(() => import('./pages/ContentDetailPage').then(module => ({ default: module.ContentDetailPage })));
 const BlogListPage = lazy(() => import('./pages/BlogListPage'));
 const BlogPostPage = lazy(() => import('./pages/BlogPostPage'));
 const AdminLoginPage = lazy(() => import('./pages/admin/AdminLoginPage'));
@@ -49,7 +48,7 @@ function App() {
         <Route path="/portfolio/projects" element={<PublicLayout><ProjectsListPage /></PublicLayout>} />
         <Route path="/portfolio/project/:slug" element={<PublicLayout><ProjectDetailPage /></PublicLayout>} />
         <Route path="/portfolio/content" element={<PublicLayout><ContentPortfolioPage /></PublicLayout>} />
-        <Route path="/portfolio/content/:slug" element={<PublicLayout><ContentDetailPage /></PublicLayout>} />
+        <Route path="/portfolio/content/:slug" element={<PublicLayout><ContentPortfolioPage /></PublicLayout>} />
         <Route path="/blog" element={<PublicLayout><BlogListPage /></PublicLayout>} />
         <Route path="/blog/:slug" element={<PublicLayout><BlogPostPage /></PublicLayout>} />
 
