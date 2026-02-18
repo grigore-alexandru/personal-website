@@ -129,9 +129,9 @@ const Hero = () => {
             <div className="absolute inset-0 bg-surface-highlight rounded-[3rem] transform rotate-3" />
             <div className="absolute inset-0 bg-white rounded-[3rem] shadow-soft overflow-hidden transform transition-transform hover:-rotate-1">
               <img
-                src="https://placehold.co/800x1200/f1f5f9/1e293b/png?text=Portrait"
+                src="https://lqbyvubbzexujviflunv.supabase.co/storage/v1/object/sign/website-media/HOMEPAGE_PERSON.webp?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iNTIzNTU4Yi1iZjk0LTRiMTItYmQ1Yy1kOGM4MzExZDQ5ZWYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ3ZWJzaXRlLW1lZGlhL0hPTUVQQUdFX1BFUlNPTi53ZWJwIiwiaWF0IjoxNzcxNDU0NDE3LCJleHAiOjE4MDI5OTA0MTd9.1oZku9dB0uQgki25AM_MPMrd5fYZ48aqPdevTsi50Jw"
                 alt="Portrait"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover object-top"
               />
             </div>
 
