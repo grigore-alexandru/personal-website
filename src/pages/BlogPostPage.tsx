@@ -7,7 +7,7 @@ import { generateHTML } from '@tiptap/html';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
-import { HeroImageSkeleton, ContentBlockSkeleton } from '../components/ui/SkeletonLoader';
+import { BlogPostPageSkeleton } from '../components/ui/SkeletonLoader';
 
 const BlogPostPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -42,15 +42,7 @@ const BlogPostPage: React.FC = () => {
   }, []);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-white">
-        <div className="max-w-3xl mx-auto px-3 sm:px-4 lg:px-6 pt-12 pb-12 md:pt-16 md:pb-16">
-          <HeroImageSkeleton />
-          <ContentBlockSkeleton />
-          <ContentBlockSkeleton />
-        </div>
-      </div>
-    );
+    return <BlogPostPageSkeleton />;
   }
 
   if (!post) {
@@ -61,7 +53,7 @@ const BlogPostPage: React.FC = () => {
             <h1 className="text-2xl font-bold text-black mb-4">Post Not Found</h1>
             <Link
               to="/blog"
-              className="text-blue-600 hover:text-blue-800 underline"
+              className="text-primary-600 hover:text-primary-700 underline"
             >
               Return to Blog
             </Link>
@@ -117,7 +109,7 @@ const BlogPostPage: React.FC = () => {
       {showBackButton && (
         <Link
           to="/blog"
-          className="fixed bottom-8 left-8 z-50 w-12 h-12 bg-black text-white rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors"
+          className="fixed bottom-8 left-8 z-50 w-12 h-12 bg-neutral-900 text-white rounded-full flex items-center justify-center hover:bg-neutral-700 transition-colors duration-250 shadow-token-md focus:outline-none focus-visible:shadow-token-focus"
         >
           <ArrowLeft size={20} />
         </Link>
@@ -198,7 +190,7 @@ const BlogPostPage: React.FC = () => {
                     href={source.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 underline"
+                    className="text-primary-600 hover:text-primary-700 underline"
                     style={{
                       fontSize: designTokens.typography.sizes.sm,
                       fontFamily: designTokens.typography.fontFamily,
@@ -314,12 +306,12 @@ const BlogPostPage: React.FC = () => {
         }
 
         .prose a {
-          color: #2563eb;
+          color: var(--color-text-link);
           text-decoration: underline;
         }
 
         .prose a:hover {
-          color: #1d4ed8;
+          color: var(--color-text-link-hover);
         }
       `}</style>
     </div>

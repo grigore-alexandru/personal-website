@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Project } from '../types';
 import { generateProjectUrl } from '../utils/dataLoader';
-import { designTokens } from '../styles/tokens';
 
 interface CardProps {
   project: Project;
@@ -14,9 +13,12 @@ const Card: React.FC<CardProps> = ({ project }) => {
   return (
     <Link
       to={generateProjectUrl(project)}
-      className="group block overflow-hidden rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-black/20"
+      className="group block bg-surface-raised card-raised overflow-hidden focus-visible:outline-none focus-visible:shadow-token-focus"
     >
-      <div className="relative overflow-hidden" style={{ aspectRatio: '16 / 10' }}>
+      <div
+        className="relative overflow-hidden"
+        style={{ aspectRatio: '16 / 10' }}
+      >
         <img
           src={project.hero_image_thumbnail}
           alt={project.title}
@@ -26,37 +28,19 @@ const Card: React.FC<CardProps> = ({ project }) => {
         />
       </div>
 
-      <div style={{ padding: designTokens.spacing.scale.sm }}>
+      <div className="px-4 pt-4 pb-5">
         <h3
-          style={{
-            fontFamily: designTokens.typography.fontFamily,
-            fontSize: designTokens.typography.sizes.md,
-            fontWeight: designTokens.typography.weights.bold,
-            lineHeight: designTokens.typography.lineHeights.heading,
-            color: designTokens.colors.textPrimary,
-            marginBottom: '8px',
-          }}
+          className="text-token-text-primary font-bold leading-tight mb-2 text-lg"
+          style={{ letterSpacing: '-0.01em' }}
         >
           {project.title}
         </h3>
         <div className="flex items-center justify-between">
-          <span
-            style={{
-              fontFamily: designTokens.typography.fontFamily,
-              fontSize: designTokens.typography.sizes.xs,
-              color: designTokens.colors.textSecondary,
-            }}
-          >
+          <span className="text-xs text-token-text-secondary font-medium truncate max-w-[55%]">
             {project.client_name}
           </span>
-          <span
-            style={{
-              fontFamily: designTokens.typography.fontFamily,
-              fontSize: designTokens.typography.sizes.xs,
-              color: designTokens.colors.textSecondary,
-            }}
-          >
-            {project.project_type.name} &middot; {year}
+          <span className="text-xs text-token-text-muted whitespace-nowrap ml-2">
+            {project.project_type.name}&nbsp;&middot;&nbsp;{year}
           </span>
         </div>
       </div>

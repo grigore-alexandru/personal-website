@@ -2,93 +2,56 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { BlogPost } from '../utils/blogLoader';
-import { designTokens } from '../styles/tokens';
 
 interface BlogPostCardProps {
   post: BlogPost;
 }
 
 const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
-  // State to track if the screen is mobile size
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  // Effect to listen for window resize events
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
-    
-    // Cleanup listener on unmount
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
     });
-  };
 
   const extractFirstParagraph = (content: any): string => {
-    if (!content || !content.content || !Array.isArray(content.content)) {
-      return '';
-    }
-
-    // Find the first paragraph node
+    if (!content || !content.content || !Array.isArray(content.content)) return '';
     const firstParagraph = content.content.find(
-      (node: any) => node.type === 'paragraph' && node.content && node.content.length > 0
+      (node: any) => node.type === 'paragraph' && node.content?.length > 0
     );
-
-    if (!firstParagraph || !firstParagraph.content) {
-      return '';
-    }
-
-    // Extract text from all text nodes in the paragraph
-    const text = firstParagraph.content
+    if (!firstParagraph?.content) return '';
+    return firstParagraph.content
       .filter((node: any) => node.type === 'text')
       .map((node: any) => node.text || '')
       .join('');
-
-    return text;
   };
 
-  const truncateExcerpt = (text: string, maxLength: number) => {
-    if (text.length <= maxLength) return text;
-    return text.slice(0, maxLength).trim() + '...';
-  };
+  const truncateExcerpt = (text: string, maxLength: number) =>
+    text.length <= maxLength ? text : text.slice(0, maxLength).trim() + '...';
 
-  const excerptText = extractFirstParagraph(post.content);
-  
-  // Dynamic limit: 120 chars for mobile, 280 for desktop
+  const excerptText   = extractFirstParagraph(post.content);
   const displayExcerpt = truncateExcerpt(excerptText, isMobile ? 120 : 280);
 
   return (
-    <article className="block bg-white border border-gray-100 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-gray-200 group">
+    <article className="group block bg-surface-raised card-raised overflow-hidden">
       <div className="p-6">
         <div className="mb-4">
           <h2
-            className="text-black font-bold mb-2 group-hover:underline"
-            style={{
-              fontSize: designTokens.typography.sizes.lg,
-              fontFamily: designTokens.typography.fontFamily,
-              fontWeight: designTokens.typography.weights.bold,
-              lineHeight: designTokens.typography.lineHeights.heading,
-              letterSpacing: '-0.01em',
-            }}
+            className="text-token-text-primary font-bold mb-2 group-hover:underline leading-tight"
+            style={{ fontSize: '22px', letterSpacing: '-0.01em' }}
           >
             {post.title}
           </h2>
-          <p
-            className="text-gray-500"
-            style={{
-              fontSize: designTokens.typography.sizes.xs,
-              fontFamily: designTokens.typography.fontFamily,
-              fontWeight: designTokens.typography.weights.regular,
-            }}
-          >
+          <p className="text-xs text-token-text-muted">
             {formatDate(post.publishedAt)}
           </p>
         </div>
@@ -96,11 +59,11 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
         <div className="flex flex-col md:flex-row gap-4">
           {post.heroImageThumbnail && (
             <div className="w-full md:w-2/5 flex-shrink-0">
-              <div className="relative w-full pt-[60%] bg-gray-100 rounded-lg overflow-hidden">
+              <div className="relative w-full pt-[60%] bg-surface-sunken rounded-token-md overflow-hidden">
                 <img
                   src={post.heroImageThumbnail}
                   alt={post.title}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 ease-smooth group-hover:scale-105"
                   loading="lazy"
                   decoding="async"
                 />
@@ -110,15 +73,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
 
           <div className="flex-1 flex flex-col justify-between">
             {displayExcerpt && (
-              <p
-                className="text-gray-700 mb-4"
-                style={{
-                  fontSize: designTokens.typography.sizes.sm,
-                  fontFamily: designTokens.typography.fontFamily,
-                  fontWeight: designTokens.typography.weights.regular,
-                  lineHeight: designTokens.typography.lineHeights.body,
-                }}
-              >
+              <p className="text-sm text-token-text-secondary leading-relaxed mb-4">
                 {displayExcerpt}
               </p>
             )}
@@ -126,15 +81,16 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
             <div className="flex items-center justify-end">
               <Link
                 to={`/blog/${post.slug}`}
-                className="inline-flex items-center gap-2 px-4 py-2 text-black font-medium rounded-lg hover:bg-gray-50 transition-colors duration-200"
-                style={{
-                  fontSize: designTokens.typography.sizes.sm,
-                  fontFamily: designTokens.typography.fontFamily,
-                  fontWeight: designTokens.typography.weights.medium,
-                }}
+                className="
+                  inline-flex items-center gap-2 px-4 py-2 rounded-token-md text-sm font-medium
+                  bg-accent-500 text-white
+                  hover:bg-accent-600 active:bg-accent-700
+                  transition-lift duration-250 ease-smooth
+                  focus:outline-none focus-visible:shadow-token-focus-accent
+                "
               >
                 Read More
-                <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+                <ArrowRight size={15} className="transition-transform duration-150 group-hover:translate-x-0.5" />
               </Link>
             </div>
           </div>

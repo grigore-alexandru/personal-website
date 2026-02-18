@@ -3,13 +3,100 @@ export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      colors: {
+        primary: {
+          50:  'var(--color-primary-50)',
+          100: 'var(--color-primary-100)',
+          200: 'var(--color-primary-200)',
+          300: 'var(--color-primary-300)',
+          400: 'var(--color-primary-400)',
+          500: 'var(--color-primary-500)',
+          600: 'var(--color-primary-600)',
+          700: 'var(--color-primary-700)',
+          800: 'var(--color-primary-800)',
+          900: 'var(--color-primary-900)',
+        },
+        accent: {
+          50:  'var(--color-accent-50)',
+          100: 'var(--color-accent-100)',
+          200: 'var(--color-accent-200)',
+          300: 'var(--color-accent-300)',
+          400: 'var(--color-accent-400)',
+          500: 'var(--color-accent-500)',
+          600: 'var(--color-accent-600)',
+          700: 'var(--color-accent-700)',
+        },
+        surface: {
+          base:    'var(--color-surface-base)',
+          raised:  'var(--color-surface-raised)',
+          sunken:  'var(--color-surface-sunken)',
+        },
+        border: {
+          default: 'var(--color-border-default)',
+          strong:  'var(--color-border-strong)',
+          focus:   'var(--color-border-focus)',
+        },
+        'token-text': {
+          primary:   'var(--color-text-primary)',
+          secondary: 'var(--color-text-secondary)',
+          muted:     'var(--color-text-muted)',
+          disabled:  'var(--color-text-disabled)',
+          accent:    'var(--color-text-accent)',
+          link:      'var(--color-text-link)',
+        },
+      },
+      boxShadow: {
+        'token-xs':     'var(--shadow-xs)',
+        'token-sm':     'var(--shadow-sm)',
+        'token-md':     'var(--shadow-md)',
+        'token-raised': 'var(--shadow-raised)',
+        'token-lifted': 'var(--shadow-lifted)',
+        'token-lg':     'var(--shadow-lg)',
+        'token-xl':     'var(--shadow-xl)',
+        'token-focus':  'var(--shadow-focus)',
+        'token-focus-accent': 'var(--shadow-focus-accent)',
+      },
+      borderRadius: {
+        'token-sm':  'var(--radius-sm)',
+        'token-md':  'var(--radius-md)',
+        'token-lg':  'var(--radius-lg)',
+        'token-xl':  'var(--radius-xl)',
+        'token-2xl': 'var(--radius-2xl)',
+        'token-full':'var(--radius-full)',
+      },
+      transitionProperty: {
+        'lift': 'transform, box-shadow',
+      },
+      transitionTimingFunction: {
+        'spring': 'cubic-bezier(0.34,1.56,0.64,1)',
+        'smooth': 'cubic-bezier(0.4,0,0.2,1)',
+      },
+      transitionDuration: {
+        '150': '150ms',
+        '250': '250ms',
+        '350': '350ms',
+        '400': '400ms',
+      },
       keyframes: {
         slideIn: {
-          '0%': { transform: 'translateX(100%)', opacity: '0' },
-          '100%': { transform: 'translateX(0)', opacity: '1' },
+          '0%':   { transform: 'translateX(100%)', opacity: '0' },
+          '100%': { transform: 'translateX(0)',    opacity: '1' },
         },
+        cardShimmer: {
+          '0%':   { backgroundPosition: '-800px 0' },
+          '100%': { backgroundPosition:  '800px 0' },
+        },
+      },
+      animation: {
+        'card-shimmer': 'cardShimmer 1.6s ease-in-out infinite',
       },
     },
   },
+  safelist: [
+    { pattern: /^(bg|text|border|ring)-(primary|accent)-(50|100|200|300|400|500|600|700|800|900)$/ },
+    { pattern: /^shadow-token-(xs|sm|md|raised|lifted|lg|xl|focus)$/ },
+    'card-raised',
+    'skeleton-shimmer',
+  ],
   plugins: [],
 };
