@@ -214,7 +214,6 @@ const PortfolioLandingPage: React.FC = () => {
             className="absolute inset-0 w-full h-full object-cover"
             style={{
               filter: hoveredPanel === 'right' ? 'saturate(1.1) brightness(0.8)' : 'saturate(0.3) brightness(0.6)',
-              opacity: hoveredPanel === 'right' ? 1 : 0.4,
               transform: getMediaTransform('right'),
               transition: 'all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1)',
             }}
