@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { designTokens } from '../styles/tokens';
+import { Button } from '../components/forms/Button';
 
 type HoveredPanel = 'left' | 'right' | null;
 
@@ -159,9 +160,9 @@ const PortfolioLandingPage: React.FC = () => {
             <h2 className="text-white mb-6 tracking-wide" style={{ fontFamily: designTokens.typography.fontFamily, fontSize: isMobile ? '3rem' : '4rem', fontWeight: 700 }}>
               Projects
             </h2>
-            <button className="px-8 py-3 bg-white text-black rounded-full transition-transform active:scale-90 hover:scale-105">
+            <Button variant="white" size="md">
               Explore
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -200,9 +201,9 @@ const PortfolioLandingPage: React.FC = () => {
             <h2 className="text-white mb-6 tracking-wide" style={{ fontFamily: designTokens.typography.fontFamily, fontSize: isMobile ? '3rem' : '4rem', fontWeight: 700 }}>
               Media
             </h2>
-            <button className="px-8 py-3 bg-white text-black rounded-full transition-transform active:scale-90 hover:scale-105">
+            <Button variant="white" size="md">
               Experience
-            </button>
+            </Button>
           </div>
         </div>
       </div>

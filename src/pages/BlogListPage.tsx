@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, Calendar } from 'lucide-react';
+import { Search, Calendar, X } from 'lucide-react';
 import { BlogPost, loadAllPosts, countAllPosts } from '../utils/blogLoader';
 import BlogPostCard from '../components/BlogPostCard';
 import CustomDropdown from '../components/forms/CustomDropdown';
 import { designTokens } from '../styles/tokens';
 import { BlogPostCardSkeleton } from '../components/ui/SkeletonLoader';
+import { Button } from '../components/forms/Button';
 
 type DateFilter = 'all' | 'week' | 'month' | 'year';
 
@@ -160,16 +161,15 @@ const BlogListPage: React.FC = () => {
 
         {hasActiveFilters && (
           <div className="mb-6 flex justify-end">
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={<X size={14} />}
+              iconPosition="left"
               onClick={clearFilters}
-              className="text-sm text-gray-600 hover:text-black underline"
-              style={{
-                fontFamily: designTokens.typography.fontFamily,
-                fontSize: designTokens.typography.sizes.sm,
-              }}
             >
               Clear filters
-            </button>
+            </Button>
           </div>
         )}
       </section>

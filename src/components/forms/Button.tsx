@@ -1,6 +1,6 @@
 import { ButtonHTMLAttributes, ReactNode } from 'react';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'accent' | 'accent-pink' | 'ghost' | 'danger';
+export type ButtonVariant = 'primary' | 'secondary' | 'accent' | 'accent-pink' | 'ghost' | 'danger' | 'white';
 export type ButtonSize = 'sm' | 'md' | 'lg' | 'xl';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -50,6 +50,12 @@ const variantStyles: Record<ButtonVariant, string> = {
     'active:scale-[0.97] ' +
     'disabled:bg-red-200 disabled:text-red-400 disabled:shadow-none disabled:cursor-not-allowed ' +
     'focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2',
+  white:
+    'bg-white text-display shadow-lg ' +
+    'hover:bg-surface-highlight hover:shadow-xl ' +
+    'active:scale-[0.97] ' +
+    'disabled:bg-neutral-100 disabled:text-neutral-400 disabled:shadow-none disabled:cursor-not-allowed ' +
+    'focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-display',
 };
 
 const sizeStyles: Record<ButtonSize, string> = {

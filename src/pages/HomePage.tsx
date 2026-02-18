@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import { ArrowRight, Camera, Film, Star, Mail, Zap, Heart } from 'lucide-react';
+import { Button } from '../components/forms/Button';
 
 const FadeIn: React.FC<{ children?: React.ReactNode; delay?: number; className?: string }> = ({
   children,
@@ -110,13 +111,11 @@ const Hero = () => {
               Crafting cinematic narratives that don't just capture attention—they capture souls.
             </p>
 
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-10 py-5 bg-display text-white rounded-full font-bold text-lg shadow-lg hover:shadow-xl hover:bg-accent transition-all duration-300 flex items-center gap-3"
-            >
-              Start Your Story <ArrowRight className="w-5 h-5" />
-            </motion.button>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="inline-block">
+              <Button size="xl" variant="primary" icon={<ArrowRight className="w-5 h-5" />}>
+                Start Your Story
+              </Button>
+            </motion.div>
           </motion.div>
         </div>
 
@@ -414,9 +413,9 @@ const Contact = () => (
               placeholder="Tell me about your world..."
             />
           </div>
-          <button className="w-full py-6 mt-8 bg-display text-white rounded-2xl font-bold text-xl hover:bg-accent hover:scale-[1.02] transition-all duration-300 shadow-lg">
+          <Button size="lg" variant="primary" fullWidth type="submit" className="mt-8">
             Initiate Collaboration
-          </button>
+          </Button>
         </form>
       </FadeIn>
     </div>

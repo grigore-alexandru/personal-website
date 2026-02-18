@@ -109,7 +109,8 @@ const BlogPostPage: React.FC = () => {
       {showBackButton && (
         <Link
           to="/blog"
-          className="fixed bottom-8 left-8 z-50 w-12 h-12 bg-neutral-900 text-white rounded-full flex items-center justify-center hover:bg-neutral-700 transition-colors duration-250 shadow-token-md focus:outline-none focus-visible:shadow-token-focus"
+          aria-label="Back to blog"
+          className="fixed bottom-8 left-8 z-50 w-12 h-12 bg-display text-white rounded-full flex items-center justify-center shadow-lg hover:bg-accent hover:shadow-xl hover:scale-[1.03] active:scale-[0.97] transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-display focus-visible:ring-offset-2"
         >
           <ArrowLeft size={20} />
         </Link>
