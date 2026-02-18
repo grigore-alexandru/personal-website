@@ -17,6 +17,7 @@ export default {
           900: 'var(--color-primary-900)',
         },
         accent: {
+          DEFAULT: '#3b82f6',
           50:  'var(--color-accent-50)',
           100: 'var(--color-accent-100)',
           200: 'var(--color-accent-200)',
@@ -26,11 +27,16 @@ export default {
           600: 'var(--color-accent-600)',
           700: 'var(--color-accent-700)',
         },
+        'accent-pink': '#ec4899',
         surface: {
+          DEFAULT: '#ffffff',
           base:    'var(--color-surface-base)',
           raised:  'var(--color-surface-raised)',
           sunken:  'var(--color-surface-sunken)',
         },
+        'surface-highlight': '#f8fafc',
+        display: '#1e293b',
+        body: '#64748b',
         border: {
           default: 'var(--color-border-default)',
           strong:  'var(--color-border-strong)',
@@ -46,6 +52,7 @@ export default {
         },
       },
       boxShadow: {
+        'soft':         '0 20px 40px -10px rgba(0,0,0,0.05)',
         'token-xs':     'var(--shadow-xs)',
         'token-sm':     'var(--shadow-sm)',
         'token-md':     'var(--shadow-md)',
@@ -57,6 +64,7 @@ export default {
         'token-focus-accent': 'var(--shadow-focus-accent)',
       },
       borderRadius: {
+        '4xl':       '2.5rem',
         'token-sm':  'var(--radius-sm)',
         'token-md':  'var(--radius-md)',
         'token-lg':  'var(--radius-lg)',
