@@ -57,7 +57,6 @@ const PortfolioLandingPage: React.FC = () => {
     setIsExiting(true);
     setExitingPanel(panel);
 
-    // Timing matches the CSS transition for a seamless jump
     setTimeout(() => {
       navigate(path);
     }, 600);
@@ -65,7 +64,6 @@ const PortfolioLandingPage: React.FC = () => {
 
   const getGridTemplate = () => {
     if (isExiting) {
-      // Aggressive collapse: The non-selected side vanishes entirely
       return exitingPanel === 'left' ? '1fr 1fr 0fr 0fr' : '0fr 0fr 1fr 1fr';
     }
     if (hoveredPanel === 'left') return '1.06fr 1.06fr 0.94fr 0.94fr';
@@ -73,10 +71,9 @@ const PortfolioLandingPage: React.FC = () => {
     return '1fr 1fr 1fr 1fr';
   };
 
-  // Helper to determine media scale
   const getMediaTransform = (panel: 'left' | 'right') => {
-    if (isExiting && exitingPanel === panel) return 'scale(1.25)'; // Deep zoom on click
-    if (hoveredPanel === panel) return 'scale(1.05)'; // Gentle zoom on hover
+    if (isExiting && exitingPanel === panel) return 'scale(1.25)';
+    if (hoveredPanel === panel) return 'scale(1.05)';
     return 'scale(1)';
   };
 
@@ -95,52 +92,24 @@ const PortfolioLandingPage: React.FC = () => {
           {/* Left Skeleton Panel */}
           <div
             className="relative rounded-2xl overflow-hidden bg-gray-200 animate-pulse"
-            style={{
-              gridColumn: isMobile ? 'span 1' : 'span 2',
-            }}
+            style={{ gridColumn: isMobile ? 'span 1' : 'span 2' }}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer" />
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <div
-                className="bg-gray-300 rounded mb-4"
-                style={{
-                  width: isMobile ? '150px' : '200px',
-                  height: isMobile ? '50px' : '70px',
-                }}
-              />
-              <div
-                className="bg-gray-300 rounded-full"
-                style={{
-                  width: '120px',
-                  height: '45px',
-                }}
-              />
+              <div className="bg-gray-300 rounded mb-4" style={{ width: isMobile ? '150px' : '200px', height: isMobile ? '50px' : '70px' }} />
+              <div className="bg-gray-300 rounded-full" style={{ width: '120px', height: '45px' }} />
             </div>
           </div>
 
           {/* Right Skeleton Panel */}
           <div
             className="relative rounded-2xl overflow-hidden bg-gray-200 animate-pulse"
-            style={{
-              gridColumn: isMobile ? 'span 1' : 'span 2',
-            }}
+            style={{ gridColumn: isMobile ? 'span 1' : 'span 2' }}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer" />
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <div
-                className="bg-gray-300 rounded mb-4"
-                style={{
-                  width: isMobile ? '150px' : '200px',
-                  height: isMobile ? '50px' : '70px',
-                }}
-              />
-              <div
-                className="bg-gray-300 rounded-full"
-                style={{
-                  width: '120px',
-                  height: '45px',
-                }}
-              />
+              <div className="bg-gray-300 rounded mb-4" style={{ width: isMobile ? '150px' : '200px', height: isMobile ? '50px' : '70px' }} />
+              <div className="bg-gray-300 rounded-full" style={{ width: '120px', height: '45px' }} />
             </div>
           </div>
         </div>
@@ -180,7 +149,6 @@ const PortfolioLandingPage: React.FC = () => {
             }}
           />
           
-          {/* Content Overlay */}
           <div 
             className="absolute inset-0 flex flex-col items-center justify-center transition-all duration-500"
             style={{
@@ -213,7 +181,8 @@ const PortfolioLandingPage: React.FC = () => {
             ref={videoRef}
             className="absolute inset-0 w-full h-full object-cover"
             style={{
-              filter: hoveredPanel === 'right' ? 'saturate(1.1) brightness(0.8)' : 'saturate(0.3) brightness(0.6)',
+              // Changed brightness(0.8) to brightness(1.1) here for the 'enlighten' effect
+              filter: hoveredPanel === 'right' ? 'saturate(1.1) brightness(1.1)' : 'saturate(0.3) brightness(0.6)',
               transform: getMediaTransform('right'),
               transition: 'all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1)',
             }}
