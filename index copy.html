@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@18.2.0",
+      "react/": "https://esm.sh/react@18.2.0/",
+      "react-dom": "https://esm.sh/react-dom@18.2.0",
+      "react-dom/": "https://esm.sh/react-dom@18.2.0/",
+      "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+      "framer-motion": "https://esm.sh/framer-motion@11.0.8?deps=react@18.2.0",
+      "lucide-react": "https://esm.sh/lucide-react@0.344.0?deps=react@18.2.0"
+    }
+  }
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            surface: '#ffffff',
+            'surface-highlight': '#f8fafc',
+            display: '#1e293b', // Slate 800
+            body: '#64748b',    // Slate 500
+            accent: '#3b82f6',  // Blue 500
+            'accent-pink': '#ec4899', // Pink 500
+          },
+          fontFamily: {
+            sans: ['Poppins', 'sans-serif'],
+          },
+          fontSize: {
+            'display-lg': ['5rem', { lineHeight: '1.1', letterSpacing: '-0.02em', fontWeight: '700' }],
+            'display-md': ['3.5rem', { lineHeight: '1.2', letterSpacing: '-0.01em', fontWeight: '600' }],
+          },
+          spacing: {
+            '18': '4.5rem',
+            '30': '7.5rem',
+          },
+          borderRadius: {
+            '4xl': '2.5rem',
+          },
+          boxShadow: {
+            'soft': '0 20px 40px -10px rgba(0, 0, 0, 0.05)',
+          },
+          animation: {
+            'bounce-slow': 'bounce 3s infinite',
+          }
+        },
+      },
+    }
+  </script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="bg-surface text-display antialiased">
+  <div id="root"></div>
+  <script type="module" src="./index.tsx"></script>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>
