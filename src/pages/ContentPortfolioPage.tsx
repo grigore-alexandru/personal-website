@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, X, Film, Users } from 'lucide-react';
+import { X, Film, Users } from 'lucide-react';
+import { SearchBar } from '../components/ui/SearchBar';
 import { ContentWithProject } from '../types';
 import { loadPublishedContentWithProjects, countPublishedContent } from '../utils/contentService';
 import { ContentGridItem } from '../components/ContentGridItem';
@@ -154,21 +155,12 @@ export function ContentPortfolioPage() {
 
         {/* ── Filter bar ── */}
         <div className="flex flex-col sm:flex-row gap-3 mb-8">
-          {/* Search */}
-          <div className="relative flex-1 flex items-center">
-            <Search size={18} className="absolute left-3 text-neutral-400 pointer-events-none" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by title..."
-              className="w-full h-11 pl-9 pr-4 rounded-lg border border-neutral-200 bg-white text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all duration-200"
-              style={{
-                fontFamily: designTokens.typography.fontFamily,
-                fontSize: '14px',
-              }}
-            />
-          </div>
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search by title..."
+            className="flex-1"
+          />
 
           {/* Media type */}
           <CustomDropdown

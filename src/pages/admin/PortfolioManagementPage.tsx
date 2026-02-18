@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Loader2, Search } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
+import { SearchBar } from '../../components/ui/SearchBar';
 import { AdminLayout } from '../../components/admin/AdminLayout';
 import { AdminProjectCard } from '../../components/admin/AdminProjectCard';
 import { supabase } from '../../lib/supabase';
@@ -177,16 +178,13 @@ export function PortfolioManagementPage() {
         </div>
 
         <div className="flex items-center gap-3 flex-1">
-          <div className="relative flex-1 max-w-xs">
-            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search projects..."
-              className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-            />
-          </div>
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search projects..."
+            size="sm"
+            className="flex-1 max-w-xs"
+          />
 
           {projectTypes.length > 0 && (
             <select

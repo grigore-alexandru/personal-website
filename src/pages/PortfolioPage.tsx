@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Film } from 'lucide-react';
+import { Film } from 'lucide-react';
+import { SearchBar } from '../components/ui/SearchBar';
 import { Project, Filter, ProjectType } from '../types';
 import { loadProjects } from '../utils/dataLoader';
 import { loadProjectTypes } from '../utils/portfolioService';
@@ -77,23 +78,12 @@ const PortfolioPage: React.FC = () => {
     <div className="min-h-screen bg-white">
       <section className="max-w-4xl mx-auto px-6 pt-24 pb-8">
         <div className="flex flex-col sm:flex-row gap-3 mb-8">
-          <div className="relative flex-1 flex items-center">
-            <Search
-              size={20}
-              className="absolute left-3 text-gray-400"
-            />
-            <input
-              type="text"
-              placeholder="Search projects, clients, or types..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-              style={{
-                fontFamily: designTokens.typography.fontFamily,
-                fontSize: designTokens.typography.sizes.sm,
-              }}
-            />
-          </div>
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search projects, clients, or types..."
+            className="flex-1"
+          />
 
           <CustomDropdown
             options={typeOptions}

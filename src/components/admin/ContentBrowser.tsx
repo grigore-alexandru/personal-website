@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Search, X, Check, Film, ImageIcon, Loader2, Folder } from 'lucide-react';
+import { X, Check, Film, ImageIcon, Loader2, Folder } from 'lucide-react';
+import { SearchBar } from '../ui/SearchBar';
 import { Content } from '../../types';
 import { loadContentWithProjects } from '../../utils/contentService';
 
@@ -82,16 +83,13 @@ export function ContentBrowser({ open, onClose, onSelect, excludeIds }: ContentB
         </div>
 
         <div className="p-4 border-b border-neutral-100 flex items-center gap-3">
-          <div className="flex-1 relative">
-            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by title..."
-              className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-            />
-          </div>
+          <SearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder="Search by title..."
+            size="sm"
+            className="flex-1"
+          />
           <div className="flex gap-1 bg-neutral-100 rounded-lg p-1">
             {(['all', 'video', 'image'] as const).map((t) => (
               <button
