@@ -1,5 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { ContentWithProject, ContentThumbnailVideo, ContentThumbnailImage } from '../types';
+import { useTouchScrollActivation } from '../hooks/useTouchScrollActivation';
 
 interface ContentGridItemProps {
   content: ContentWithProject;
@@ -7,29 +8,40 @@ interface ContentGridItemProps {
 }
 
 export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
-  const [isHovering, setIsHovering] = useState(false);
+  const [mouseHovering, setMouseHovering] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const thumbnail = content.thumbnail;
+  // On touch devices, activates when the card's vertical centre crosses the
+  // viewport's vertical midpoint during scrolling.  Always false on mouse
+  // devices so normal CSS hover is unaffected.
+  const [touchRef, touchActive] = useTouchScrollActivation();
+
+  // Combined hover state: either mouse hover (desktop) or scroll activation (touch).
+  const isHovering = mouseHovering || touchActive;
+
+  const thumbnail         = content.thumbnail;
   const hasVideoThumbnail = thumbnail && 'poster' in thumbnail && 'video' in thumbnail;
   const hasImageThumbnail = thumbnail && 'compressed' in thumbnail;
-  const isPortrait = content.format === 'portrait';
+  const isPortrait        = content.format === 'portrait';
 
-  const handleMouseEnter = () => {
-    setIsHovering(true);
-    if (hasVideoThumbnail && videoRef.current) {
+  // Keep video playback in sync with the merged hover state.
+  const syncVideo = useCallback((active: boolean) => {
+    if (!hasVideoThumbnail || !videoRef.current) return;
+    if (active) {
       videoRef.current.currentTime = 0;
       videoRef.current.play().catch(() => {});
-    }
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovering(false);
-    if (hasVideoThumbnail && videoRef.current) {
+    } else {
       videoRef.current.pause();
       videoRef.current.currentTime = 0;
     }
-  };
+  }, [hasVideoThumbnail]);
+
+  useEffect(() => {
+    syncVideo(isHovering);
+  }, [isHovering, syncVideo]);
+
+  const handleMouseEnter = () => setMouseHovering(true);
+  const handleMouseLeave = () => setMouseHovering(false);
 
   const year = content.published_at
     ? new Date(content.published_at).getFullYear()
@@ -37,6 +49,7 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
 
   return (
     <div
+      ref={touchRef}
       className={`group relative bg-gray-100 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg w-full h-full ${
         isPortrait ? '' : 'aspect-[16/10]'
       }`}
