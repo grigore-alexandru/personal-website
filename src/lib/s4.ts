@@ -12,8 +12,11 @@ export const s4Client = new S3Client({
   forcePathStyle: true,
 });
 
-export function getMegaS4PublicUrl(bucket: string, key: string): string {
-  const base = endpoint.replace(/\/$/, '');
+const publicBase =
+  import.meta.env.VITE_MEGA_S4_PUBLIC_BASE?.replace(/\/$/, '') ??
+  'https://s3.g.s4.mega.io';
+
+export function getMegaS4PublicUrl(_bucket: string, key: string): string {
   const encodedKey = key.split('/').map(encodeURIComponent).join('/');
-  return `${base}/${bucket}/${encodedKey}`;
+  return `${publicBase}/${encodedKey}`;
 }
