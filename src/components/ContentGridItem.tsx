@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { ContentWithProject, ContentThumbnailVideo, ContentThumbnailImage, isVideoThumbnail } from '../types';
+import { ContentWithProject, isVideoThumbnail } from '../types';
 import { useTouchScrollActivation } from '../hooks/useTouchScrollActivation';
 import { ProgressiveImage } from './ui/ProgressiveImage';
 
@@ -12,22 +12,18 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
   const [mouseHovering, setMouseHovering] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // On touch devices, activates when the card's vertical centre crosses the
-  // viewport's vertical midpoint during scrolling.  Always false on mouse
-  // devices so normal CSS hover is unaffected.
   const [touchRef, touchActive] = useTouchScrollActivation();
 
-  // Combined hover state: either mouse hover (desktop) or scroll activation (touch).
   const isHovering = mouseHovering || touchActive;
 
-  const thumbnail         = content.thumbnail;
-  const hasVideoThumbnail = thumbnail && isVideoThumbnail(thumbnail);
-  const hasImageThumbnail = thumbnail && !isVideoThumbnail(thumbnail);
-  const isPortrait        = content.format === 'portrait';
+  const thumbnail  = content.thumbnail;
+  const isPortrait = content.format === 'portrait';
 
-  // Keep video playback in sync with the merged hover state.
+  const videoThumb = thumbnail && isVideoThumbnail(thumbnail) ? thumbnail : null;
+  const imageThumb = thumbnail && !isVideoThumbnail(thumbnail) ? thumbnail : null;
+
   const syncVideo = useCallback((active: boolean) => {
-    if (!hasVideoThumbnail || !videoRef.current) return;
+    if (!videoThumb || !videoRef.current) return;
     if (active) {
       videoRef.current.currentTime = 0;
       videoRef.current.play().catch(() => {});
@@ -35,7 +31,7 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
       videoRef.current.pause();
       videoRef.current.currentTime = 0;
     }
-  }, [hasVideoThumbnail]);
+  }, [videoThumb]);
 
   useEffect(() => {
     syncVideo(isHovering);
@@ -58,40 +54,40 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
       onMouseLeave={handleMouseLeave}
       onClick={onClick}
     >
-      {hasVideoThumbnail && (
+      {videoThumb && (
         <>
           <ProgressiveImage
-            src={(thumbnail as ContentThumbnailVideo).poster}
+            src={videoThumb.poster}
             alt={content.title}
-            className={`object-cover transition-all duration-300 ${
+            className={`object-cover transition-all duration-500 ease-in-out ${
               isHovering
-                ? 'opacity-0 scale-105'
+                ? 'opacity-0 scale-[1.07]'
                 : 'opacity-100 scale-100 saturate-[0.3]'
             }`}
           />
           <video
             ref={videoRef}
-            src={(thumbnail as ContentThumbnailVideo).hover_video}
+            src={videoThumb.hover_video}
             loop
             muted
             playsInline
-            className={`absolute inset-0 w-full h-full object-cover transition-all duration-300 ${
+            preload="none"
+            className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ease-in-out ${
               isHovering
-                ? 'opacity-100 scale-105 saturate-110'
+                ? 'opacity-100 scale-[1.07]'
                 : 'opacity-0 scale-100'
             }`}
-            preload="none"
           />
         </>
       )}
 
-      {hasImageThumbnail && (
+      {imageThumb && (
         <ProgressiveImage
-          src={(thumbnail as ContentThumbnailImage).poster}
+          src={imageThumb.poster}
           alt={content.title}
-          className={`object-cover transition-all duration-300 ${
+          className={`object-cover transition-all duration-500 ease-in-out ${
             isHovering
-              ? 'scale-105 saturate-110'
+              ? 'scale-[1.07] saturate-100'
               : 'scale-100 saturate-[0.3]'
           }`}
         />
@@ -104,7 +100,7 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
       )}
 
       <div
-        className={`absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-black/80 via-black/40 to-transparent transition-all duration-300 ${
+        className={`absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-black/80 via-black/40 to-transparent transition-all duration-500 ease-in-out ${
           isHovering
             ? 'opacity-100 translate-y-0'
             : 'opacity-0 translate-y-4'
