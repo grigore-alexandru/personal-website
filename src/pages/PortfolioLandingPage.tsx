@@ -25,11 +25,11 @@ const PortfolioLandingPage: React.FC = () => {
 
   useEffect(() => {
     const projectImage = new Image();
-    projectImage.src = 'https://lqbyvubbzexujviflunv.supabase.co/storage/v1/object/sign/website-media/PORTFOLIO_PROJECTS_IMAGE.webp?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iNTIzNTU4Yi1iZjk0LTRiMTItYmQ1Yy1kOGM4MzExZDQ5ZWYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ3ZWJzaXRlLW1lZGlhL1BPUlRGT0xJT19QUk9KRUNUU19JTUFHRS53ZWJwIiwiaWF0IjoxNzczMTQ0ODY2LCJleHAiOjIwODg1MDQ4NjZ9.jmXGVKYxBc0l0WWmDcunn_cVCY0aSYslx6yZ1yOu1Ao';
+    projectImage.src = 'https://lqbyvubbzexujviflunv.supabase.co/storage/v1/object/sign/website-media/PORTFOLIO_PROJECTS_IMAGE.webp?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iNTIzNTU4Yi1iZjk0LTRiMTItYmQ1Yy1kOGM4MzExZDQ5ZWYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ3ZWJzaXRlLW1lZGlhL1BPUlRGT0xJT19QUk9KRUNUU19JTUFHRS53ZWJwIiwiaWF0IjoxNzczMTQ0OTY1LCJleHAiOjIwODg1MDQ5NjV9.s2u49_vZot36JvNJZsOnrouC791RdMpj3gzjOyQ3zYE';
     projectImage.onload = () => setImageLoaded(true);
 
     const video = document.createElement('video');
-    video.src = 'https://lqbyvubbzexujviflunv.supabase.co/storage/v1/object/sign/website-media/PORTFOLIO_MEDIA_VIDEO.webm?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iNTIzNTU4Yi1iZjk0LTRiMTItYmQ1Yy1kOGM4MzExZDQ5ZWYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ3ZWJzaXRlLW1lZGlhL1BPUlRGT0xJT19NRURJQV9WSURFTy53ZWJtIiwiaWF0IjoxNzczMTQ0ODQwLCJleHAiOjIwODg1MDQ4NDB9.LFb520hsBVmgobY9byRkXOfR_u1Zl685InkpYPn-3w4';
+    video.src = 'https://lqbyvubbzexujviflunv.supabase.co/storage/v1/object/sign/website-media/PORTFOLIO_MEDIA_VIDEO.webm?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iNTIzNTU4Yi1iZjk0LTRiMTItYmQ1Yy1kOGM4MzExZDQ5ZWYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ3ZWJzaXRlLW1lZGlhL1BPUlRGT0xJT19NRURJQV9WSURFTy53ZWJtIiwiaWF0IjoxNzczMTQ1MDM1LCJleHAiOjIwODg1MDUwMzV9.7DOmN85zsUG3qC7oVAhLAt1Gj9ss3mkWFTUoOyPl2C8';
     video.preload = 'auto';
     video.onloadeddata = () => setVideoLoaded(true);
   }, []);
@@ -143,7 +143,7 @@ const PortfolioLandingPage: React.FC = () => {
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{
-              backgroundImage: `url('https://lqbyvubbzexujviflunv.supabase.co/storage/v1/object/sign/website-media/PORTFOLIO_PROJECTS_IMAGE.jpeg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iNTIzNTU4Yi1iZjk0LTRiMTItYmQ1Yy1kOGM4MzExZDQ5ZWYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ3ZWJzaXRlLW1lZGlhL1BPUlRGT0xJT19QUk9KRUNUU19JTUFHRS5qcGVnIiwiaWF0IjoxNzcwOTIyNjQzLCJleHAiOjE4MDI0NTg2NDN9.aOODZRS-dsK1i_55i-6Ailz2NiuOQSCP0YIR3-zreQA')`,
+              backgroundImage: `url('https://lqbyvubbzexujviflunv.supabase.co/storage/v1/object/sign/website-media/PORTFOLIO_PROJECTS_IMAGE.webp?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iNTIzNTU4Yi1iZjk0LTRiMTItYmQ1Yy1kOGM4MzExZDQ5ZWYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ3ZWJzaXRlLW1lZGlhL1BPUlRGT0xJT19QUk9KRUNUU19JTUFHRS53ZWJwIiwiaWF0IjoxNzczMTQ0OTY1LCJleHAiOjIwODg1MDQ5NjV9.s2u49_vZot36JvNJZsOnrouC791RdMpj3gzjOyQ3zYE')`,
               filter: hoveredPanel === 'left' ? 'saturate(1) brightness(0.8)' : 'saturate(0.3) brightness(0.6)',
               transform: getMediaTransform('left'),
               transition: 'all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1)',
@@ -187,7 +187,7 @@ const PortfolioLandingPage: React.FC = () => {
               transform: getMediaTransform('right'),
               transition: 'all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1)',
             }}
-            src="https://lqbyvubbzexujviflunv.supabase.co/storage/v1/object/sign/website-media/PORTFOLIO_MEDIA_VIDEO.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iNTIzNTU4Yi1iZjk0LTRiMTItYmQ1Yy1kOGM4MzExZDQ5ZWYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ3ZWJzaXRlLW1lZGlhL1BPUlRGT0xJT19NRURJQV9WSURFTy5tcDQiLCJpYXQiOjE3NzA5MjI2MzAsImV4cCI6MTgwMjQ1ODYzMH0.Z2kP5B44DyVjS23XQO5TJfijAQyAFBYNGglbpN3jZAc"
+            src="https://lqbyvubbzexujviflunv.supabase.co/storage/v1/object/sign/website-media/PORTFOLIO_MEDIA_VIDEO.webm?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iNTIzNTU4Yi1iZjk0LTRiMTItYmQ1Yy1kOGM4MzExZDQ5ZWYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ3ZWJzaXRlLW1lZGlhL1BPUlRGT0xJT19NRURJQV9WSURFTy53ZWJtIiwiaWF0IjoxNzczMTQ1MDM1LCJleHAiOjIwODg1MDUwMzV9.7DOmN85zsUG3qC7oVAhLAt1Gj9ss3mkWFTUoOyPl2C8"
             muted loop playsInline preload="metadata"
           />
 
