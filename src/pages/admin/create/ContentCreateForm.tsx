@@ -329,9 +329,19 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
     setUploadStage('Processing main image...');
 
     try {
-      const result = await uploadContentMainImage(file, (stage) => setUploadStage(stage));
-      setFormData((prev) => ({ ...prev, url: result.publicUrl }));
-      showToast('success', 'Main image uploaded');
+      const [mainResult, thumbResult] = await Promise.all([
+        uploadContentMainImage(file, (stage) => setUploadStage(`Main: ${stage}`)),
+        processAndUploadContentPoster(file, formData.format === 'portrait', (stage) =>
+          setUploadStage(`Thumbnail: ${stage}`)
+        ),
+      ]);
+
+      setFormData((prev) => ({
+        ...prev,
+        url: mainResult.publicUrl,
+        thumbnail: { kind: 'image', data: thumbResult },
+      }));
+      showToast('success', 'Image uploaded and thumbnail generated');
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Failed to upload image';
       showToast('error', msg);
@@ -751,11 +761,11 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
                   />
                 </div>
 
-                {/* Main image upload → saved to url */}
+                {/* Single upload — generates both full URL and thumbnail automatically */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Main Image (Full)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Image</label>
                   <p className="text-xs text-gray-500 mb-3">
-                    High-resolution image shown in the detail view. Saved as the main content URL.
+                    Upload one image. A high-res version is saved as the main URL and a compressed thumbnail is auto-generated for the grid.
                   </p>
                   {!formData.url ? (
                     <div>
@@ -780,26 +790,39 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
                         ) : (
                           <div className="flex flex-col items-center gap-2">
                             <UploadCloud size={32} className="text-gray-400" />
-                            <p className="text-sm font-medium text-gray-700">Click to upload main image</p>
-                            <p className="text-xs text-gray-500">JPEG, PNG, or WebP — up to 1920px wide, 85% quality</p>
+                            <p className="text-sm font-medium text-gray-700">Click to upload image</p>
+                            <p className="text-xs text-gray-500">JPEG, PNG, or WebP — thumbnail auto-generated</p>
                           </div>
                         )}
                       </button>
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                        <img src={formData.url} alt="Main image preview" className="w-full h-full object-contain" />
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-xs font-medium text-gray-500 mb-1">Full image</p>
+                          <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden">
+                            <img src={formData.url} alt="Main image" className="w-full h-full object-contain" />
+                          </div>
+                        </div>
+                        {posterUrl && (
+                          <div>
+                            <p className="text-xs font-medium text-gray-500 mb-1">Grid thumbnail (auto)</p>
+                            <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden">
+                              <img src={posterUrl} alt="Thumbnail" className="w-full h-full object-contain" />
+                            </div>
+                          </div>
+                        )}
                       </div>
                       <Button
                         variant="secondary"
                         onClick={() => {
-                          setFormData((prev) => ({ ...prev, url: '' }));
-                          mainImageInputRef.current?.click();
+                          setFormData((prev) => ({ ...prev, url: '', thumbnail: null }));
+                          setTimeout(() => mainImageInputRef.current?.click(), 0);
                         }}
                         disabled={isUploadingMainImage}
                       >
-                        Replace Main Image
+                        Replace Image
                       </Button>
                     </div>
                   )}
@@ -808,25 +831,6 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
                       message={validationErrors.find((e) => e.field === 'url')!.message}
                     />
                   )}
-                </div>
-
-                {/* Thumbnail upload → poster only */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Thumbnail (Grid)</label>
-                  <p className="text-xs text-gray-500 mb-3">
-                    Compressed image shown in the portfolio grid. Saved to the thumbnail poster field.
-                  </p>
-                  <ThumbnailUploadZone
-                    thumbnail={formData.thumbnail}
-                    posterUrl={posterUrl}
-                    isUploading={isUploadingThumbnail}
-                    uploadStage={uploadStage}
-                    inputRef={thumbnailInputRef}
-                    accept={ALLOWED_IMAGE_MIME.join(',')}
-                    onFileSelect={handleThumbnailFileSelect}
-                    onReplace={handleReplaceThumbnail}
-                    hint="JPEG, PNG, or WebP (max 7MB)"
-                  />
                   {validationErrors.find((e) => e.field === 'thumbnail') && (
                     <ValidationErrorComponent
                       message={validationErrors.find((e) => e.field === 'thumbnail')!.message}

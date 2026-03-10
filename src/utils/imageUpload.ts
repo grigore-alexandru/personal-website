@@ -1,7 +1,7 @@
 import { uploadBlob, generateStorageKey } from '../lib/storageClient';
 
 const BLOG_IMAGES_BUCKET = 'blog-images';
-const CONTENT_MEDIA_BUCKET = 'portfolio-images';
+const CONTENT_MEDIA_BUCKET = 'content-media';
 
 const BLOG_MAX_WIDTH   = 1000;
 const BLOG_QUALITY     = 0.70;
