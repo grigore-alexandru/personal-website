@@ -260,7 +260,7 @@ export function ContentPortfolioPage() {
 
         {/* ── Grid ── */}
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 lg:gap-6 auto-rows-[1fr]">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 lg:gap-6 md:auto-rows-[300px] lg:auto-rows-[280px]">
             {Array.from({ length: 12 }).map((_, i) => (
               <div key={i} style={{ animation: `fadeIn 0.3s ease-in-out ${i * 50}ms both` }}>
                 <ContentGridItemSkeleton />
@@ -278,7 +278,7 @@ export function ContentPortfolioPage() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 lg:gap-6 auto-rows-[1fr]">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 lg:gap-6 md:auto-rows-[300px] lg:auto-rows-[280px]">
               {filteredContent.map((item, index) => {
                 const isPortrait = item.format === 'portrait';
                 return (
