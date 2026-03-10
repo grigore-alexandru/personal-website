@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit, MoreVertical, Loader2 } from 'lucide-react';
+import { CreditCard as Edit, MoreVertical, Loader2 } from 'lucide-react';
 import { BlogPost } from '../../utils/blogLoader';
 import { designTokens } from '../../styles/tokens';
 import { formatDistanceToNow } from '../../utils/dateUtils';

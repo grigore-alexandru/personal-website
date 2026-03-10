@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Edit, MoreVertical, Loader2, Video, Image as ImageIcon, GripVertical } from 'lucide-react';
+import { CreditCard as Edit, MoreVertical, Loader2, Video, Image as ImageIcon, GripVertical } from 'lucide-react';
 import { designTokens } from '../../styles/tokens';
 import { ProgressiveImage } from '../ui/ProgressiveImage';
 
