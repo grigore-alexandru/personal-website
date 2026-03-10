@@ -103,6 +103,7 @@ export interface Database {
           url: string;
           platform: 'youtube' | 'vimeo' | 'mega' | 'instagram' | null;
           format: 'landscape' | 'portrait';
+          thumbnail: { poster: string; hover_video: string } | { poster: string } | null;
           created_at: string;
         };
         Insert: {
@@ -113,6 +114,7 @@ export interface Database {
           url: string;
           platform?: 'youtube' | 'vimeo' | 'mega' | 'instagram' | null;
           format?: 'landscape' | 'portrait';
+          thumbnail?: { poster: string; hover_video: string } | { poster: string } | null;
           created_at?: string;
         };
         Update: {
@@ -123,6 +125,7 @@ export interface Database {
           url?: string;
           platform?: 'youtube' | 'vimeo' | 'mega' | 'instagram' | null;
           format?: 'landscape' | 'portrait';
+          thumbnail?: { poster: string; hover_video: string } | { poster: string } | null;
           created_at?: string;
         };
       };

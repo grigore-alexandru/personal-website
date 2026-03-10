@@ -23,15 +23,18 @@ export interface Recommendation {
 
 export interface ContentThumbnailVideo {
   poster: string;
-  video: string;
+  hover_video: string;
 }
 
 export interface ContentThumbnailImage {
-  full: string;
-  compressed: string;
+  poster: string;
 }
 
 export type ContentThumbnail = ContentThumbnailVideo | ContentThumbnailImage;
+
+export function isVideoThumbnail(t: ContentThumbnail): t is ContentThumbnailVideo {
+  return 'hover_video' in t;
+}
 
 export interface ContentContributor {
   name: string;

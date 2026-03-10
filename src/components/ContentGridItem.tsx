@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { ContentWithProject, ContentThumbnailVideo, ContentThumbnailImage } from '../types';
+import { ContentWithProject, ContentThumbnailVideo, ContentThumbnailImage, isVideoThumbnail } from '../types';
 import { useTouchScrollActivation } from '../hooks/useTouchScrollActivation';
 import { ProgressiveImage } from './ui/ProgressiveImage';
 
@@ -21,8 +21,8 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
   const isHovering = mouseHovering || touchActive;
 
   const thumbnail         = content.thumbnail;
-  const hasVideoThumbnail = thumbnail && 'poster' in thumbnail && 'video' in thumbnail;
-  const hasImageThumbnail = thumbnail && 'compressed' in thumbnail;
+  const hasVideoThumbnail = thumbnail && isVideoThumbnail(thumbnail);
+  const hasImageThumbnail = thumbnail && !isVideoThumbnail(thumbnail);
   const isPortrait        = content.format === 'portrait';
 
   // Keep video playback in sync with the merged hover state.
@@ -71,7 +71,7 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
           />
           <video
             ref={videoRef}
-            src={(thumbnail as ContentThumbnailVideo).video}
+            src={(thumbnail as ContentThumbnailVideo).hover_video}
             loop
             muted
             playsInline
@@ -87,7 +87,7 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
 
       {hasImageThumbnail && (
         <ProgressiveImage
-          src={(thumbnail as ContentThumbnailImage).compressed}
+          src={(thumbnail as ContentThumbnailImage).poster}
           alt={content.title}
           className={`object-cover transition-all duration-300 ${
             isHovering

@@ -51,10 +51,7 @@ export function AdminContentCard({
     }
   };
 
-  const isVideo = content.thumbnail && 'poster' in content.thumbnail;
-  const thumbnailUrl = isVideo
-    ? content.thumbnail.poster
-    : content.thumbnail?.compressed || content.thumbnail?.full;
+  const thumbnailUrl = content.thumbnail?.poster ?? null;
 
   return (
     <article

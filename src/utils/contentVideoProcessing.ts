@@ -11,7 +11,7 @@ const THUMBNAIL_VIDEO_BITRATE = 350000;
 
 export interface ProcessedVideoThumbnail {
   poster: string;
-  video: string;
+  hover_video: string;
 }
 
 export interface VideoValidationError {
@@ -251,7 +251,7 @@ export async function processAndUploadVideoThumbnail(
 
     return {
       poster: posterResult.publicUrl,
-      video: hoverResult.publicUrl,
+      hover_video: hoverResult.publicUrl,
     };
   } catch (error) {
     if (error instanceof Error) {

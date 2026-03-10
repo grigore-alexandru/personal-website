@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { ContentWithProject, ContentThumbnailVideo, ContentThumbnailImage } from '../types';
+import { ContentWithProject, ContentThumbnailVideo, ContentThumbnailImage, isVideoThumbnail } from '../types';
 import { ProgressiveImage } from './ui/ProgressiveImage';
 
 interface ContentCardProps {
@@ -13,8 +13,8 @@ export function ContentCard({ content, onClick }: ContentCardProps) {
 
   const isVideo = content.content_type.slug === 'video';
   const thumbnail = content.thumbnail;
-  const hasVideoThumbnail = thumbnail && 'poster' in thumbnail && 'video' in thumbnail;
-  const hasImageThumbnail = thumbnail && 'compressed' in thumbnail;
+  const hasVideoThumbnail = thumbnail && isVideoThumbnail(thumbnail);
+  const hasImageThumbnail = thumbnail && !isVideoThumbnail(thumbnail);
 
   const year = content.published_at
     ? new Date(content.published_at).getFullYear()
@@ -59,7 +59,7 @@ export function ContentCard({ content, onClick }: ContentCardProps) {
           />
           <video
             ref={videoRef}
-            src={(thumbnail as ContentThumbnailVideo).video}
+            src={(thumbnail as ContentThumbnailVideo).hover_video}
             loop
             muted
             playsInline
@@ -74,7 +74,7 @@ export function ContentCard({ content, onClick }: ContentCardProps) {
 
       {hasImageThumbnail && (
         <ProgressiveImage
-          src={(thumbnail as ContentThumbnailImage).compressed}
+          src={(thumbnail as ContentThumbnailImage).poster}
           alt={content.title}
           className={`object-cover transition-all duration-300 ${
             isHovering

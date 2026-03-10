@@ -2,15 +2,12 @@ import { uploadBlob, deleteByUrl, generateStorageKey } from '../lib/storageClien
 
 const CONTENT_MEDIA_BUCKET = 'content-media';
 const MAX_FILE_SIZE = 7 * 1024 * 1024;
-const FULL_IMAGE_MAX_WIDTH_LANDSCAPE = 1920;
-const FULL_IMAGE_MAX_WIDTH_PORTRAIT = 1080;
 const THUMBNAIL_MAX_WIDTH_LANDSCAPE = 400;
 const THUMBNAIL_MAX_WIDTH_PORTRAIT = 270;
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
 
 export interface ProcessedContentImages {
-  full: string;
-  compressed: string;
+  poster: string;
 }
 
 export interface ImageValidationError {
@@ -117,30 +114,21 @@ export async function processAndUploadContentImage(
     onProgress?.('Loading image...');
     const img = await loadImage(file);
 
-    const fullMaxWidth = isPortrait ? FULL_IMAGE_MAX_WIDTH_PORTRAIT : FULL_IMAGE_MAX_WIDTH_LANDSCAPE;
     const thumbnailMaxWidth = isPortrait ? THUMBNAIL_MAX_WIDTH_PORTRAIT : THUMBNAIL_MAX_WIDTH_LANDSCAPE;
 
-    onProgress?.('Processing full resolution...');
-    const fullBlob = await resizeImage(img, fullMaxWidth, 0.85, 'image/webp');
-
-    onProgress?.('Processing compressed thumbnail...');
+    onProgress?.('Processing poster...');
     const thumbnailBlob = await resizeImage(img, thumbnailMaxWidth, 0.50, 'image/webp');
 
     const baseFileName = file.name.replace(/\.[^/.]+$/, '');
 
-    onProgress?.('Uploading full image...');
-    const fullKey = generateStorageKey('images', baseFileName, 'full', 'webp');
-    const fullResult = await uploadBlob(fullBlob, CONTENT_MEDIA_BUCKET, fullKey, 'image/webp');
-
-    onProgress?.('Uploading thumbnail...');
+    onProgress?.('Uploading poster...');
     const posterKey = generateStorageKey('posters', baseFileName, 'poster', 'webp');
     const posterResult = await uploadBlob(thumbnailBlob, CONTENT_MEDIA_BUCKET, posterKey, 'image/webp');
 
     onProgress?.('Complete!');
 
     return {
-      full: fullResult.publicUrl,
-      compressed: posterResult.publicUrl,
+      poster: posterResult.publicUrl,
     };
   } catch (error) {
     if (error instanceof Error) {
@@ -151,11 +139,7 @@ export async function processAndUploadContentImage(
 }
 
 export async function deleteContentImages(
-  fullUrl: string | null,
-  compressedUrl: string | null
+  posterUrl: string | null,
 ): Promise<void> {
-  await Promise.all([
-    deleteByUrl(fullUrl),
-    deleteByUrl(compressedUrl),
-  ]);
+  await deleteByUrl(posterUrl);
 }

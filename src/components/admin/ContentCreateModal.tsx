@@ -187,7 +187,7 @@ export function ContentCreateModal({ open, onClose, onSuccess, onError, contentS
   const handleReplaceVideo = async () => {
     if (formData.videoThumbnail) {
       try {
-        await deleteVideoThumbnails(formData.videoThumbnail.poster, formData.videoThumbnail.video);
+        await deleteVideoThumbnails(formData.videoThumbnail.poster, formData.videoThumbnail.hover_video);
       } catch (error) {
         console.error('Error deleting old video thumbnails:', error);
       }
@@ -199,7 +199,7 @@ export function ContentCreateModal({ open, onClose, onSuccess, onError, contentS
   const handleReplaceImage = async () => {
     if (formData.imageThumbnail) {
       try {
-        await deleteContentImages(formData.imageThumbnail.full, formData.imageThumbnail.compressed);
+        await deleteContentImages(formData.imageThumbnail.poster);
       } catch (error) {
         console.error('Error deleting old image thumbnails:', error);
       }
@@ -509,9 +509,9 @@ export function ContentCreateModal({ open, onClose, onSuccess, onError, contentS
                         Replace
                       </button>
                     </div>
-                    {formData.imageThumbnail.compressed && (
+                    {formData.imageThumbnail.poster && (
                       <img
-                        src={formData.imageThumbnail.compressed}
+                        src={formData.imageThumbnail.poster}
                         alt="Image thumbnail"
                         className="w-full h-32 object-cover rounded"
                       />

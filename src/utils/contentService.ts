@@ -230,10 +230,10 @@ export async function deleteContent(
     if (content?.thumbnail) {
       const thumbnail = content.thumbnail as any;
 
-      if ('poster' in thumbnail && 'video' in thumbnail) {
-        await deleteVideoThumbnails(thumbnail.poster, thumbnail.video);
-      } else if ('full' in thumbnail && 'compressed' in thumbnail) {
-        await deleteContentImages(thumbnail.full, thumbnail.compressed);
+      if ('hover_video' in thumbnail) {
+        await deleteVideoThumbnails(thumbnail.poster, thumbnail.hover_video);
+      } else if ('poster' in thumbnail) {
+        await deleteContentImages(thumbnail.poster);
       }
     }
 

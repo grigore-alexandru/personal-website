@@ -44,7 +44,7 @@ export function VideoThumbnailHoverPreview({ thumbnail, format = 'landscape', cl
       />
       <video
         ref={videoRef}
-        src={thumbnail.video}
+        src={thumbnail.hover_video}
         loop
         muted
         playsInline

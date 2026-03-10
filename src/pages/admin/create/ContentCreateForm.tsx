@@ -299,7 +299,7 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
   const handleReplaceVideo = async () => {
     if (formData.videoThumbnail && mode === 'edit') {
       try {
-        await deleteVideoThumbnails(formData.videoThumbnail.poster, formData.videoThumbnail.video);
+        await deleteVideoThumbnails(formData.videoThumbnail.poster, formData.videoThumbnail.hover_video);
       } catch (error) {
         console.error('Error deleting old video thumbnails:', error);
       }
@@ -311,7 +311,7 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
   const handleReplaceImage = async () => {
     if (formData.imageThumbnail && mode === 'edit') {
       try {
-        await deleteContentImages(formData.imageThumbnail.full, formData.imageThumbnail.compressed);
+        await deleteContentImages(formData.imageThumbnail.poster);
       } catch (error) {
         console.error('Error deleting old images:', error);
       }
@@ -822,7 +822,7 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
                     <div className="space-y-4">
                       <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden">
                         <img
-                          src={formData.imageThumbnail.full}
+                          src={formData.imageThumbnail.poster}
                           alt="Preview"
                           className="w-full h-full object-contain"
                         />
