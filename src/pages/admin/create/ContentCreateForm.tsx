@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Sparkles, Save, Trash2, AlertCircle, Loader2, Image as ImageIcon, Video } from 'lucide-react';
+import { Sparkles, Save, Trash2, AlertCircle, Loader2, Image as ImageIcon, Video, UploadCloud } from 'lucide-react';
 import { AdminLayout } from '../../../components/admin/AdminLayout';
 import { FormInput } from '../../../components/forms/FormInput';
 import { FormCheckbox } from '../../../components/forms/FormCheckbox';
 import { FormTextarea } from '../../../components/forms/FormTextarea';
 import { Button } from '../../../components/forms/Button';
-import { Tooltip } from '../../../components/ui/Tooltip';
 import { ToastContainer } from '../../../components/ui/Toast';
 import { ValidationError as ValidationErrorComponent } from '../../../components/ui/ValidationError';
 import { VideoThumbnailHoverPreview } from '../../../components/admin/VideoThumbnailHoverPreview';
@@ -29,12 +28,27 @@ import {
   deleteVideoThumbnails,
 } from '../../../utils/contentVideoProcessing';
 import {
-  processAndUploadContentImage,
+  processAndUploadContentPoster,
   validateContentImage,
   deleteContentImages,
 } from '../../../utils/contentImageProcessing';
-import { loadProjectTypes } from '../../../utils/portfolioService';
-import { ContentType, ProjectType, ContentThumbnailVideo, ContentThumbnailImage, ContentContributor } from '../../../types';
+import { uploadContentMainImage } from '../../../utils/imageUpload';
+import { ContentType, isVideoThumbnail, ContentThumbnailVideo, ContentThumbnailImage, ContentContributor } from '../../../types';
+
+const ALLOWED_VIDEO_MIME = ['video/mp4', 'video/webm', 'video/quicktime'];
+const ALLOWED_IMAGE_MIME = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
+interface VideoThumbnailState {
+  kind: 'video';
+  data: ContentThumbnailVideo;
+}
+
+interface ImageThumbnailState {
+  kind: 'image';
+  data: ContentThumbnailImage;
+}
+
+type ThumbnailState = VideoThumbnailState | ImageThumbnailState | null;
 
 interface ContentFormData {
   type: 'video' | 'image';
@@ -44,10 +58,7 @@ interface ContentFormData {
   url: string;
   platform: 'youtube' | 'vimeo' | 'mega' | 'instagram' | '';
   format: 'landscape' | 'portrait';
-  videoFile: File | null;
-  videoThumbnail: ContentThumbnailVideo | null;
-  imageFile: File | null;
-  imageThumbnail: ContentThumbnailImage | null;
+  thumbnail: ThumbnailState;
   publishedDate: string;
   projectId: string | null;
   hasContributors: boolean;
@@ -69,10 +80,7 @@ const initialFormData: ContentFormData = {
   url: '',
   platform: 'youtube',
   format: 'landscape',
-  videoFile: null,
-  videoThumbnail: null,
-  imageFile: null,
-  imageThumbnail: null,
+  thumbnail: null,
   publishedDate: new Date().toISOString().split('T')[0],
   projectId: null,
   hasContributors: false,
@@ -102,13 +110,13 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
   const [isLoadingContent, setIsLoadingContent] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
-  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
+  const [isUploadingMainImage, setIsUploadingMainImage] = useState(false);
   const [uploadStage, setUploadStage] = useState('');
   const [originalProjectId, setOriginalProjectId] = useState<string | null>(null);
 
-  const videoInputRef = useRef<HTMLInputElement>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
+  const thumbnailInputRef  = useRef<HTMLInputElement>(null);
+  const mainImageInputRef  = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadFormDependencies();
@@ -177,6 +185,15 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
     const linkedProjectId = projectLink?.project_id || null;
     setOriginalProjectId(linkedProjectId);
 
+    let thumbnail: ThumbnailState = null;
+    if (c.thumbnail) {
+      if (isVideoThumbnail(c.thumbnail)) {
+        thumbnail = { kind: 'video', data: c.thumbnail as ContentThumbnailVideo };
+      } else {
+        thumbnail = { kind: 'image', data: c.thumbnail as ContentThumbnailImage };
+      }
+    }
+
     setFormData({
       type: isVideo ? 'video' : 'image',
       title: c.title,
@@ -185,11 +202,10 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
       url: c.url,
       platform: (c.platform || '') as any,
       format: c.format,
-      videoFile: null,
-      videoThumbnail: isVideo ? (c.thumbnail as ContentThumbnailVideo) : null,
-      imageFile: null,
-      imageThumbnail: !isVideo ? (c.thumbnail as ContentThumbnailImage) : null,
-      publishedDate: c.published_at ? new Date(c.published_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      thumbnail,
+      publishedDate: c.published_at
+        ? new Date(c.published_at).toISOString().split('T')[0]
+        : new Date().toISOString().split('T')[0],
       projectId: linkedProjectId,
       hasContributors: !!c.contributors && c.contributors.length > 0,
       contributors: c.contributors || [],
@@ -203,8 +219,7 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
       showToast('error', 'Please enter a title first');
       return;
     }
-    const newSlug = slugify(formData.title);
-    setFormData({ ...formData, slug: newSlug });
+    setFormData({ ...formData, slug: slugify(formData.title) });
   };
 
   const deducePlatformFromUrl = (url: string): typeof formData.platform => {
@@ -226,98 +241,105 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
     }));
   };
 
-  const handleVideoFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const clearExistingThumbnail = async (current: ThumbnailState) => {
+    if (!current || mode !== 'edit') return;
+    try {
+      if (current.kind === 'video') {
+        await deleteVideoThumbnails(current.data.poster, current.data.hover_video);
+      } else {
+        await deleteContentImages(current.data.poster);
+      }
+    } catch (error) {
+      console.error('Error deleting old thumbnail:', error);
+    }
+  };
+
+  const handleThumbnailFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const validation = validateVideoFile(file);
-    if (!validation.valid) {
-      showToast('error', validation.error);
+    const isVideoFile = ALLOWED_VIDEO_MIME.includes(file.type);
+    const isImageFile = ALLOWED_IMAGE_MIME.includes(file.type);
+
+    if (!isVideoFile && !isImageFile) {
+      showToast('error', 'Invalid file type. Upload an image (JPEG, PNG, WebP) or video (MP4, WebM, MOV).');
       return;
     }
 
-    setIsUploadingVideo(true);
-    setUploadStage('Validating video...');
+    await clearExistingThumbnail(formData.thumbnail);
+    setFormData((prev) => ({ ...prev, thumbnail: null }));
+    setIsUploadingThumbnail(true);
 
     try {
-      const isPortrait = formData.format === 'portrait';
-      const result = await processAndUploadVideoThumbnail(file, isPortrait, (stage) => {
-        setUploadStage(stage);
-      });
-
-      setFormData((prev) => ({
-        ...prev,
-        videoFile: file,
-        videoThumbnail: result,
-      }));
-      showToast('success', 'Video thumbnail processed successfully');
+      if (isVideoFile) {
+        const validation = validateVideoFile(file);
+        if (!validation.valid) {
+          showToast('error', validation.error);
+          return;
+        }
+        setUploadStage('Validating video...');
+        const result = await processAndUploadVideoThumbnail(
+          file,
+          formData.format === 'portrait',
+          (stage) => setUploadStage(stage)
+        );
+        setFormData((prev) => ({ ...prev, thumbnail: { kind: 'video', data: result } }));
+        showToast('success', 'Video thumbnail processed');
+      } else {
+        const validation = validateContentImage(file);
+        if (!validation.valid) {
+          showToast('error', validation.error);
+          return;
+        }
+        setUploadStage('Processing image...');
+        const result = await processAndUploadContentPoster(
+          file,
+          formData.format === 'portrait',
+          (stage) => setUploadStage(stage)
+        );
+        setFormData((prev) => ({ ...prev, thumbnail: { kind: 'image', data: result } }));
+        showToast('success', 'Thumbnail image uploaded');
+      }
     } catch (error) {
-      console.error('Video processing error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred while processing the video';
-      showToast('error', errorMessage);
+      const msg = error instanceof Error ? error.message : 'Failed to process file';
+      showToast('error', msg);
     } finally {
-      setIsUploadingVideo(false);
+      setIsUploadingThumbnail(false);
       setUploadStage('');
+      if (thumbnailInputRef.current) thumbnailInputRef.current.value = '';
     }
   };
 
-  const handleImageFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleReplaceThumbnail = async () => {
+    await clearExistingThumbnail(formData.thumbnail);
+    setFormData((prev) => ({ ...prev, thumbnail: null }));
+    thumbnailInputRef.current?.click();
+  };
+
+  const handleMainImageFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const validation = validateContentImage(file);
-    if (!validation.valid) {
-      showToast('error', validation.error);
+    if (!ALLOWED_IMAGE_MIME.includes(file.type)) {
+      showToast('error', 'Invalid file type. Please upload a JPEG, PNG, or WebP image.');
       return;
     }
 
-    setIsUploadingImage(true);
-    setUploadStage('Processing image...');
+    setIsUploadingMainImage(true);
+    setUploadStage('Processing main image...');
 
     try {
-      const isPortrait = formData.format === 'portrait';
-      const result = await processAndUploadContentImage(file, isPortrait, (stage) => {
-        setUploadStage(stage);
-      });
-
-      setFormData((prev) => ({
-        ...prev,
-        imageFile: file,
-        imageThumbnail: result,
-      }));
-      showToast('success', 'Image processed successfully');
+      const result = await uploadContentMainImage(file, (stage) => setUploadStage(stage));
+      setFormData((prev) => ({ ...prev, url: result.publicUrl }));
+      showToast('success', 'Main image uploaded');
     } catch (error) {
-      console.error('Image processing error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred while processing the image';
-      showToast('error', errorMessage);
+      const msg = error instanceof Error ? error.message : 'Failed to upload image';
+      showToast('error', msg);
     } finally {
-      setIsUploadingImage(false);
+      setIsUploadingMainImage(false);
       setUploadStage('');
+      if (mainImageInputRef.current) mainImageInputRef.current.value = '';
     }
-  };
-
-  const handleReplaceVideo = async () => {
-    if (formData.videoThumbnail && mode === 'edit') {
-      try {
-        await deleteVideoThumbnails(formData.videoThumbnail.poster, formData.videoThumbnail.hover_video);
-      } catch (error) {
-        console.error('Error deleting old video thumbnails:', error);
-      }
-    }
-    setFormData((prev) => ({ ...prev, videoFile: null, videoThumbnail: null }));
-    videoInputRef.current?.click();
-  };
-
-  const handleReplaceImage = async () => {
-    if (formData.imageThumbnail && mode === 'edit') {
-      try {
-        await deleteContentImages(formData.imageThumbnail.poster);
-      } catch (error) {
-        console.error('Error deleting old images:', error);
-      }
-    }
-    setFormData((prev) => ({ ...prev, imageFile: null, imageThumbnail: null }));
-    imageInputRef.current?.click();
   };
 
   const addContributor = () => {
@@ -375,12 +397,15 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
         if (!formData.platform) {
           errors.push({ field: 'platform', message: 'Platform is required for videos' });
         }
-        if (!formData.videoThumbnail) {
-          errors.push({ field: 'video', message: 'Video thumbnail is required' });
+        if (!formData.thumbnail) {
+          errors.push({ field: 'thumbnail', message: 'A thumbnail (image or video clip) is required' });
         }
       } else {
-        if (!formData.imageThumbnail) {
-          errors.push({ field: 'image', message: 'Image upload is required' });
+        if (!formData.url.trim()) {
+          errors.push({ field: 'url', message: 'Main image is required' });
+        }
+        if (!formData.thumbnail) {
+          errors.push({ field: 'thumbnail', message: 'A thumbnail image is required' });
         }
       }
 
@@ -395,6 +420,12 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
 
     setValidationErrors(errors);
     return errors.length === 0;
+  };
+
+  const buildThumbnailPayload = (): ContentThumbnailVideo | ContentThumbnailImage | null => {
+    if (!formData.thumbnail) return null;
+    if (formData.thumbnail.kind === 'video') return formData.thumbnail.data;
+    return formData.thumbnail.data;
   };
 
   const handleSave = async (isDraft: boolean) => {
@@ -415,9 +446,6 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
         return;
       }
 
-      const thumbnail =
-        formData.type === 'video' ? formData.videoThumbnail : formData.imageThumbnail;
-
       const contentData = {
         type_id: contentType.id,
         title: formData.title,
@@ -426,11 +454,12 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
         url: formData.url,
         platform: formData.type === 'video' && formData.platform ? formData.platform : null,
         format: formData.format,
-        thumbnail: thumbnail || null,
+        thumbnail: buildThumbnailPayload(),
         is_draft: isDraft,
-        contributors: formData.hasContributors && formData.contributors.length > 0
-          ? formData.contributors.filter((c) => c.name.trim())
-          : null,
+        contributors:
+          formData.hasContributors && formData.contributors.length > 0
+            ? formData.contributors.filter((c) => c.name.trim())
+            : null,
         published_at: !isDraft ? formData.publishedDate : null,
       };
 
@@ -495,6 +524,7 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
   }
 
   const isVideo = formData.type === 'video';
+  const posterUrl = formData.thumbnail?.data.poster ?? null;
 
   return (
     <AdminLayout
@@ -519,9 +549,10 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
         )}
 
         <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-8">
+
+          {/* Basic Information */}
           <section>
             <h2 className="text-lg font-bold text-black mb-4">Basic Information</h2>
-
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Content Type</label>
@@ -529,12 +560,12 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
                   <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg border border-gray-300">
                     {isVideo ? (
                       <>
-                        <Video size={18} className="text-purple-600" />
+                        <Video size={18} className="text-gray-600" />
                         <span className="font-medium text-gray-700">Video</span>
                       </>
                     ) : (
                       <>
-                        <ImageIcon size={18} className="text-blue-600" />
+                        <ImageIcon size={18} className="text-gray-600" />
                         <span className="font-medium text-gray-700">Image</span>
                       </>
                     )}
@@ -544,11 +575,9 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
                   <div className="inline-flex rounded-lg border border-gray-300 bg-white p-1">
                     <button
                       type="button"
-                      onClick={() => setFormData({ ...formData, type: 'video' })}
+                      onClick={() => setFormData({ ...formData, type: 'video', thumbnail: null })}
                       className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-colors ${
-                        formData.type === 'video'
-                          ? 'bg-black text-white'
-                          : 'text-gray-700 hover:bg-gray-100'
+                        formData.type === 'video' ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
                       <Video size={18} />
@@ -556,11 +585,9 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setFormData({ ...formData, type: 'image' })}
+                      onClick={() => setFormData({ ...formData, type: 'image', thumbnail: null, url: '', platform: '' })}
                       className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-colors ${
-                        formData.type === 'image'
-                          ? 'bg-black text-white'
-                          : 'text-gray-700 hover:bg-gray-100'
+                        formData.type === 'image' ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
                       <ImageIcon size={18} />
@@ -622,6 +649,7 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
             </div>
           </section>
 
+          {/* Project Assignment */}
           <section>
             <h2 className="text-lg font-bold text-black mb-4">Project Assignment</h2>
             <div>
@@ -641,7 +669,8 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
             </div>
           </section>
 
-          {isVideo ? (
+          {/* Video Details */}
+          {isVideo && (
             <section>
               <h2 className="text-lg font-bold text-black mb-4">Video Details</h2>
               <div className="space-y-4">
@@ -668,191 +697,154 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
                     <option value="instagram">Instagram</option>
                   </select>
                   {validationErrors.find((e) => e.field === 'platform') && (
-                    <ValidationErrorComponent message={validationErrors.find((e) => e.field === 'platform')!.message} />
+                    <ValidationErrorComponent
+                      message={validationErrors.find((e) => e.field === 'platform')!.message}
+                    />
                   )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Format</label>
-                  <div className="inline-flex rounded-lg border border-gray-300 bg-white p-1">
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, format: 'landscape' })}
-                      className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                        formData.format === 'landscape'
-                          ? 'bg-black text-white'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      Landscape
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, format: 'portrait' })}
-                      className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                        formData.format === 'portrait'
-                          ? 'bg-black text-white'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      Portrait
-                    </button>
-                  </div>
+                  <FormatToggle
+                    value={formData.format}
+                    onChange={(v) => setFormData({ ...formData, format: v })}
+                  />
                 </div>
 
+                {/* Unified thumbnail upload for video type */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Thumbnail Video</label>
-                  {!formData.videoThumbnail ? (
-                    <div>
-                      <input
-                        ref={videoInputRef}
-                        type="file"
-                        accept="video/mp4,video/webm,video/quicktime"
-                        onChange={handleVideoFileSelect}
-                        className="hidden"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => videoInputRef.current?.click()}
-                        disabled={isUploadingVideo}
-                        className="w-full border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isUploadingVideo ? (
-                          <div className="flex flex-col items-center gap-2">
-                            <Loader2 size={32} className="animate-spin text-gray-400" />
-                            <p className="text-sm text-gray-600">{uploadStage}</p>
-                          </div>
-                        ) : (
-                          <div className="flex flex-col items-center gap-2">
-                            <Video size={32} className="text-gray-400" />
-                            <p className="text-sm font-medium text-gray-700">Click to upload video</p>
-                            <p className="text-xs text-gray-500">MP4, WebM, or MOV (max 50MB)</p>
-                          </div>
-                        )}
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div>
-                        <p className="text-xs font-medium text-gray-600 mb-2">Video Thumbnail (hover to preview)</p>
-                        <VideoThumbnailHoverPreview
-                          thumbnail={formData.videoThumbnail}
-                          className="aspect-video"
-                        />
-                      </div>
-                      <Button
-                        variant="secondary"
-                        onClick={handleReplaceVideo}
-                        disabled={isUploadingVideo}
-                      >
-                        Replace Video
-                      </Button>
-                    </div>
-                  )}
-                  {validationErrors.find((e) => e.field === 'video') && (
-                    <ValidationErrorComponent message={validationErrors.find((e) => e.field === 'video')!.message} />
-                  )}
-                </div>
-              </div>
-            </section>
-          ) : (
-            <section>
-              <h2 className="text-lg font-bold text-black mb-4">Image Details</h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Format</label>
-                  <div className="inline-flex rounded-lg border border-gray-300 bg-white p-1">
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, format: 'landscape' })}
-                      className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                        formData.format === 'landscape'
-                          ? 'bg-black text-white'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      Landscape
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, format: 'portrait' })}
-                      className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                        formData.format === 'portrait'
-                          ? 'bg-black text-white'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      Portrait
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Image</label>
-                  {!formData.imageThumbnail ? (
-                    <div>
-                      <input
-                        ref={imageInputRef}
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp,image/jpg"
-                        onChange={handleImageFileSelect}
-                        className="hidden"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => imageInputRef.current?.click()}
-                        disabled={isUploadingImage}
-                        className="w-full border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isUploadingImage ? (
-                          <div className="flex flex-col items-center gap-2">
-                            <Loader2 size={32} className="animate-spin text-gray-400" />
-                            <p className="text-sm text-gray-600">{uploadStage}</p>
-                          </div>
-                        ) : (
-                          <div className="flex flex-col items-center gap-2">
-                            <ImageIcon size={32} className="text-gray-400" />
-                            <p className="text-sm font-medium text-gray-700">Click to upload image</p>
-                            <p className="text-xs text-gray-500">JPEG, PNG, or WebP (max 7MB)</p>
-                          </div>
-                        )}
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                        <img
-                          src={formData.imageThumbnail.poster}
-                          alt="Preview"
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
-                      <Button
-                        variant="secondary"
-                        onClick={handleReplaceImage}
-                        disabled={isUploadingImage}
-                      >
-                        Replace Image
-                      </Button>
-                    </div>
-                  )}
-                  {validationErrors.find((e) => e.field === 'image') && (
-                    <ValidationErrorComponent message={validationErrors.find((e) => e.field === 'image')!.message} />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Thumbnail</label>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Upload an image for a static thumbnail, or a short video clip for an animated hover preview.
+                  </p>
+                  <ThumbnailUploadZone
+                    thumbnail={formData.thumbnail}
+                    posterUrl={posterUrl}
+                    isUploading={isUploadingThumbnail}
+                    uploadStage={uploadStage}
+                    inputRef={thumbnailInputRef}
+                    accept={[...ALLOWED_IMAGE_MIME, ...ALLOWED_VIDEO_MIME].join(',')}
+                    onFileSelect={handleThumbnailFileSelect}
+                    onReplace={handleReplaceThumbnail}
+                    hint="Image (JPEG, PNG, WebP) or Video clip (MP4, WebM, MOV)"
+                  />
+                  {validationErrors.find((e) => e.field === 'thumbnail') && (
+                    <ValidationErrorComponent
+                      message={validationErrors.find((e) => e.field === 'thumbnail')!.message}
+                    />
                   )}
                 </div>
               </div>
             </section>
           )}
 
+          {/* Image Details */}
+          {!isVideo && (
+            <section>
+              <h2 className="text-lg font-bold text-black mb-4">Image Details</h2>
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Format</label>
+                  <FormatToggle
+                    value={formData.format}
+                    onChange={(v) => setFormData({ ...formData, format: v })}
+                  />
+                </div>
+
+                {/* Main image upload → saved to url */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Main Image (Full)</label>
+                  <p className="text-xs text-gray-500 mb-3">
+                    High-resolution image shown in the detail view. Saved as the main content URL.
+                  </p>
+                  {!formData.url ? (
+                    <div>
+                      <input
+                        ref={mainImageInputRef}
+                        type="file"
+                        accept={ALLOWED_IMAGE_MIME.join(',')}
+                        onChange={handleMainImageFileSelect}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => mainImageInputRef.current?.click()}
+                        disabled={isUploadingMainImage}
+                        className="w-full border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isUploadingMainImage ? (
+                          <div className="flex flex-col items-center gap-2">
+                            <Loader2 size={32} className="animate-spin text-gray-400" />
+                            <p className="text-sm text-gray-600">{uploadStage}</p>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center gap-2">
+                            <UploadCloud size={32} className="text-gray-400" />
+                            <p className="text-sm font-medium text-gray-700">Click to upload main image</p>
+                            <p className="text-xs text-gray-500">JPEG, PNG, or WebP — up to 1920px wide, 85% quality</p>
+                          </div>
+                        )}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden">
+                        <img src={formData.url} alt="Main image preview" className="w-full h-full object-contain" />
+                      </div>
+                      <Button
+                        variant="secondary"
+                        onClick={() => {
+                          setFormData((prev) => ({ ...prev, url: '' }));
+                          mainImageInputRef.current?.click();
+                        }}
+                        disabled={isUploadingMainImage}
+                      >
+                        Replace Main Image
+                      </Button>
+                    </div>
+                  )}
+                  {validationErrors.find((e) => e.field === 'url') && (
+                    <ValidationErrorComponent
+                      message={validationErrors.find((e) => e.field === 'url')!.message}
+                    />
+                  )}
+                </div>
+
+                {/* Thumbnail upload → poster only */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Thumbnail (Grid)</label>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Compressed image shown in the portfolio grid. Saved to the thumbnail poster field.
+                  </p>
+                  <ThumbnailUploadZone
+                    thumbnail={formData.thumbnail}
+                    posterUrl={posterUrl}
+                    isUploading={isUploadingThumbnail}
+                    uploadStage={uploadStage}
+                    inputRef={thumbnailInputRef}
+                    accept={ALLOWED_IMAGE_MIME.join(',')}
+                    onFileSelect={handleThumbnailFileSelect}
+                    onReplace={handleReplaceThumbnail}
+                    hint="JPEG, PNG, or WebP (max 7MB)"
+                  />
+                  {validationErrors.find((e) => e.field === 'thumbnail') && (
+                    <ValidationErrorComponent
+                      message={validationErrors.find((e) => e.field === 'thumbnail')!.message}
+                    />
+                  )}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Contributors */}
           <section>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-black">Contributors</h2>
               <FormCheckbox
                 label="Include Contributors"
                 checked={formData.hasContributors}
-                onChange={(checked) =>
-                  setFormData({ ...formData, hasContributors: checked })
-                }
+                onChange={(checked) => setFormData({ ...formData, hasContributors: checked })}
               />
             </div>
 
@@ -890,29 +882,23 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
           </section>
         </div>
 
+        {/* Footer actions */}
         <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 flex items-center justify-between gap-4 mt-6">
           <Button variant="danger" onClick={handleDiscard} disabled={isSubmitting}>
             Discard
           </Button>
           <div className="flex gap-3">
-            <Button
-              variant="secondary"
-              onClick={() => handleSave(true)}
-              disabled={isSubmitting}
-            >
+            <Button variant="secondary" onClick={() => handleSave(true)} disabled={isSubmitting}>
               {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
               Save Draft
             </Button>
-            <Button
-              variant="primary"
-              onClick={() => handleSave(false)}
-              disabled={isSubmitting}
-            >
+            <Button variant="primary" onClick={() => handleSave(false)} disabled={isSubmitting}>
               {mode === 'edit' ? 'Update' : 'Publish'}
             </Button>
           </div>
         </div>
 
+        {/* Discard dialog */}
         {showDiscardDialog && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
@@ -921,10 +907,7 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
                 You have unsaved changes. Are you sure you want to discard them?
               </p>
               <div className="flex gap-3 justify-end">
-                <Button
-                  variant="secondary"
-                  onClick={() => setShowDiscardDialog(false)}
-                >
+                <Button variant="secondary" onClick={() => setShowDiscardDialog(false)}>
                   Cancel
                 </Button>
                 <Button variant="danger" onClick={confirmDiscard}>
@@ -938,5 +921,123 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
         <ToastContainer toasts={toasts} onClose={closeToast} />
       </div>
     </AdminLayout>
+  );
+}
+
+// ── Sub-components ──────────────────────────────────────────────────────────
+
+interface FormatToggleProps {
+  value: 'landscape' | 'portrait';
+  onChange: (v: 'landscape' | 'portrait') => void;
+}
+
+function FormatToggle({ value, onChange }: FormatToggleProps) {
+  return (
+    <div className="inline-flex rounded-lg border border-gray-300 bg-white p-1">
+      {(['landscape', 'portrait'] as const).map((opt) => (
+        <button
+          key={opt}
+          type="button"
+          onClick={() => onChange(opt)}
+          className={`px-4 py-2 rounded-md font-medium capitalize transition-colors ${
+            value === opt ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-100'
+          }`}
+        >
+          {opt}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+interface ThumbnailUploadZoneProps {
+  thumbnail: ThumbnailState;
+  posterUrl: string | null;
+  isUploading: boolean;
+  uploadStage: string;
+  inputRef: React.RefObject<HTMLInputElement>;
+  accept: string;
+  onFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onReplace: () => void;
+  hint: string;
+}
+
+function ThumbnailUploadZone({
+  thumbnail,
+  posterUrl,
+  isUploading,
+  uploadStage,
+  inputRef,
+  accept,
+  onFileSelect,
+  onReplace,
+  hint,
+}: ThumbnailUploadZoneProps) {
+  if (!thumbnail) {
+    return (
+      <div>
+        <input
+          ref={inputRef}
+          type="file"
+          accept={accept}
+          onChange={onFileSelect}
+          className="hidden"
+        />
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={isUploading}
+          className="w-full border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isUploading ? (
+            <div className="flex flex-col items-center gap-2">
+              <Loader2 size={32} className="animate-spin text-gray-400" />
+              <p className="text-sm text-gray-600">{uploadStage}</p>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <UploadCloud size={32} className="text-gray-400" />
+              <p className="text-sm font-medium text-gray-700">Click to upload thumbnail</p>
+              <p className="text-xs text-gray-500">{hint}</p>
+            </div>
+          )}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {thumbnail.kind === 'video' ? (
+        <div>
+          <p className="text-xs font-medium text-gray-600 mb-2">
+            Video thumbnail — hover to preview clip
+          </p>
+          <VideoThumbnailHoverPreview
+            thumbnail={thumbnail.data}
+            className="aspect-video"
+          />
+        </div>
+      ) : (
+        <div>
+          <p className="text-xs font-medium text-gray-600 mb-2">Poster image</p>
+          {posterUrl && (
+            <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden">
+              <img src={posterUrl} alt="Thumbnail preview" className="w-full h-full object-contain" />
+            </div>
+          )}
+        </div>
+      )}
+      <input
+        ref={inputRef}
+        type="file"
+        accept={accept}
+        onChange={onFileSelect}
+        className="hidden"
+      />
+      <Button variant="secondary" onClick={onReplace} disabled={isUploading}>
+        Replace Thumbnail
+      </Button>
+    </div>
   );
 }

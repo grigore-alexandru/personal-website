@@ -1,14 +1,24 @@
 import { uploadBlob, generateStorageKey } from '../lib/storageClient';
 
 const BLOG_IMAGES_BUCKET = 'blog-images';
-const INLINE_MAX_WIDTH = 1000;
-const INLINE_QUALITY = 0.70;
+const CONTENT_MEDIA_BUCKET = 'portfolio-images';
+
+const BLOG_MAX_WIDTH   = 1000;
+const BLOG_QUALITY     = 0.70;
+
+const CONTENT_MAX_WIDTH = 1920;
+const CONTENT_QUALITY   = 0.85;
 
 export interface UploadProgress {
   progress: number;
   status: 'uploading' | 'success' | 'error';
   url?: string;
   error?: string;
+}
+
+export interface ContentImageUploadResult {
+  publicUrl: string;
+  key: string;
 }
 
 function loadImage(file: File): Promise<HTMLImageElement> {
@@ -69,19 +79,35 @@ function resizeAndCompress(img: HTMLImageElement, maxWidth: number, quality: num
 
 export async function uploadImageToSupabase(
   file: File,
-  onProgress?: (progress: UploadProgress) => void
+  onProgress?: (progress: UploadProgress) => void,
+  context: 'blog' | 'content' = 'blog'
 ): Promise<string> {
   try {
     onProgress?.({ progress: 0, status: 'uploading' });
 
     const img = await loadImage(file);
-    const compressed = await resizeAndCompress(img, INLINE_MAX_WIDTH, INLINE_QUALITY);
+
+    const maxWidth = context === 'content' ? CONTENT_MAX_WIDTH : BLOG_MAX_WIDTH;
+    const quality  = context === 'content' ? CONTENT_QUALITY   : BLOG_QUALITY;
+
+    const compressed = await resizeAndCompress(img, maxWidth, quality);
 
     onProgress?.({ progress: 50, status: 'uploading' });
 
     const baseName = file.name.replace(/\.[^/.]+$/, '');
-    const key = generateStorageKey('images', baseName, 'inline', 'webp');
-    const result = await uploadBlob(compressed, BLOG_IMAGES_BUCKET, key, 'image/webp');
+
+    let key: string;
+    let bucket: string;
+
+    if (context === 'content') {
+      key    = generateStorageKey('content-media/images', baseName, 'main', 'webp');
+      bucket = CONTENT_MEDIA_BUCKET;
+    } else {
+      key    = generateStorageKey('images', baseName, 'inline', 'webp');
+      bucket = BLOG_IMAGES_BUCKET;
+    }
+
+    const result = await uploadBlob(compressed, bucket, key, 'image/webp');
 
     onProgress?.({ progress: 100, status: 'success', url: result.publicUrl });
 
@@ -93,8 +119,29 @@ export async function uploadImageToSupabase(
   }
 }
 
+export async function uploadContentMainImage(
+  file: File,
+  onProgress?: (stage: string) => void,
+): Promise<ContentImageUploadResult> {
+  onProgress?.('Loading image...');
+  const img = await loadImage(file);
+
+  onProgress?.('Compressing...');
+  const blob = await resizeAndCompress(img, CONTENT_MAX_WIDTH, CONTENT_QUALITY);
+
+  const baseName = file.name.replace(/\.[^/.]+$/, '');
+  const key      = generateStorageKey('content-media/images', baseName, 'main', 'webp');
+
+  onProgress?.('Uploading...');
+  const result = await uploadBlob(blob, CONTENT_MEDIA_BUCKET, key, 'image/webp');
+
+  onProgress?.('Complete!');
+
+  return { publicUrl: result.publicUrl, key };
+}
+
 export function validateImageFile(file: File): { valid: boolean; error?: string } {
-  const maxSize = 5 * 1024 * 1024;
+  const maxSize     = 5 * 1024 * 1024;
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 
   if (!allowedTypes.includes(file.type)) {
