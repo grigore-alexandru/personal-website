@@ -8,6 +8,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
 import { BlogPostPageSkeleton } from '../components/ui/SkeletonLoader';
+import { ProgressiveImage } from '../components/ui/ProgressiveImage';
 
 const BlogPostPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -149,17 +150,12 @@ const BlogPostPage: React.FC = () => {
         {/* Hero Image */}
         {post.heroImageLarge && (
           <div className="mb-12 md:mb-16">
-            <div className="relative w-full overflow-hidden rounded-lg shadow-sm">
-              <img
+            <div className="relative w-full pt-[62%] overflow-hidden rounded-lg shadow-sm">
+              <ProgressiveImage
                 src={post.heroImageLarge}
                 alt={post.title}
-                className="w-full h-auto object-cover"
-                style={{
-                  maxHeight: '500px',
-                }}
-                loading="eager"
-                decoding="async"
-                fetchpriority="high"
+                eager
+                className="object-cover"
               />
             </div>
           </div>

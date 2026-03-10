@@ -4,7 +4,6 @@ interface ProgressiveImageProps {
   src: string;
   alt: string;
   className?: string;
-  containerClassName?: string;
   skeletonClassName?: string;
   eager?: boolean;
   onLoad?: () => void;
@@ -15,7 +14,6 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
   src,
   alt,
   className = '',
-  containerClassName = '',
   skeletonClassName = '',
   eager = false,
   onLoad,
@@ -67,7 +65,7 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
   }, [src]);
 
   return (
-    <div className={`relative w-full h-full ${containerClassName}`}>
+    <>
       <div
         className={`absolute inset-0 skeleton-shimmer transition-opacity duration-300 ${
           loaded || error ? 'opacity-0 pointer-events-none' : 'opacity-100'
@@ -93,6 +91,6 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
           <span className="text-neutral-400 text-xs">Failed to load</span>
         </div>
       )}
-    </div>
+    </>
   );
 };
