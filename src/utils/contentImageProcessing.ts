@@ -2,8 +2,9 @@ import { uploadBlob, deleteByUrl, generateStorageKey } from '../lib/storageClien
 
 const CONTENT_MEDIA_BUCKET = 'content-media';
 const MAX_FILE_SIZE = 7 * 1024 * 1024;
-const THUMBNAIL_MAX_WIDTH_LANDSCAPE = 400;
-const THUMBNAIL_MAX_WIDTH_PORTRAIT = 270;
+const POSTER_MAX_WIDTH_LANDSCAPE = 480;
+const POSTER_MAX_WIDTH_PORTRAIT = 270;
+const POSTER_QUALITY = 0.80;
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
 
 export interface ProcessedContentImages {
@@ -100,7 +101,7 @@ async function loadImage(file: File): Promise<HTMLImageElement> {
   });
 }
 
-export async function processAndUploadContentImage(
+export async function processAndUploadContentPoster(
   file: File,
   isPortrait: boolean = false,
   onProgress?: (stage: string) => void,
@@ -114,16 +115,16 @@ export async function processAndUploadContentImage(
     onProgress?.('Loading image...');
     const img = await loadImage(file);
 
-    const thumbnailMaxWidth = isPortrait ? THUMBNAIL_MAX_WIDTH_PORTRAIT : THUMBNAIL_MAX_WIDTH_LANDSCAPE;
+    const maxWidth = isPortrait ? POSTER_MAX_WIDTH_PORTRAIT : POSTER_MAX_WIDTH_LANDSCAPE;
 
     onProgress?.('Processing poster...');
-    const thumbnailBlob = await resizeImage(img, thumbnailMaxWidth, 0.50, 'image/webp');
+    const posterBlob = await resizeImage(img, maxWidth, POSTER_QUALITY, 'image/webp');
 
     const baseFileName = file.name.replace(/\.[^/.]+$/, '');
 
     onProgress?.('Uploading poster...');
     const posterKey = generateStorageKey('posters', baseFileName, 'poster', 'webp');
-    const posterResult = await uploadBlob(thumbnailBlob, CONTENT_MEDIA_BUCKET, posterKey, 'image/webp');
+    const posterResult = await uploadBlob(posterBlob, CONTENT_MEDIA_BUCKET, posterKey, 'image/webp');
 
     onProgress?.('Complete!');
 
@@ -134,8 +135,17 @@ export async function processAndUploadContentImage(
     if (error instanceof Error) {
       throw error;
     }
-    throw new Error('Failed to process and upload content image');
+    throw new Error('Failed to process and upload content poster');
   }
+}
+
+/** @deprecated Use processAndUploadContentPoster instead */
+export async function processAndUploadContentImage(
+  file: File,
+  isPortrait: boolean = false,
+  onProgress?: (stage: string) => void,
+): Promise<ProcessedContentImages> {
+  return processAndUploadContentPoster(file, isPortrait, onProgress);
 }
 
 export async function deleteContentImages(

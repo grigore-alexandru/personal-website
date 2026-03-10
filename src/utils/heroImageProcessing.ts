@@ -1,13 +1,37 @@
-import { supabase } from '../lib/supabase';
 import { uploadBlob, deleteByUrl, generateStorageKey } from '../lib/storageClient';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
-const LARGE_IMAGE_MAX_WIDTH = 1920;
-const THUMBNAIL_MAX_WIDTH = 800;
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
 
-const PORTFOLIO_IMAGES_BUCKET = 'portfolio-images';
-const BLOG_IMAGES_BUCKET = 'blog-images';
+export const PORTFOLIO_IMAGES_BUCKET = 'portfolio-images';
+export const BLOG_IMAGES_BUCKET = 'blog-images';
+
+interface CompressionProfile {
+  largeMaxWidth: number;
+  largeQuality: number;
+  thumbMaxWidth: number;
+  thumbQuality: number;
+  largeFolder: string;
+  thumbFolder: string;
+}
+
+const PORTFOLIO_PROFILE: CompressionProfile = {
+  largeMaxWidth: 1920,
+  largeQuality: 0.85,
+  thumbMaxWidth: 800,
+  thumbQuality: 0.65,
+  largeFolder: 'large',
+  thumbFolder: 'thumb',
+};
+
+const BLOG_PROFILE: CompressionProfile = {
+  largeMaxWidth: 1200,
+  largeQuality: 0.80,
+  thumbMaxWidth: 600,
+  thumbQuality: 0.60,
+  largeFolder: 'hero/large',
+  thumbFolder: 'hero/thumb',
+};
 
 export interface ProcessedImages {
   largeUrl: string;
@@ -104,47 +128,6 @@ async function loadImage(file: File): Promise<HTMLImageElement> {
   });
 }
 
-async function uploadToSupabase(
-  blob: Blob,
-  fileName: string,
-  bucket: string,
-  contentType: string = 'image/webp'
-): Promise<string> {
-  const timestamp = Date.now();
-  const randomString = Math.random().toString(36).substring(7);
-  const fileExtension = contentType === 'image/webp' ? 'webp' : 'jpg';
-  const storagePath = `hero-images/${timestamp}-${randomString}-${fileName}.${fileExtension}`;
-
-  const { data, error } = await supabase.storage
-    .from(bucket)
-    .upload(storagePath, blob, {
-      contentType,
-      upsert: false,
-    });
-
-  if (error) {
-    throw new Error(`Failed to upload image: ${error.message}`);
-  }
-
-  const { data: publicUrlData } = supabase.storage
-    .from(bucket)
-    .getPublicUrl(data.path);
-
-  return publicUrlData.publicUrl;
-}
-
-async function uploadToMegaS4HeroLarge(blob: Blob, baseFileName: string): Promise<string> {
-  const key = generateStorageKey('hero/large', baseFileName, 'large', 'webp');
-  const result = await uploadBlob(blob, PORTFOLIO_IMAGES_BUCKET, key, 'image/webp');
-  return result.publicUrl;
-}
-
-async function uploadToMegaS4HeroThumb(blob: Blob, baseFileName: string): Promise<string> {
-  const key = generateStorageKey('hero/thumb', baseFileName, 'thumb', 'webp');
-  const result = await uploadBlob(blob, PORTFOLIO_IMAGES_BUCKET, key, 'image/webp');
-  return result.publicUrl;
-}
-
 export async function processAndUploadHeroImage(
   file: File,
   onProgress?: (stage: string) => void,
@@ -155,35 +138,33 @@ export async function processAndUploadHeroImage(
     throw new Error(validation.error);
   }
 
-  const isPortfolio = bucket === PORTFOLIO_IMAGES_BUCKET;
+  const profile = bucket === PORTFOLIO_IMAGES_BUCKET ? PORTFOLIO_PROFILE : BLOG_PROFILE;
 
   try {
     onProgress?.('Loading image...');
     const img = await loadImage(file);
 
     onProgress?.('Processing large version...');
-    const largeBlob = await resizeImage(img, LARGE_IMAGE_MAX_WIDTH, 0.85, 'image/webp');
+    const largeBlob = await resizeImage(img, profile.largeMaxWidth, profile.largeQuality, 'image/webp');
 
     onProgress?.('Processing thumbnail...');
-    const thumbnailBlob = await resizeImage(img, THUMBNAIL_MAX_WIDTH, 0.65, 'image/webp');
+    const thumbnailBlob = await resizeImage(img, profile.thumbMaxWidth, profile.thumbQuality, 'image/webp');
 
     const baseFileName = file.name.replace(/\.[^/.]+$/, '');
 
     onProgress?.('Uploading large image...');
-    const largeUrl = isPortfolio
-      ? await uploadToMegaS4HeroLarge(largeBlob, baseFileName)
-      : await uploadToSupabase(largeBlob, `${baseFileName}-large`, bucket, 'image/webp');
+    const largeKey = generateStorageKey(profile.largeFolder, baseFileName, 'large', 'webp');
+    const largeResult = await uploadBlob(largeBlob, bucket, largeKey, 'image/webp');
 
     onProgress?.('Uploading thumbnail...');
-    const thumbnailUrl = isPortfolio
-      ? await uploadToMegaS4HeroThumb(thumbnailBlob, baseFileName)
-      : await uploadToSupabase(thumbnailBlob, `${baseFileName}-thumb`, bucket, 'image/webp');
+    const thumbKey = generateStorageKey(profile.thumbFolder, baseFileName, 'thumb', 'webp');
+    const thumbResult = await uploadBlob(thumbnailBlob, bucket, thumbKey, 'image/webp');
 
     onProgress?.('Complete!');
 
     return {
-      largeUrl,
-      thumbnailUrl,
+      largeUrl: largeResult.publicUrl,
+      thumbnailUrl: thumbResult.publicUrl,
     };
   } catch (error) {
     if (error instanceof Error) {

@@ -1,10 +1,70 @@
-import { supabase } from '../lib/supabase';
+import { uploadBlob, generateStorageKey } from '../lib/storageClient';
+
+const BLOG_IMAGES_BUCKET = 'blog-images';
+const INLINE_MAX_WIDTH = 1000;
+const INLINE_QUALITY = 0.70;
 
 export interface UploadProgress {
   progress: number;
   status: 'uploading' | 'success' | 'error';
   url?: string;
   error?: string;
+}
+
+function loadImage(file: File): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Failed to load image'));
+    };
+
+    img.src = url;
+  });
+}
+
+function resizeAndCompress(img: HTMLImageElement, maxWidth: number, quality: number): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) {
+      reject(new Error('Failed to get canvas context'));
+      return;
+    }
+
+    let width = img.width;
+    let height = img.height;
+
+    if (width > maxWidth) {
+      height = (height * maxWidth) / width;
+      width = maxWidth;
+    }
+
+    canvas.width = width;
+    canvas.height = height;
+
+    ctx.drawImage(img, 0, 0, width, height);
+
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject(new Error('Failed to create blob from canvas'));
+        }
+      },
+      'image/webp',
+      quality
+    );
+  });
 }
 
 export async function uploadImageToSupabase(
@@ -14,32 +74,18 @@ export async function uploadImageToSupabase(
   try {
     onProgress?.({ progress: 0, status: 'uploading' });
 
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-    const filePath = `${fileName}`;
+    const img = await loadImage(file);
+    const compressed = await resizeAndCompress(img, INLINE_MAX_WIDTH, INLINE_QUALITY);
 
     onProgress?.({ progress: 50, status: 'uploading' });
 
-    const { data, error } = await supabase.storage
-      .from('blog-images')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false,
-      });
+    const baseName = file.name.replace(/\.[^/.]+$/, '');
+    const key = generateStorageKey('images', baseName, 'inline', 'webp');
+    const result = await uploadBlob(compressed, BLOG_IMAGES_BUCKET, key, 'image/webp');
 
-    if (error) {
-      throw error;
-    }
+    onProgress?.({ progress: 100, status: 'success', url: result.publicUrl });
 
-    const { data: urlData } = supabase.storage
-      .from('blog-images')
-      .getPublicUrl(data.path);
-
-    const publicUrl = urlData.publicUrl;
-
-    onProgress?.({ progress: 100, status: 'success', url: publicUrl });
-
-    return publicUrl;
+    return result.publicUrl;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Failed to upload image';
     onProgress?.({ progress: 0, status: 'error', error: errorMessage });
