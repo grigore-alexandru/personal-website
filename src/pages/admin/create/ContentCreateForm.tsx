@@ -275,7 +275,8 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
     setUploadStage('Processing image...');
 
     try {
-      const result = await processAndUploadContentImage(file, (stage) => {
+      const isPortrait = formData.format === 'portrait';
+      const result = await processAndUploadContentImage(file, isPortrait, (stage) => {
         setUploadStage(stage);
       });
 

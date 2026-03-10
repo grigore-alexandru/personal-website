@@ -1,12 +1,13 @@
-import { supabase } from '../lib/supabase';
+import { uploadBlob, deleteByUrl, generateStorageKey } from '../lib/storageClient';
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB for source video
+const CONTENT_MEDIA_BUCKET = 'content-media';
+const MAX_FILE_SIZE = 50 * 1024 * 1024;
 const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
 const MAX_THUMBNAIL_DURATION = 4;
 const POSTER_MAX_WIDTH_LANDSCAPE = 480;
 const POSTER_MAX_WIDTH_PORTRAIT = 270;
 const THUMBNAIL_VIDEO_MAX_WIDTH = 480;
-const THUMBNAIL_VIDEO_BITRATE = 350000; // 350kbps
+const THUMBNAIL_VIDEO_BITRATE = 350000;
 
 export interface ProcessedVideoThumbnail {
   poster: string;
@@ -216,48 +217,10 @@ async function compressVideoThumbnail(
   });
 }
 
-async function uploadToContentMedia(
-  blob: Blob,
-  fileName: string,
-  subfolder: string,
-  contentType: string,
-  bucket: string = 'portfolio-images'
-): Promise<string> {
-  const timestamp = Date.now();
-  const randomString = Math.random().toString(36).substring(7);
-  let extension = 'bin';
-  if (contentType.includes('video')) {
-    extension = 'webm';
-  } else if (contentType.includes('webp')) {
-    extension = 'webp';
-  } else if (contentType.includes('jpeg') || contentType.includes('jpg')) {
-    extension = 'jpg';
-  }
-  const storagePath = `${subfolder}/${timestamp}-${randomString}-${fileName}.${extension}`;
-
-  const { data, error } = await supabase.storage
-    .from(bucket)
-    .upload(storagePath, blob, {
-      contentType,
-      upsert: false,
-    });
-
-  if (error) {
-    throw new Error(`Failed to upload to ${bucket}: ${error.message}`);
-  }
-
-  const { data: publicUrlData } = supabase.storage
-    .from(bucket)
-    .getPublicUrl(data.path);
-
-  return publicUrlData.publicUrl;
-}
-
 export async function processAndUploadVideoThumbnail(
   file: File,
   isPortrait: boolean = false,
   onProgress?: (stage: string) => void,
-  bucket: string = 'portfolio-images'
 ): Promise<ProcessedVideoThumbnail> {
   const validation = validateVideoFile(file);
   if (!validation.valid) {
@@ -277,28 +240,18 @@ export async function processAndUploadVideoThumbnail(
     const baseFileName = file.name.replace(/\.[^/.]+$/, '');
 
     onProgress?.('Uploading poster image...');
-    const posterUrl = await uploadToContentMedia(
-      posterBlob,
-      `${baseFileName}-poster`,
-      'video-posters',
-      'image/webp',
-      bucket
-    );
+    const posterKey = generateStorageKey('posters', baseFileName, 'poster', 'webp');
+    const posterResult = await uploadBlob(posterBlob, CONTENT_MEDIA_BUCKET, posterKey, 'image/webp');
 
-    onProgress?.('Uploading thumbnail video...');
-    const videoUrl = await uploadToContentMedia(
-      thumbnailBlob,
-      `${baseFileName}-thumb`,
-      'video-thumbnails',
-      'video/webm',
-      bucket
-    );
+    onProgress?.('Uploading hover video...');
+    const hoverKey = generateStorageKey('hover-videos', baseFileName, 'hover', 'webm');
+    const hoverResult = await uploadBlob(thumbnailBlob, CONTENT_MEDIA_BUCKET, hoverKey, 'video/webm');
 
     onProgress?.('Complete!');
 
     return {
-      poster: posterUrl,
-      video: videoUrl,
+      poster: posterResult.publicUrl,
+      video: hoverResult.publicUrl,
     };
   } catch (error) {
     if (error instanceof Error) {
@@ -312,38 +265,8 @@ export async function deleteVideoThumbnails(
   posterUrl: string | null,
   videoUrl: string | null
 ): Promise<void> {
-  const extractBucketAndPath = (url: string): { bucket: string; path: string } | null => {
-    const buckets = ['portfolio-images', 'blog-images', 'content-media'];
-    for (const bucket of buckets) {
-      const parts = url.split(`/${bucket}/`);
-      if (parts.length === 2) {
-        return { bucket, path: parts[1] };
-      }
-    }
-    return null;
-  };
-
-  if (posterUrl) {
-    const result = extractBucketAndPath(posterUrl);
-    if (result) {
-      const { error } = await supabase.storage
-        .from(result.bucket)
-        .remove([result.path]);
-      if (error) {
-        console.error('Failed to delete poster image:', error);
-      }
-    }
-  }
-
-  if (videoUrl) {
-    const result = extractBucketAndPath(videoUrl);
-    if (result) {
-      const { error } = await supabase.storage
-        .from(result.bucket)
-        .remove([result.path]);
-      if (error) {
-        console.error('Failed to delete thumbnail video:', error);
-      }
-    }
-  }
+  await Promise.all([
+    deleteByUrl(posterUrl),
+    deleteByUrl(videoUrl),
+  ]);
 }

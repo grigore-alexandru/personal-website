@@ -1,9 +1,13 @@
 import { supabase } from '../lib/supabase';
+import { uploadBlob, deleteByUrl, generateStorageKey } from '../lib/storageClient';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const LARGE_IMAGE_MAX_WIDTH = 1920;
 const THUMBNAIL_MAX_WIDTH = 800;
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+
+const PORTFOLIO_IMAGES_BUCKET = 'portfolio-images';
+const BLOG_IMAGES_BUCKET = 'blog-images';
 
 export interface ProcessedImages {
   largeUrl: string;
@@ -100,7 +104,7 @@ async function loadImage(file: File): Promise<HTMLImageElement> {
   });
 }
 
-async function uploadToStorage(
+async function uploadToSupabase(
   blob: Blob,
   fileName: string,
   bucket: string,
@@ -129,15 +133,29 @@ async function uploadToStorage(
   return publicUrlData.publicUrl;
 }
 
+async function uploadToMegaS4HeroLarge(blob: Blob, baseFileName: string): Promise<string> {
+  const key = generateStorageKey('hero/large', baseFileName, 'large', 'webp');
+  const result = await uploadBlob(blob, PORTFOLIO_IMAGES_BUCKET, key, 'image/webp');
+  return result.publicUrl;
+}
+
+async function uploadToMegaS4HeroThumb(blob: Blob, baseFileName: string): Promise<string> {
+  const key = generateStorageKey('hero/thumb', baseFileName, 'thumb', 'webp');
+  const result = await uploadBlob(blob, PORTFOLIO_IMAGES_BUCKET, key, 'image/webp');
+  return result.publicUrl;
+}
+
 export async function processAndUploadHeroImage(
   file: File,
   onProgress?: (stage: string) => void,
-  bucket: string = 'blog-images'
+  bucket: string = BLOG_IMAGES_BUCKET
 ): Promise<ProcessedImages> {
   const validation = validateHeroImage(file);
   if (!validation.valid) {
     throw new Error(validation.error);
   }
+
+  const isPortfolio = bucket === PORTFOLIO_IMAGES_BUCKET;
 
   try {
     onProgress?.('Loading image...');
@@ -152,10 +170,14 @@ export async function processAndUploadHeroImage(
     const baseFileName = file.name.replace(/\.[^/.]+$/, '');
 
     onProgress?.('Uploading large image...');
-    const largeUrl = await uploadToStorage(largeBlob, `${baseFileName}-large`, bucket, 'image/webp');
+    const largeUrl = isPortfolio
+      ? await uploadToMegaS4HeroLarge(largeBlob, baseFileName)
+      : await uploadToSupabase(largeBlob, `${baseFileName}-large`, bucket, 'image/webp');
 
     onProgress?.('Uploading thumbnail...');
-    const thumbnailUrl = await uploadToStorage(thumbnailBlob, `${baseFileName}-thumb`, bucket, 'image/webp');
+    const thumbnailUrl = isPortfolio
+      ? await uploadToMegaS4HeroThumb(thumbnailBlob, baseFileName)
+      : await uploadToSupabase(thumbnailBlob, `${baseFileName}-thumb`, bucket, 'image/webp');
 
     onProgress?.('Complete!');
 
@@ -174,31 +196,9 @@ export async function processAndUploadHeroImage(
 export async function deleteHeroImages(
   largeUrl: string | null,
   thumbnailUrl: string | null,
-  bucketName: string = 'blog-images'
 ): Promise<void> {
-  const filesToDelete: string[] = [];
-
-  if (largeUrl) {
-    const largePath = largeUrl.split(`/${bucketName}/`)[1];
-    if (largePath) {
-      filesToDelete.push(largePath);
-    }
-  }
-
-  if (thumbnailUrl) {
-    const thumbPath = thumbnailUrl.split(`/${bucketName}/`)[1];
-    if (thumbPath) {
-      filesToDelete.push(thumbPath);
-    }
-  }
-
-  if (filesToDelete.length > 0) {
-    const { error } = await supabase.storage
-      .from(bucketName)
-      .remove(filesToDelete);
-
-    if (error) {
-      console.error('Failed to delete hero images:', error);
-    }
-  }
+  await Promise.all([
+    deleteByUrl(largeUrl),
+    deleteByUrl(thumbnailUrl),
+  ]);
 }
