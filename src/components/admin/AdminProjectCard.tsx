@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Edit, MoreVertical, Loader2 } from 'lucide-react';
 import { designTokens } from '../../styles/tokens';
 import { formatDistanceToNow } from '../../utils/dateUtils';
+import { ProgressiveImage } from '../ui/ProgressiveImage';
 
 interface AdminProjectCardProps {
   project: {
@@ -88,11 +89,11 @@ export function AdminProjectCard({ project, onEdit, onToggleStatus, onDelete }: 
         <div className="flex flex-col md:flex-row gap-4">
           {project.hero_image_thumbnail && (
             <div className="w-full md:w-2/5 flex-shrink-0">
-              <div className="relative w-full pt-[56%] bg-gray-100 rounded-lg overflow-hidden">
-                <img
+              <div className="relative w-full pt-[56%] rounded-lg overflow-hidden">
+                <ProgressiveImage
                   src={project.hero_image_thumbnail}
                   alt={project.title}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  className="object-cover transition-transform duration-300 group-hover:scale-105"
                 />
               </div>
             </div>

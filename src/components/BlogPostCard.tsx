@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { BlogPost } from '../utils/blogLoader';
+import { ProgressiveImage } from './ui/ProgressiveImage';
 
 interface BlogPostCardProps {
   post: BlogPost;
@@ -59,13 +60,11 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
         <div className="flex flex-col md:flex-row gap-4">
           {post.heroImageThumbnail && (
             <div className="w-full md:w-2/5 flex-shrink-0">
-              <div className="relative w-full pt-[60%] bg-surface-sunken rounded-token-md overflow-hidden">
-                <img
+              <div className="relative w-full pt-[60%] rounded-token-md overflow-hidden">
+                <ProgressiveImage
                   src={post.heroImageThumbnail}
                   alt={post.title}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 ease-smooth group-hover:scale-105"
-                  loading="lazy"
-                  decoding="async"
+                  className="object-cover transition-transform duration-300 ease-smooth group-hover:scale-105"
                 />
               </div>
             </div>

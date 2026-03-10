@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { ContentWithProject, ContentThumbnailVideo, ContentThumbnailImage } from '../types';
+import { ProgressiveImage } from './ui/ProgressiveImage';
 
 interface ContentCardProps {
   content: ContentWithProject;
@@ -47,10 +48,10 @@ export function ContentCard({ content, onClick }: ContentCardProps) {
     >
       {hasVideoThumbnail && (
         <>
-          <img
+          <ProgressiveImage
             src={(thumbnail as ContentThumbnailVideo).poster}
             alt={content.title}
-            className={`absolute inset-0 w-full h-full object-cover transition-all duration-300 ${
+            className={`object-cover transition-all duration-300 ${
               isHovering
                 ? 'opacity-0 scale-105'
                 : 'opacity-100 scale-100 saturate-[0.3]'
@@ -72,10 +73,10 @@ export function ContentCard({ content, onClick }: ContentCardProps) {
       )}
 
       {hasImageThumbnail && (
-        <img
+        <ProgressiveImage
           src={(thumbnail as ContentThumbnailImage).compressed}
           alt={content.title}
-          className={`absolute inset-0 w-full h-full object-cover transition-all duration-300 ${
+          className={`object-cover transition-all duration-300 ${
             isHovering
               ? 'scale-105 saturate-110'
               : 'scale-100 saturate-[0.3]'

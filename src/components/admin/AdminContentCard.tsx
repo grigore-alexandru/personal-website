@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Edit, MoreVertical, Loader2, Video, Image as ImageIcon, GripVertical } from 'lucide-react';
 import { designTokens } from '../../styles/tokens';
+import { ProgressiveImage } from '../ui/ProgressiveImage';
 
 interface AdminContentCardProps {
   content: {
@@ -130,12 +131,12 @@ export function AdminContentCard({
         </div>
       </div>
 
-      <div className="relative w-full pt-[100%] bg-gray-100 flex-shrink-0">
+      <div className="relative w-full pt-[100%] flex-shrink-0">
         {thumbnailUrl ? (
-          <img
+          <ProgressiveImage
             src={thumbnailUrl}
             alt={content.title}
-            className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">

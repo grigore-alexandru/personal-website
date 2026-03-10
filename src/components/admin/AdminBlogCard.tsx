@@ -3,6 +3,7 @@ import { Edit, MoreVertical, Loader2 } from 'lucide-react';
 import { BlogPost } from '../../utils/blogLoader';
 import { designTokens } from '../../styles/tokens';
 import { formatDistanceToNow } from '../../utils/dateUtils';
+import { ProgressiveImage } from '../ui/ProgressiveImage';
 
 interface AdminBlogCardProps {
   post: BlogPost;
@@ -206,11 +207,11 @@ export const AdminBlogCard: React.FC<AdminBlogCardProps> = ({
         <div className="flex flex-col md:flex-row gap-4">
           {post.heroImageThumbnail && (
             <div className="w-full md:w-2/5 flex-shrink-0">
-              <div className="relative w-full pt-[60%] bg-gray-100 rounded-lg overflow-hidden">
-                <img
+              <div className="relative w-full pt-[60%] rounded-lg overflow-hidden">
+                <ProgressiveImage
                   src={post.heroImageThumbnail}
                   alt={post.title}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  className="object-cover transition-transform duration-300 group-hover:scale-105"
                 />
               </div>
             </div>

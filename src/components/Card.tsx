@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Project } from '../types';
 import { generateProjectUrl } from '../utils/dataLoader';
+import { ProgressiveImage } from './ui/ProgressiveImage';
 
 interface CardProps {
   project: Project;
@@ -19,12 +20,10 @@ const Card: React.FC<CardProps> = ({ project }) => {
         className="relative overflow-hidden"
         style={{ aspectRatio: '16 / 10' }}
       >
-        <img
+        <ProgressiveImage
           src={project.hero_image_thumbnail}
           alt={project.title}
-          className="w-full h-full object-cover saturate-[0.2] group-hover:saturate-100 group-hover:scale-105 transition-all duration-300 ease-out"
-          loading="lazy"
-          decoding="async"
+          className="object-cover saturate-[0.2] group-hover:saturate-100 group-hover:scale-105 transition-all duration-300 ease-out"
         />
       </div>
 

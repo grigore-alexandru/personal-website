@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { ContentWithProject, ContentThumbnailVideo, ContentThumbnailImage } from '../types';
 import { useTouchScrollActivation } from '../hooks/useTouchScrollActivation';
+import { ProgressiveImage } from './ui/ProgressiveImage';
 
 interface ContentGridItemProps {
   content: ContentWithProject;
@@ -59,16 +60,14 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
     >
       {hasVideoThumbnail && (
         <>
-          <img
+          <ProgressiveImage
             src={(thumbnail as ContentThumbnailVideo).poster}
             alt={content.title}
-            className={`absolute inset-0 w-full h-full object-cover transition-all duration-300 ${
+            className={`object-cover transition-all duration-300 ${
               isHovering
                 ? 'opacity-0 scale-105'
                 : 'opacity-100 scale-100 saturate-[0.3]'
             }`}
-            loading="lazy"
-            decoding="async"
           />
           <video
             ref={videoRef}
@@ -87,16 +86,14 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
       )}
 
       {hasImageThumbnail && (
-        <img
+        <ProgressiveImage
           src={(thumbnail as ContentThumbnailImage).compressed}
           alt={content.title}
-          className={`absolute inset-0 w-full h-full object-cover transition-all duration-300 ${
+          className={`object-cover transition-all duration-300 ${
             isHovering
               ? 'scale-105 saturate-110'
               : 'scale-100 saturate-[0.3]'
           }`}
-          loading="lazy"
-          decoding="async"
         />
       )}
 
