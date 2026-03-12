@@ -64,7 +64,7 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
             src={videoThumb.poster}
             alt={content.title}
             // Switched to ease-smooth for that premium curve
-            className={`object-cover transition-all duration-1000 ease-smooth ${
+            className={`object-cover transition-all duration-400 ease-smooth ${
               isHovering
                 ? 'opacity-0 scale-[1.002]'
                 : 'opacity-100 scale-100 saturate-[0.3]'
