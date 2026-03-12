@@ -61,7 +61,7 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
             alt={content.title}
             className={`object-cover transition-all duration-1000 ease-out ${
               isHovering
-                ? 'opacity-0 scale-[1.03]'
+                ? 'opacity-0 scale-[1.00]'
                 : 'opacity-100 scale-100 saturate-[0.3]'
             }`}
           />
