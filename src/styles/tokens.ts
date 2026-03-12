@@ -107,7 +107,7 @@ export const designTokens = {
     slow:   '400ms ease',
     smooth: '300ms cubic-bezier(0.4,0,0.2,1)',
     spring: '350ms cubic-bezier(0.34,1.56,0.64,1)',
-    lift:   'transform 250ms cubic-bezier(0.4,0,0.2,1), box-shadow 250ms cubic-bezier(0.4,0,0.2,1)',
+    lift:   'box-shadow 250ms cubic-bezier(0.4,0,0.2,1)',
   },
 
   typography: {
