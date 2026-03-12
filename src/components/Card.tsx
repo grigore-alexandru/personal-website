@@ -14,7 +14,8 @@ const Card: React.FC<CardProps> = ({ project }) => {
   return (
     <Link
       to={generateProjectUrl(project)}
-      className="group block bg-surface-raised card-raised overflow-hidden focus-visible:outline-none focus-visible:shadow-token-focus"
+      // Removed 'card-raised' to stop the jumping effect on hover
+      className="group block bg-surface-raised overflow-hidden focus-visible:outline-none focus-visible:shadow-token-focus"
     >
       <div
         className="relative overflow-hidden"
@@ -23,7 +24,8 @@ const Card: React.FC<CardProps> = ({ project }) => {
         <ProgressiveImage
           src={project.hero_image_thumbnail}
           alt={project.title}
-          className="object-cover saturate-[0.2] group-hover:saturate-100 group-hover:scale-103 transition-all duration-300 ease-out"
+          // Swapped to duration-700 for a slow saturation fade, and scale-[1.02] for a micro-zoom
+          className="object-cover saturate-[0.2] scale-100 group-hover:saturate-100 group-hover:scale-[1.02] transition-all duration-700 ease-in-out"
         />
       </div>
 
