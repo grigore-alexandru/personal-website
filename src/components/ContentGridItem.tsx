@@ -78,7 +78,7 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
             playsInline
             preload="none"
             // Switched to ease-smooth
-            className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ease-smooth ${
+            className={`absolute inset-0 w-full h-full object-cover transition-all duration-400 ease-smooth ${
               isHovering
                 ? 'opacity-100 scale-[1.002]'
                 : 'opacity-0 scale-100'
