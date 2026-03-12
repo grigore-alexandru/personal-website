@@ -234,7 +234,6 @@ a:focus {
 
 .card-raised:hover {
   box-shadow: var(--shadow-lifted);
-  transform: translateY(-4px);
 }
 
 /* =====================================================
