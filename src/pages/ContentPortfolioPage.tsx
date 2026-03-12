@@ -287,7 +287,7 @@ export function ContentPortfolioPage() {
                     className={isPortrait ? 'portrait-grid-item md:row-span-2' : ''}
                     style={{
                       opacity: 0,
-                      transform: 'translateY(20px)',
+                      
                       animation: `fadeInUp 0.6s ease-out ${Math.min(index, 12) * 0.05}s forwards`,
                     }}
                   >
