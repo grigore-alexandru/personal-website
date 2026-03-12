@@ -334,13 +334,13 @@ export function ContentPortfolioPage() {
         }
         @media (min-width: 768px) and (max-width: 1023px) {
           .portrait-grid-item {
-            height: calc(2 * 300px + 1);
+            height: calc(2 * 300px + 20);
             overflow: hidden;
           }
         }
         @media (min-width: 1024px) {
           .portrait-grid-item {
-            height: calc(2 * 280px);
+            height: calc(2 * 280px + 24);
             overflow: hidden;
           }
         }
