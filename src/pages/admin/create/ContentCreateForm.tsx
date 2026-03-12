@@ -387,8 +387,8 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
 
     if (!formData.slug.trim()) {
       errors.push({ field: 'slug', message: 'Slug is required' });
-    } else if (!validateSlug(formData.slug)) {
-      errors.push({ field: 'slug', message: 'Slug must contain only lowercase letters, numbers, and hyphens' });
+    } else if (!validateSlug(formData.slug).isValid) {
+      errors.push({ field: 'slug', message: validateSlug(formData.slug).error || 'Invalid slug' });
     } else {
       const isUnique = await checkContentSlugUniqueness(
         formData.slug,
