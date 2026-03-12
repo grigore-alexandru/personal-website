@@ -332,15 +332,21 @@ export function ContentPortfolioPage() {
           from { opacity: 0; }
           to   { opacity: 1; }
         }
+        
+        /* TABLET (md) */
         @media (min-width: 768px) and (max-width: 1023px) {
           .portrait-grid-item {
-            height: calc(2 * 300px + 200px);
+            /* 2 rows of 300px + gap-5 (20px) */
+            height: calc(2 * 300px + 20px); 
             overflow: hidden;
           }
         }
+        
+        /* DESKTOP (lg) */
         @media (min-width: 1024px) {
           .portrait-grid-item {
-            height: calc(2 * 280px - 10px);
+            /* 2 rows of 280px + gap-6 (24px) */
+            height: calc(2 * 280px + 24px); 
             overflow: hidden;
           }
         }
