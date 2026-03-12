@@ -284,7 +284,7 @@ export function ContentPortfolioPage() {
                 return (
                   <div
                     key={item.id}
-                    className={isPortrait ? 'md:row-span-2 md:h-full' : ''}
+                    className={isPortrait ? 'portrait-grid-item md:row-span-2' : ''}
                     style={{
                       opacity: 0,
                       transform: 'translateY(20px)',
@@ -331,6 +331,18 @@ export function ContentPortfolioPage() {
         @keyframes fadeIn {
           from { opacity: 0; }
           to   { opacity: 1; }
+        }
+        @media (min-width: 768px) and (max-width: 1023px) {
+          .portrait-grid-item {
+            height: calc(2 * 300px + 20px);
+            overflow: hidden;
+          }
+        }
+        @media (min-width: 1024px) {
+          .portrait-grid-item {
+            height: calc(2 * 280px + 24px);
+            overflow: hidden;
+          }
         }
       `}</style>
     </div>
