@@ -23,7 +23,7 @@ const Card: React.FC<CardProps> = ({ project }) => {
         <ProgressiveImage
           src={project.hero_image_thumbnail}
           alt={project.title}
-          className="object-cover saturate-[0.2] group-hover:saturate-100 group-hover:scale-103 transition-all duration-3000 ease-out"
+          className="object-cover saturate-[0.2] group-hover:saturate-100 group-hover:scale-103 transition-all duration-300 ease-out"
         />
       </div>
 
