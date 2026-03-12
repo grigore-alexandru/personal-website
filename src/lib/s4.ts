@@ -12,11 +12,9 @@ export const s4Client = new S3Client({
   forcePathStyle: true,
 });
 
-const publicBase =
-  import.meta.env.VITE_MEGA_S4_PUBLIC_BASE?.replace(/\/$/, '') ??
-  'https://s3.g.s4.mega.io';
-
-export function getMegaS4PublicUrl(_bucket: string, key: string): string {
+export function getMegaS4PublicUrl(bucket: string, key: string): string {
+  const base = (import.meta.env.VITE_MEGA_S4_ENDPOINT ?? 'https://s3.eu-central-1.s4.mega.io').replace(/\/$/, '');
+  const accountId = import.meta.env.VITE_MEGA_S4_ACCOUNT_ID ?? '';
   const encodedKey = key.split('/').map(encodeURIComponent).join('/');
-  return `${publicBase}/${encodedKey}`;
+  return `${base}/${accountId}/${bucket}/${encodedKey}`;
 }

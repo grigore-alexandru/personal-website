@@ -83,26 +83,49 @@ export function parseStorageUrl(url: string): ParsedStorageUrl | null {
     return { type: 'supabase', bucket: supabaseMatch[1], path: supabaseMatch[2] };
   }
 
-  const megaEndpoint = import.meta.env.VITE_MEGA_S4_ENDPOINT ?? 'https://s3.eu-central-1.s4.mega.io';
-  const megaBase = megaEndpoint.replace(/\/$/, '');
-  if (url.startsWith(megaBase)) {
-    const rest = url.slice(megaBase.length + 1);
-    const slashIdx = rest.indexOf('/');
-    if (slashIdx !== -1) {
+  const megaEndpoint = (import.meta.env.VITE_MEGA_S4_ENDPOINT ?? 'https://s3.eu-central-1.s4.mega.io').replace(/\/$/, '');
+  const accountId = import.meta.env.VITE_MEGA_S4_ACCOUNT_ID ?? '';
+
+  if (url.startsWith(megaEndpoint)) {
+    const rest = url.slice(megaEndpoint.length + 1);
+    const parts = rest.split('/');
+
+    if (accountId && parts[0] === accountId && parts.length >= 3) {
+      const bucket = parts[1];
+      const keyParts = parts.slice(2);
       return {
         type: 'mega-s4',
-        bucket: rest.slice(0, slashIdx),
-        path: decodeURIComponent(rest.slice(slashIdx + 1)),
+        bucket,
+        path: decodeURIComponent(keyParts.join('/')),
+      };
+    }
+
+    if (parts.length >= 2) {
+      const bucket = parts[0];
+      const keyParts = parts.slice(1);
+      return {
+        type: 'mega-s4',
+        bucket,
+        path: decodeURIComponent(keyParts.join('/')),
       };
     }
   }
 
-  const s4FallbackMatch = url.match(/s3\.[^.]+\.s4\.mega\.io\/([^/]+)\/(.+)$/);
+  const s4FallbackMatch = url.match(/s3\.[^.]+\.s4\.mega\.io\/([^/]+)\/([^/]+)\/(.+)$/);
   if (s4FallbackMatch) {
     return {
       type: 'mega-s4',
-      bucket: s4FallbackMatch[1],
-      path: decodeURIComponent(s4FallbackMatch[2]),
+      bucket: s4FallbackMatch[2],
+      path: decodeURIComponent(s4FallbackMatch[3]),
+    };
+  }
+
+  const s4LegacyMatch = url.match(/s3\.[^.]+\.s4\.mega\.io\/([^/]+)\/(.+)$/);
+  if (s4LegacyMatch) {
+    return {
+      type: 'mega-s4',
+      bucket: s4LegacyMatch[1],
+      path: decodeURIComponent(s4LegacyMatch[2]),
     };
   }
 
