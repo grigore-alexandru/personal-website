@@ -52,7 +52,7 @@ export function AdminContentCard({
   };
 
   const thumbnailUrl = content.thumbnail?.poster ?? null;
-  const isVideo = !!(content.thumbnail?.hover_video);
+  const isVideo = content.type_name?.toLowerCase() === 'video';
 
   return (
     <article
