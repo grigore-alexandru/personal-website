@@ -123,7 +123,7 @@ export async function processAndUploadContentPoster(
     const baseFileName = file.name.replace(/\.[^/.]+$/, '');
 
     onProgress?.('Uploading poster...');
-    const posterKey = generateStorageKey('posters', baseFileName, 'poster', 'webp');
+    const posterKey = generateStorageKey('thumb/posters', baseFileName, 'poster', 'webp');
     const posterResult = await uploadBlob(posterBlob, CONTENT_MEDIA_BUCKET, posterKey, 'image/webp');
 
     onProgress?.('Complete!');

@@ -100,10 +100,10 @@ export async function uploadImageToSupabase(
     let bucket: string;
 
     if (context === 'content') {
-      key    = generateStorageKey('content-media/images', baseName, 'main', 'webp');
+      key    = generateStorageKey('images', baseName, 'main', 'webp');
       bucket = CONTENT_MEDIA_BUCKET;
     } else {
-      key    = generateStorageKey('images', baseName, 'inline', 'webp');
+      key    = generateStorageKey('inline', baseName, 'inline', 'webp');
       bucket = BLOG_IMAGES_BUCKET;
     }
 
@@ -130,7 +130,7 @@ export async function uploadContentMainImage(
   const blob = await resizeAndCompress(img, CONTENT_MAX_WIDTH, CONTENT_QUALITY);
 
   const baseName = file.name.replace(/\.[^/.]+$/, '');
-  const key      = generateStorageKey('content-media/images', baseName, 'main', 'webp');
+  const key      = generateStorageKey('images', baseName, 'main', 'webp');
 
   onProgress?.('Uploading...');
   const result = await uploadBlob(blob, CONTENT_MEDIA_BUCKET, key, 'image/webp');

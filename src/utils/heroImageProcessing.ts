@@ -20,8 +20,8 @@ const PORTFOLIO_PROFILE: CompressionProfile = {
   largeQuality: 0.85,
   thumbMaxWidth: 800,
   thumbQuality: 0.65,
-  largeFolder: 'large',
-  thumbFolder: 'thumb',
+  largeFolder: 'hero/large',
+  thumbFolder: 'hero/thumb',
 };
 
 const BLOG_PROFILE: CompressionProfile = {
