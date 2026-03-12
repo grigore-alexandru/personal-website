@@ -346,7 +346,7 @@ export function ContentPortfolioPage() {
         @media (min-width: 1024px) {
           .portrait-grid-item {
             /* 2 rows of 280px + gap-6 (24px) */
-            height: calc(2 * 280px + 24px); 
+            height: calc(2 * 280px + 0px); 
             overflow: hidden;
           }
         }
