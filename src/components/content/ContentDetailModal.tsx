@@ -111,36 +111,44 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 animate-fadeIn"
+      /* 1. Increased z-index to 100 to ensure it covers ANY site navigation */
+      /* 2. Added responsive padding so the modal doesn't touch screen edges on tablets */
+      className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 md:p-8 lg:p-12 animate-fadeIn"
       onClick={handleBackdropClick}
     >
       <div
         ref={modalRef}
-        className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden animate-scaleIn flex flex-col"
+        /* 3. Changed max-w-6xl to max-w-5xl for better desktop proportions */
+        /* 4. Strictly enforced max-height using calc() to guarantee it never overflows the viewport */
+        className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[calc(100vh-2rem)] md:max-h-[calc(100vh-4rem)] overflow-hidden animate-scaleIn flex flex-col relative"
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b border-gray-200 bg-white">
+        {/* 5. Header is now explicitly flex-shrink-0 instead of sticky. 
+               This completely prevents the scrollable content from ever overlapping it. */}
+        <div className="flex-shrink-0 z-10 flex items-center justify-between p-5 md:p-6 border-b border-gray-200 bg-white shadow-sm">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-1">{content.title}</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-1 leading-tight tracking-tight">{content.title}</h2>
             {year && (
-              <p className="text-sm text-gray-600">{year}</p>
+              <p className="text-sm text-gray-500 font-medium">{year}</p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0 ml-4"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0 ml-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             aria-label="Close modal"
           >
             <X className="w-5 h-5 text-gray-600" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-6 space-y-6">
+        {/* 6. The scrollable content is now natively isolated from the header */}
+        <div className="flex-1 overflow-y-auto w-full">
+          <div className="p-5 md:p-8 space-y-8">
             <div
-              className="relative bg-gray-100 rounded-lg overflow-hidden animate-slideIn mx-auto"
+              className="relative bg-gray-100 rounded-lg overflow-hidden animate-slideIn mx-auto shadow-inner"
               style={{
                 aspectRatio: isPortrait ? '9/16' : '16/9',
-                maxWidth: isPortrait ? '300px' : '100%',
+                // Slightly tweaked the portrait width constraint so it doesn't look too massive on desktop
+                maxWidth: isPortrait ? '320px' : '100%',
               }}
             >
               {isImage ? (
@@ -149,11 +157,11 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
                     id="content-fullscreen-img"
                     src={content.url}
                     alt={content.title}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain bg-black/5"
                   />
                   <button
                     onClick={handleFullscreen}
-                    className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-lg transition-colors z-10"
+                    className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-lg transition-colors z-10 backdrop-blur-md"
                     aria-label="Fullscreen"
                   >
                     <Maximize className="w-5 h-5 text-white" />
@@ -163,19 +171,19 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
                 <div className="w-full h-full relative">
                   {iframeLoading && !iframeError && (
                     <div className="absolute inset-0 flex items-center justify-center bg-gray-900 z-10">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
+                      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-white" />
                     </div>
                   )}
 
                   {iframeError ? (
                     <div className="absolute inset-0 flex items-center justify-center bg-gray-900 text-white px-4 z-10">
                       <div className="text-center">
-                        <p className="mb-2">Unable to load video</p>
+                        <p className="mb-2 font-medium">Unable to load video</p>
                         <a
                           href={content.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm underline hover:text-gray-300"
+                          className="text-sm underline hover:text-gray-300 transition-colors"
                         >
                           Open in new tab
                         </a>
@@ -221,9 +229,9 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
             </div>
 
             {content.project_info && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-3 border-b border-gray-200 animate-slideIn">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pb-6 border-b border-gray-100 animate-slideIn">
                 <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">
                     Client
                   </p>
                   <p className="text-base text-gray-900 font-medium">
@@ -232,7 +240,7 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
                 </div>
 
                 <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">
                     Type
                   </p>
                   <p className="text-base text-gray-900 font-medium">
@@ -241,7 +249,7 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
                 </div>
 
                 <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">
                     Project
                   </p>
                   <p className="text-base text-gray-900 font-medium">
@@ -253,19 +261,19 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
 
             {content.contributors && content.contributors.length > 0 && (
               <div className="animate-slideIn">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">
                   Collaborators
                 </p>
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   {content.contributors.map((contributor, index) => (
                     <div
                       key={index}
-                      className="flex justify-between items-center py-2"
+                      className="flex justify-between items-center py-1.5"
                     >
-                      <span className="font-medium text-gray-900">
+                      <span className="font-medium text-gray-900 text-sm md:text-base">
                         {contributor.name}
                       </span>
-                      <span className="text-gray-600 text-sm">
+                      <span className="text-gray-500 text-sm">
                         {contributor.role}
                       </span>
                     </div>
@@ -275,11 +283,11 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
             )}
 
             {content.caption && (
-              <div className="animate-slideIn">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+              <div className="animate-slideIn pt-2">
+                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
                   Caption
                 </p>
-                <p className="text-gray-700 leading-relaxed">
+                <p className="text-gray-600 leading-relaxed text-sm md:text-base">
                   {content.caption}
                 </p>
               </div>
@@ -301,21 +309,18 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
         @keyframes scaleIn {
           0% {
             opacity: 0;
-            transform: scale(0.85);
-          }
-          50% {
-            opacity: 0.5;
+            transform: scale(0.95) translateY(10px);
           }
           100% {
             opacity: 1;
-            transform: scale(1);
+            transform: scale(1) translateY(0);
           }
         }
 
         @keyframes slideInContent {
           from {
             opacity: 0;
-            transform: translateY(10px);
+            transform: translateY(15px);
           }
           to {
             opacity: 1;
@@ -324,15 +329,16 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
         }
 
         .animate-fadeIn {
-          animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+          animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .animate-scaleIn {
-          animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+          /* Swapped to a smoother bezier curve instead of the highly aggressive spring */
+          animation: scaleIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
         .animate-slideIn {
-          animation: slideInContent 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.15s forwards;
+          animation: slideInContent 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s forwards;
           opacity: 0;
         }
       `}</style>
