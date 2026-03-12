@@ -92,7 +92,7 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
           src={imageThumb.poster}
           alt={content.title}
           // Switched to ease-smooth
-          className={`object-cover transition-all duration-1000 ease-smooth ${
+          className={`object-cover transition-all duration-400 ease-smooth ${
             isHovering
               ? 'scale-[1.002] saturate-100'
               : 'scale-100 saturate-[0.3]'
