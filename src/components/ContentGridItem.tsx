@@ -74,7 +74,7 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
             preload="none"
             className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ease-out ${
               isHovering
-                ? 'opacity-100 scale-[1.03]'
+                ? 'opacity-100 scale-[1.0]'
                 : 'opacity-0 scale-100'
             }`}
           />
