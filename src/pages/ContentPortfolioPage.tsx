@@ -284,7 +284,7 @@ export function ContentPortfolioPage() {
                 return (
                   <div
                     key={item.id}
-                    className={isPortrait ? 'md:row-span-2' : ''}
+                    className={isPortrait ? 'md:row-span-2 md:h-full' : ''}
                     style={{
                       opacity: 0,
                       transform: 'translateY(20px)',

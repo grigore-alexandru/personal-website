@@ -5,7 +5,7 @@ import { Project, Filter, ProjectType } from '../types';
 import { loadProjects, countProjects } from '../utils/dataLoader';
 import { loadProjectTypes } from '../utils/portfolioService';
 import CustomDropdown from '../components/forms/CustomDropdown';
-import MasonryGrid from '../components/MasonryGrid';
+import MasonryGrid from '../TRASH/MasonryGrid';
 import { designTokens } from '../styles/tokens';
 
 const PROJECTS_PER_PAGE = 24;

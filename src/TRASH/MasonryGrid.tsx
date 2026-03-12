@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Project } from '../types';
-import Card from './Card';
-import { ProjectCardSkeleton } from './ui/SkeletonLoader';
+import Card from '../components/Card';
+import { ProjectCardSkeleton } from '../components/ui/SkeletonLoader';
 
 interface ProjectGridProps {
   projects: Project[];

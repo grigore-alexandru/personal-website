@@ -48,7 +48,9 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
     <div
       ref={touchRef}
       className={`group relative bg-gray-100 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg w-full ${
-        isPortrait ? 'md:aspect-auto md:h-full' : 'aspect-[16/10]'
+        isPortrait
+          ? 'aspect-[9/16] md:aspect-auto md:h-full'
+          : 'aspect-[16/10]'
       }`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
