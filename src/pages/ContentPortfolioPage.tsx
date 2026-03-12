@@ -171,6 +171,11 @@ export function ContentPortfolioPage() {
 
   const isModalOpen = !!slug;
 
+  // New Grid Layout Strategy:
+  // Mobile: 1 column, height relies entirely on aspect ratio.
+  // Tablet/Desktop: 2, 3, or 4 columns, dense packing, strict auto-rows to control size.
+  const gridClasses = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 grid-flow-row-dense sm:auto-rows-[220px] xl:auto-rows-[190px]";
+
   return (
     <div className="min-h-screen bg-white">
       <Header />
@@ -208,7 +213,6 @@ export function ContentPortfolioPage() {
             className="flex-1"
           />
 
-          {/* Media type */}
           <CustomDropdown
             options={MEDIA_OPTIONS}
             value={mediaFilter}
@@ -217,7 +221,6 @@ export function ContentPortfolioPage() {
             className="w-full sm:w-40 lg:w-44"
           />
 
-          {/* Project type */}
           <CustomDropdown
             options={typeOptions}
             value={typeFilter}
@@ -227,7 +230,6 @@ export function ContentPortfolioPage() {
             className="w-full sm:w-44 lg:w-52"
           />
 
-          {/* Client */}
           <CustomDropdown
             options={clientOptions}
             value={clientFilter}
@@ -238,7 +240,6 @@ export function ContentPortfolioPage() {
           />
         </div>
 
-        {/* Active-filter meta row */}
         {hasActiveFilters && (
           <div className="mb-6 flex items-center justify-between">
             <p
@@ -260,9 +261,9 @@ export function ContentPortfolioPage() {
 
         {/* ── Grid ── */}
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 lg:gap-6 md:auto-rows-[300px] lg:auto-rows-[280px]">
+          <div className={gridClasses}>
             {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} style={{ animation: `fadeIn 0.3s ease-in-out ${i * 50}ms both` }}>
+              <div key={i} className="h-full w-full" style={{ animation: `fadeIn 0.3s ease-in-out ${i * 50}ms both` }}>
                 <ContentGridItemSkeleton />
               </div>
             ))}
@@ -278,13 +279,14 @@ export function ContentPortfolioPage() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 lg:gap-6 md:auto-rows-[300px] lg:auto-rows-[280px]">
+            <div className={gridClasses}>
               {filteredContent.map((item, index) => {
                 const isPortrait = item.format === 'portrait';
                 return (
                   <div
                     key={item.id}
-                    className={isPortrait ? 'portrait-grid-item md:row-span-2' : ''}
+                    // This is the magic. No row spanning on mobile, native CSS span-2 on desktop.
+                    className={`h-full w-full ${isPortrait ? 'sm:row-span-2' : 'sm:row-span-1'}`}
                     style={{
                       opacity: 0,
                       transform: 'translateY(20px)',
@@ -300,6 +302,7 @@ export function ContentPortfolioPage() {
                 Array.from({ length: 6 }).map((_, i) => (
                   <div
                     key={`skeleton-${i}`}
+                    className="h-full w-full"
                     style={{ animation: `fadeIn 0.3s ease-in-out ${i * 50}ms both` }}
                   >
                     <ContentGridItemSkeleton />
@@ -313,7 +316,7 @@ export function ContentPortfolioPage() {
         )}
       </main>
 
-      {/* ── Detail modal overlay — grid stays mounted ── */}
+      {/* ── Detail modal overlay ── */}
       {isModalOpen && (
         modalLoading ? (
           <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
@@ -324,6 +327,7 @@ export function ContentPortfolioPage() {
         ) : null
       )}
 
+      {/* ONLY Animations remain here! Native CSS Grid handles all the math now. */}
       <style>{`
         @keyframes fadeInUp {
           to { opacity: 1; transform: translateY(0); }
@@ -332,8 +336,6 @@ export function ContentPortfolioPage() {
           from { opacity: 0; }
           to   { opacity: 1; }
         }
-        
-       
       `}</style>
     </div>
   );
