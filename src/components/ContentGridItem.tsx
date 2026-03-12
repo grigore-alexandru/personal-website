@@ -63,7 +63,7 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
             alt={content.title}
             className={`object-cover transition-all duration-1000 ease-out ${
               isHovering
-                ? 'opacity-0 scale-[1.01]'
+                ? 'opacity-0 scale-[1.002]'
                 : 'opacity-100 scale-100 saturate-[0.3]'
             }`}
           />
@@ -76,7 +76,7 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
             preload="none"
             className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ease-out ${
               isHovering
-                ? 'opacity-100 scale-[1.01]'
+                ? 'opacity-100 scale-[1.002]'
                 : 'opacity-0 scale-100'
             }`}
           />
@@ -89,7 +89,7 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
           alt={content.title}
           className={`object-cover transition-all duration-1000 ease-out ${
             isHovering
-              ? 'scale-[1.01] saturate-100'
+              ? 'scale-[1.002] saturate-100'
               : 'scale-100 saturate-[0.3]'
           }`}
         />
@@ -104,8 +104,8 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
       <div
         className={`absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-black/80 via-black/40 to-transparent transition-all duration-500 ease-in-out ${
           isHovering
-            ? 'opacity-100 translate-y-0'
-            : 'opacity-0 translate-y-4'
+            ? 'opacity-100'
+            : 'opacity-0'
         }`}
       >
         <div className="absolute bottom-0 left-0 right-0 p-4">
