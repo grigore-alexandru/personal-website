@@ -14,9 +14,7 @@ const Card: React.FC<CardProps> = ({ project }) => {
   return (
     <Link
       to={generateProjectUrl(project)}
-      // 1. Removed 'card-raised' to stop the rising effect
-      // 2. Added 'hover:shadow-2xl' and a slow duration for the shadow "deepening"
-      className="group block bg-surface-raised overflow-hidden transition-shadow duration-700 ease-in-out hover:shadow-2xl focus-visible:outline-none focus-visible:shadow-token-focus"
+      className="group block bg-surface-raised card-raised overflow-hidden focus-visible:outline-none focus-visible:shadow-token-focus"
     >
       <div
         className="relative overflow-hidden"
@@ -25,9 +23,7 @@ const Card: React.FC<CardProps> = ({ project }) => {
         <ProgressiveImage
           src={project.hero_image_thumbnail}
           alt={project.title}
-          // 3. Changed duration to 1000ms and scale to 1.02 for a much smoother, subtle zoom
-          // 4. Using ease-in-out for a more natural acceleration/deceleration
-          className="object-cover saturate-[0.2] scale-100 transition-all duration-1000 ease-in-out group-hover:saturate-100 group-hover:scale-[1.02]"
+          className="object-cover saturate-[0.2] group-hover:saturate-100 group-hover:scale-105 transition-all duration-300 ease-out"
         />
       </div>
 
