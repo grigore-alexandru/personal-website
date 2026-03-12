@@ -52,6 +52,7 @@ export function AdminContentCard({
   };
 
   const thumbnailUrl = content.thumbnail?.poster ?? null;
+  const isVideo = !!(content.thumbnail?.hover_video);
 
   return (
     <article
