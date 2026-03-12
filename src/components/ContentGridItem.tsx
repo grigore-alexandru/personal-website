@@ -25,11 +25,13 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
   const syncVideo = useCallback((active: boolean) => {
     if (!videoThumb || !videoRef.current) return;
     if (active) {
+      // Reset to 0 ONLY when starting to play
       videoRef.current.currentTime = 0;
       videoRef.current.play().catch(() => {});
     } else {
+      // Just pause. DO NOT reset to 0 here. 
+      // This lets the video stay on its last frame while it fades out smoothly.
       videoRef.current.pause();
-      videoRef.current.currentTime = 0;
     }
   }, [videoThumb]);
 
@@ -46,12 +48,12 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
 
   return (
     <div
-  ref={touchRef}
-  className={`group relative bg-gray-100 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg w-full h-full ${
-    isPortrait
-      ? 'aspect-[9/16] sm:aspect-auto'
-      : 'aspect-[16/10] sm:aspect-auto'
-  }`}
+      ref={touchRef}
+      className={`group relative bg-gray-100 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg w-full h-full ${
+        isPortrait
+          ? 'aspect-[9/16] sm:aspect-auto'
+          : 'aspect-[16/10] sm:aspect-auto'
+      }`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={onClick}
@@ -61,7 +63,8 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
           <ProgressiveImage
             src={videoThumb.poster}
             alt={content.title}
-            className={`object-cover transition-all duration-1000 ease-out ${
+            // Switched to ease-smooth for that premium curve
+            className={`object-cover transition-all duration-1000 ease-smooth ${
               isHovering
                 ? 'opacity-0 scale-[1.002]'
                 : 'opacity-100 scale-100 saturate-[0.3]'
@@ -74,7 +77,8 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
             muted
             playsInline
             preload="none"
-            className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ease-out ${
+            // Switched to ease-smooth
+            className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ease-smooth ${
               isHovering
                 ? 'opacity-100 scale-[1.002]'
                 : 'opacity-0 scale-100'
@@ -87,7 +91,8 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
         <ProgressiveImage
           src={imageThumb.poster}
           alt={content.title}
-          className={`object-cover transition-all duration-1000 ease-out ${
+          // Switched to ease-smooth
+          className={`object-cover transition-all duration-1000 ease-smooth ${
             isHovering
               ? 'scale-[1.002] saturate-100'
               : 'scale-100 saturate-[0.3]'
@@ -102,7 +107,7 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
       )}
 
       <div
-        className={`absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-black/80 via-black/40 to-transparent transition-all duration-500 ease-in-out ${
+        className={`absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-black/80 via-black/40 to-transparent transition-all duration-500 ease-smooth ${
           isHovering
             ? 'opacity-100'
             : 'opacity-0'
