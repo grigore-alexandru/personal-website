@@ -59,7 +59,7 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
           <ProgressiveImage
             src={videoThumb.poster}
             alt={content.title}
-            className={`object-cover transition-all duration-500 ease-in-out ${
+            className={`object-cover transition-all duration-700 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${
               isHovering
                 ? 'opacity-0 scale-[1.07]'
                 : 'opacity-100 scale-100 saturate-[0.3]'
@@ -72,7 +72,7 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
             muted
             playsInline
             preload="none"
-            className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ease-in-out ${
+            className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${
               isHovering
                 ? 'opacity-100 scale-[1.07]'
                 : 'opacity-0 scale-100'
@@ -85,7 +85,7 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
         <ProgressiveImage
           src={imageThumb.poster}
           alt={content.title}
-          className={`object-cover transition-all duration-500 ease-in-out ${
+          className={`object-cover transition-all duration-700 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${
             isHovering
               ? 'scale-[1.07] saturate-100'
               : 'scale-100 saturate-[0.3]'
