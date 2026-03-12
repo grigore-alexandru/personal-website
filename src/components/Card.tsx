@@ -14,7 +14,7 @@ const Card: React.FC<CardProps> = ({ project }) => {
   return (
     <Link
       to={generateProjectUrl(project)}
-      className="group block overflow-hidden focus-visible:outline-none focus-visible:shadow-token-focus"
+      className="group block bg-surface-raised overflow-hidden focus-visible:outline-none focus-visible:shadow-token-focus"
     >
       <div
         className="relative overflow-hidden"
