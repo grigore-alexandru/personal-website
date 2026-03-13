@@ -13,7 +13,7 @@ import { designTokens } from '../styles/tokens';
 
 type MediaFilter = 'all' | 'videos' | 'photos';
 
-const CONTENT_PER_PAGE = 30;
+const CONTENT_PER_PAGE = 3;
 
 const MEDIA_OPTIONS = [
   { value: 'all',    label: 'All Media'  },
