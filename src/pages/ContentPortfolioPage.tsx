@@ -175,12 +175,15 @@ export function ContentPortfolioPage() {
   // Mobile: 1 column, height relies entirely on aspect ratio.
   // Tablet/Desktop: 2, 3, or 4 columns, dense packing, strict auto-rows to control size.
   // Inside ContentPortfolioPage.tsx
+// Inside ContentPortfolioPage.tsx
+// Mobile: 1 col (full width)
+// sm (640px): 2 cols (~320px wide) -> 1.33 ratio
+// md (768px): 2 cols (~384px wide) -> 1.6 ratio (Perfect)
+// lg (1024px): 3 cols (~341px wide) -> 1.42 ratio
+// xl (1280px): 3 cols (~426px wide) -> 1.77 ratio
+// 2xl (1536px): 4 cols (~384px wide) -> 1.6 ratio (Perfect)
 
-// 1. auto-fill: Automatically calculates how many columns fit.
-// 2. minmax(min(100%, 380px), 1fr): Enforces that a column is at least 380px wide (on desktop) 
-//    but stretches to 100% on small mobiles.
-// 3. auto-rows-[240px]: Enforces the fixed vertical height.
-const gridClasses = "grid grid-cols-[repeat(auto-fill,minmax(min(100%,380px),1fr))] gap-4 md:gap-6 grid-flow-row-dense auto-rows-[220px] md:auto-rows-[240px]";
+const gridClasses = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5 grid-flow-row-dense sm:auto-rows-[240px]";
 
   return (
     <div className="min-h-screen bg-white">
