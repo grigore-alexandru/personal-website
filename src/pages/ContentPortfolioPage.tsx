@@ -183,7 +183,7 @@ export function ContentPortfolioPage() {
 // xl (1280px): 3 cols (~426px wide) -> 1.77 ratio
 // 2xl (1536px): 4 cols (~384px wide) -> 1.6 ratio (Perfect)
 
-const gridClasses = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5 grid-flow-row-dense sm:auto-rows-[240px]";
+const gridClasses = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-4 gap-4 sm:gap-5 grid-flow-row-dense sm:auto-rows-[240px]";
 
   return (
     <div className="min-h-screen bg-white">
