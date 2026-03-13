@@ -174,7 +174,13 @@ export function ContentPortfolioPage() {
   // New Grid Layout Strategy:
   // Mobile: 1 column, height relies entirely on aspect ratio.
   // Tablet/Desktop: 2, 3, or 4 columns, dense packing, strict auto-rows to control size.
-  const gridClasses = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 grid-flow-row-dense sm:auto-rows-[240px]";
+  // Inside ContentPortfolioPage.tsx
+
+// 1. auto-fill: Automatically calculates how many columns fit.
+// 2. minmax(min(100%, 380px), 1fr): Enforces that a column is at least 380px wide (on desktop) 
+//    but stretches to 100% on small mobiles.
+// 3. auto-rows-[240px]: Enforces the fixed vertical height.
+const gridClasses = "grid grid-cols-[repeat(auto-fill,minmax(min(100%,380px),1fr))] gap-4 md:gap-6 grid-flow-row-dense auto-rows-[220px] md:auto-rows-[240px]";
 
   return (
     <div className="min-h-screen bg-white">
