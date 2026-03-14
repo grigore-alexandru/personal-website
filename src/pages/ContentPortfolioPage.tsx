@@ -183,7 +183,18 @@ export function ContentPortfolioPage() {
 // xl (1280px): 3 cols (~426px wide) -> 1.77 ratio
 // 2xl (1536px): 4 cols (~384px wide) -> 1.6 ratio (Perfect)
 
-const gridClasses = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-4 gap-4 sm:gap-5 grid-flow-row-dense sm:auto-rows-[240px]";
+// New Grid Layout Strategy:
+  // 1. Mobile: 1 flexible column taking 100% width.
+  // 2. Breakpoints: We explicitly define exactly how many columns to use AND their exact pixel width.
+  // 3. justify-between: Forces the columns to the edges and turns leftover horizontal space into a dynamic gap.
+  // 4. gap-y-6: Keeps vertical spacing fixed so the rows stay consistent.
+  const gridClasses = "grid justify-between gap-y-6 sm:auto-rows-[240px] grid-flow-row-dense " +
+                      "grid-cols-1 " +                                     // Mobile (<640px): Full width
+                      "sm:grid-cols-[280px_280px] " +                      // Tablet (640px+): 2 fixed cols
+                      "md:grid-cols-[340px_340px] " +                      // Large Tablet (768px+): 2 wider fixed cols
+                      "lg:grid-cols-[300px_300px_300px] " +                // Small Desktop (1024px+): 3 fixed cols
+                      "xl:grid-cols-[360px_360px_360px] " +                // Standard Desktop (1280px+): 3 wider fixed cols
+                      "2xl:grid-cols-[360px_360px_360px_360px]";           // Ultra Wide (1536px+): 4 fixed cols
 
   return (
     <div className="min-h-screen bg-white">
