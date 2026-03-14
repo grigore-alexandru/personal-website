@@ -18,7 +18,7 @@ export const loadProjects = async (
     .from('projects')
     .select(PROJECT_SELECT)
     .eq('is_draft', false)
-    .order('created_at', { ascending: false })
+    .order('order_index', { ascending: false })
     .range(offset, offset + limit - 1);
 
   if (error) {
@@ -99,6 +99,7 @@ function mapProjectRow(row: any): Project {
     impact_metrics: row.impact_metrics,
     recommendation: row.recommendation,
     is_draft: row.is_draft,
+    order_index: row.order_index ?? 0,
     created_at: row.created_at,
     updated_at: row.updated_at,
     project_content: sortedContent,

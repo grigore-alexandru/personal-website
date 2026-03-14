@@ -19,6 +19,7 @@ interface ProjectListItem {
   type_name: string;
   hero_image_thumbnail: string;
   is_draft: boolean;
+  order_index: number;
   updated_at: string;
 }
 
@@ -48,8 +49,8 @@ export function PortfolioManagementPage() {
 
     const { data, error } = await supabase
       .from('projects')
-      .select('id, title, slug, client_name, type_id, hero_image_thumbnail, is_draft, updated_at, project_type:project_types(name)')
-      .order('updated_at', { ascending: false });
+      .select('id, title, slug, client_name, type_id, hero_image_thumbnail, is_draft, order_index, updated_at, project_type:project_types(name)')
+      .order('order_index', { ascending: false });
 
     if (error) {
       console.error('Error loading projects:', error);
@@ -65,6 +66,7 @@ export function PortfolioManagementPage() {
           type_name: p.project_type?.name || '',
           hero_image_thumbnail: p.hero_image_thumbnail,
           is_draft: p.is_draft,
+          order_index: p.order_index ?? 0,
           updated_at: p.updated_at,
         }))
       );

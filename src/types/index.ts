@@ -81,6 +81,7 @@ export interface Project {
   impact_metrics: ImpactMetric[] | null;
   recommendation: Recommendation | null;
   is_draft: boolean;
+  order_index: number;
   created_at: string;
   updated_at: string;
   project_content: ProjectContentItem[];

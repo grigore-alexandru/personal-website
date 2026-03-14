@@ -23,8 +23,40 @@ export interface SaveProjectResult {
   slug?: string;
 }
 
+async function getNextProjectOrderIndex(): Promise<number> {
+  const { data } = await supabase
+    .from('projects')
+    .select('order_index')
+    .order('order_index', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (data?.order_index ?? -1) + 1;
+}
+
+export async function updateProjectsOrder(
+  items: Array<{ id: string; order_index: number }>
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    for (const item of items) {
+      const { error } = await supabase
+        .from('projects')
+        .update({ order_index: item.order_index })
+        .eq('id', item.id);
+      if (error) return { success: false, error: error.message };
+    }
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'An unexpected error occurred',
+    };
+  }
+}
+
 export async function createProject(data: ProjectData): Promise<SaveProjectResult> {
   try {
+    const nextIndex = await getNextProjectOrderIndex();
+
     const { data: result, error } = await supabase
       .from('projects')
       .insert({
@@ -40,6 +72,7 @@ export async function createProject(data: ProjectData): Promise<SaveProjectResul
         impact_metrics: data.impact_metrics || null,
         recommendation: data.recommendation || null,
         is_draft: data.is_draft ?? true,
+        order_index: nextIndex,
       })
       .select('id, slug')
       .single();
@@ -100,6 +133,22 @@ export async function deleteProject(
   try {
     const { error } = await supabase.from('projects').delete().eq('id', projectId);
     if (error) return { success: false, error: error.message };
+
+    const { data: remaining } = await supabase
+      .from('projects')
+      .select('id')
+      .order('order_index', { ascending: true })
+      .order('created_at', { ascending: true });
+
+    if (remaining && remaining.length > 0) {
+      for (let i = 0; i < remaining.length; i++) {
+        await supabase
+          .from('projects')
+          .update({ order_index: i })
+          .eq('id', remaining[i].id);
+      }
+    }
+
     return { success: true };
   } catch (error) {
     return {
