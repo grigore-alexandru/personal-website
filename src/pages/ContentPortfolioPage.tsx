@@ -183,18 +183,12 @@ export function ContentPortfolioPage() {
 // xl (1280px): 3 cols (~426px wide) -> 1.77 ratio
 // 2xl (1536px): 4 cols (~384px wide) -> 1.6 ratio (Perfect)
 
-// New Grid Layout Strategy:
-  // 1. Mobile: 1 flexible column taking 100% width.
-  // 2. Breakpoints: We explicitly define exactly how many columns to use AND their exact pixel width.
-  // 3. justify-between: Forces the columns to the edges and turns leftover horizontal space into a dynamic gap.
-  // 4. gap-y-6: Keeps vertical spacing fixed so the rows stay consistent.
-  const gridClasses = "grid justify-between gap-y-6 sm:auto-rows-[240px] grid-flow-row-dense " +
-                      "grid-cols-1 " +                                     // Mobile (<640px): Full width
-                      "sm:grid-cols-[280px_280px] " +                      // Tablet (640px+): 2 fixed cols
-                      "md:grid-cols-[340px_340px] " +                      // Large Tablet (768px+): 2 wider fixed cols
-                      "lg:grid-cols-[300px_300px_300px] " +                // Small Desktop (1024px+): 3 fixed cols
-                      "xl:grid-cols-[360px_360px_360px] " +                // Standard Desktop (1280px+): 3 wider fixed cols
-                      "2xl:grid-cols-[360px_360px_360px_360px]";           // Ultra Wide (1536px+): 4 fixed cols
+const gridClasses = "grid justify-center sm:justify-between gap-y-10 sm:auto-rows-[240px] grid-flow-row-dense " +
+                    "grid-cols-1 " +                                       // Mobile: 1 flexible column
+                    "sm:grid-cols-[repeat(2,300px)] " +                   // Tablet: 2 cols of 300px
+                    "lg:grid-cols-[repeat(3,300px)] " +                   // Small Desktop: 3 cols of 300px
+                    "xl:grid-cols-[repeat(3,360px)] " +                   // Desktop: 3 cols of 360px (Perfect 16:10)
+                    "2xl:grid-cols-[repeat(4,340px)]";                    // Ultra-wide: 4 cols of 340px
 
   return (
     <div className="min-h-screen bg-white">
