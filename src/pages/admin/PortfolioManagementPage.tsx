@@ -226,50 +226,53 @@ export function PortfolioManagementPage() {
     const currentDraggedId = draggedId;
     const currentSelected = new Set(selectedIds);
 
+    setDraggedId(null);
+    setDragOverId(null);
+
     if (!currentDraggedId) return;
 
-    const idsToMove = currentSelected.size > 0 ? [...currentSelected] : [currentDraggedId];
+    const idsToMove = new Set(currentSelected.size > 0 ? [...currentSelected] : [currentDraggedId]);
 
-    if (idsToMove.length === 1 && idsToMove[0] === targetId) {
-      setDraggedId(null);
-      setDragOverId(null);
-      return;
-    }
+    if (idsToMove.size === 1 && idsToMove.has(targetId)) return;
 
-    const targetIndex = filteredProjects.findIndex((p) => p.id === targetId);
-    if (targetIndex === -1) return;
+    if (idsToMove.has(targetId)) return;
 
-    const movingItems = filteredProjects.filter((p) => idsToMove.includes(p.id));
-    const stationaryItems = filteredProjects.filter((p) => !idsToMove.includes(p.id));
+    // filteredProjects is sorted descending by order_index (index 0 = highest = top of visual list).
+    // We work entirely in this visual order: index 0 is the top card.
+    const visualList = [...filteredProjects];
 
+    const targetVisualIdx = visualList.findIndex((p) => p.id === targetId);
+    if (targetVisualIdx === -1) return;
+
+    // Separate into moving and stationary, preserving their relative visual order.
+    const movingItems = visualList.filter((p) => idsToMove.has(p.id));
+    const stationaryItems = visualList.filter((p) => !idsToMove.has(p.id));
+
+    // Find where the target sits in the stationary list.
     const targetInStationary = stationaryItems.findIndex((p) => p.id === targetId);
+    // Target is always stationary (we guard idsToMove.has(targetId) above),
+    // so targetInStationary is always >= 0 here.
 
-    let insertIndex: number;
-    if (targetInStationary === -1) {
-      insertIndex = stationaryItems.length;
-    } else {
-      const draggedPivot = filteredProjects.findIndex((p) => p.id === currentDraggedId);
-      insertIndex = draggedPivot < targetIndex ? targetInStationary + 1 : targetInStationary;
-    }
-
-    const newOrder = [
-      ...stationaryItems.slice(0, insertIndex),
+    // Insert the moving group *before* the target in the stationary list.
+    const newVisualOrder = [
+      ...stationaryItems.slice(0, targetInStationary),
       ...movingItems,
-      ...stationaryItems.slice(insertIndex),
+      ...stationaryItems.slice(targetInStationary),
     ];
 
-    const updatedItems = newOrder.map((item, index) => ({
+    // Re-assign order_index: the list is displayed descending, so the item at
+    // visual position 0 gets the highest order_index (= total - 1).
+    const total = newVisualOrder.length;
+    const updatedItems = newVisualOrder.map((item, visualIdx) => ({
       ...item,
-      order_index: index,
+      order_index: total - 1 - visualIdx,
     }));
 
+    // Optimistic update
     setProjects((prev) => {
-      const updated = [...prev];
-      updatedItems.forEach((item) => {
-        const idx = updated.findIndex((p) => p.id === item.id);
-        if (idx !== -1) updated[idx] = item;
-      });
-      return updated;
+      const map = new Map(prev.map((p) => [p.id, p]));
+      updatedItems.forEach((item) => map.set(item.id, item));
+      return [...map.values()];
     });
 
     const orderUpdates = updatedItems.map((item) => ({
@@ -282,12 +285,9 @@ export function PortfolioManagementPage() {
       showToast('error', result.error || 'Failed to update order');
       loadData();
     } else {
-      const count = idsToMove.length;
+      const count = idsToMove.size;
       showToast('success', count > 1 ? `Moved ${count} projects` : 'Project order updated');
     }
-
-    setDraggedId(null);
-    setDragOverId(null);
   };
 
   const handleDragEnd = () => {
