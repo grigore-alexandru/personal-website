@@ -185,7 +185,7 @@ export function ContentPortfolioPage() {
 
 const gridClasses = "grid justify-between gap-y-10 grid-flow-row-dense " +
                       "grid-cols-1 auto-rows-auto " +                      // Mobile: 1 col, natural height
-                      "sm:grid-cols-[repeat(2,280px)] sm:auto-rows-[175px] " + // Tablet: 280/175 = 1.6
+                      "sm:grid-cols-[repeat(3,280px)] sm:auto-rows-[175px] " + // Tablet: 280/175 = 1.6
                       "lg:grid-cols-[repeat(3,300px)] lg:auto-rows-[187px] " + // Lg Tablet: 300/187 ≈ 1.6
                       "xl:grid-cols-[repeat(3,384px)] xl:auto-rows-[240px] " + // Desktop: 384/240 = 1.6 (Perfect)
                       "2xl:grid-cols-[repeat(4,352px)] 2xl:auto-rows-[220px]"; // 2XL: 352/220 = 1.6
