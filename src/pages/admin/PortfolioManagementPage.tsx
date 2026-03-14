@@ -69,25 +69,6 @@ export function PortfolioManagementPage() {
     loadData();
   }, []);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setSelectedIds(new Set());
-        return;
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
-        if (isFiltered) return;
-        const activeEl = document.activeElement as HTMLElement | null;
-        const isInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT');
-        if (isInput) return;
-        e.preventDefault();
-        setSelectedIds(new Set(filteredProjects.map((p) => p.id)));
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFiltered, filteredProjects]);
-
   const loadData = async () => {
     setLoading(true);
     const types = await loadProjectTypes();
@@ -138,6 +119,25 @@ export function PortfolioManagementPage() {
       })
       .sort((a, b) => b.order_index - a.order_index);
   }, [projects, activeFilter, typeFilter, searchQuery]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedIds(new Set());
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+        if (isFiltered) return;
+        const activeEl = document.activeElement as HTMLElement | null;
+        const isInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT');
+        if (isInput) return;
+        e.preventDefault();
+        setSelectedIds(new Set(filteredProjects.map((p) => p.id)));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFiltered, filteredProjects]);
 
   const handleEdit = (projectId: string) => {
     navigate(`/admin/portfolio/project/edit/${projectId}`);
