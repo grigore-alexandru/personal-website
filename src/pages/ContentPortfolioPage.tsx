@@ -185,7 +185,7 @@ export function ContentPortfolioPage() {
 
 const gridClasses = "grid justify-center sm:justify-between gap-y-10 sm:auto-rows-[240px] grid-flow-row-dense " +
                     "grid-cols-1 " +                                       // Mobile: 1 flexible column
-                    "sm:grid-cols-[repeat(2,400px)] " +                   // Tablet: 2 cols of 300px
+                    "sm:grid-cols-[repeat(2,350px)] " +                   // Tablet: 2 cols of 300px
                     "lg:grid-cols-[repeat(3,300px)] " +                   // Small Desktop: 3 cols of 300px
                     "xl:grid-cols-[repeat(3,360px)] " +                   // Desktop: 3 cols of 360px (Perfect 16:10)
                     "2xl:grid-cols-[repeat(4,340px)]";                    // Ultra-wide: 4 cols of 340px
