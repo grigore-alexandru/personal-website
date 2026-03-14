@@ -183,12 +183,12 @@ export function ContentPortfolioPage() {
 // xl (1280px): 3 cols (~426px wide) -> 1.77 ratio
 // 2xl (1536px): 4 cols (~384px wide) -> 1.6 ratio (Perfect)
 
-const gridClasses = "grid justify-center sm:justify-between gap-y-10 sm:auto-rows-[240px] grid-flow-row-dense " +
-                    "grid-cols-1 " +                                       // Mobile: 1 flexible column
-                    "sm:grid-cols-[repeat(2,350px)] " +                   // Tablet: 2 cols of 300px
-                    "lg:grid-cols-[repeat(3,300px)] " +                   // Small Desktop: 3 cols of 300px
-                    "xl:grid-cols-[repeat(3,360px)] " +                   // Desktop: 3 cols of 360px (Perfect 16:10)
-                    "2xl:grid-cols-[repeat(4,340px)]";                    // Ultra-wide: 4 cols of 340px
+const gridClasses = "grid justify-between gap-y-10 grid-flow-row-dense " +
+                      "grid-cols-1 auto-rows-auto " +                      // Mobile: 1 col, natural height
+                      "sm:grid-cols-[repeat(2,280px)] sm:auto-rows-[175px] " + // Tablet: 280/175 = 1.6
+                      "lg:grid-cols-[repeat(3,300px)] lg:auto-rows-[187px] " + // Lg Tablet: 300/187 ≈ 1.6
+                      "xl:grid-cols-[repeat(3,384px)] xl:auto-rows-[240px] " + // Desktop: 384/240 = 1.6 (Perfect)
+                      "2xl:grid-cols-[repeat(4,352px)] 2xl:auto-rows-[220px]"; // 2XL: 352/220 = 1.6
 
   return (
     <div className="min-h-screen bg-white">
