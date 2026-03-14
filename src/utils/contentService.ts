@@ -22,6 +22,15 @@ export async function createContent(
   data: ContentData
 ): Promise<{ success: boolean; data?: Content; error?: string }> {
   try {
+    const { data: maxResult } = await supabase
+      .from('content')
+      .select('order_index')
+      .order('order_index', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const nextIndex = (maxResult?.order_index ?? -1) + 1;
+
     const { data: result, error } = await supabase
       .from('content')
       .insert({
@@ -34,7 +43,7 @@ export async function createContent(
         format: data.format || 'landscape',
         thumbnail: data.thumbnail || null,
         is_draft: data.is_draft ?? true,
-        order_index: data.order_index ?? 0,
+        order_index: nextIndex,
         contributors: data.contributors || null,
         published_at: data.published_at || null,
       })
@@ -239,6 +248,22 @@ export async function deleteContent(
 
     const { error } = await supabase.from('content').delete().eq('id', contentId);
     if (error) return { success: false, error: error.message };
+
+    const { data: remaining } = await supabase
+      .from('content')
+      .select('id')
+      .order('order_index', { ascending: true })
+      .order('created_at', { ascending: true });
+
+    if (remaining && remaining.length > 0) {
+      for (let i = 0; i < remaining.length; i++) {
+        await supabase
+          .from('content')
+          .update({ order_index: i })
+          .eq('id', remaining[i].id);
+      }
+    }
+
     return { success: true };
   } catch (error) {
     return {
