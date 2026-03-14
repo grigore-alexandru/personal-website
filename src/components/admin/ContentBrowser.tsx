@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Check, Film, ImageIcon, Loader2, Folder } from 'lucide-react';
+import { X, Check, Film, Image as ImageIcon, Loader2, Folder } from 'lucide-react';
 import { SearchBar } from '../ui/SearchBar';
 import { Content } from '../../types';
 import { loadContentWithProjects } from '../../utils/contentService';
@@ -131,7 +131,7 @@ export function ContentBrowser({ open, onClose, onSelect, excludeIds }: ContentB
                       isSelected
                         ? 'border-black ring-2 ring-black/20'
                         : 'border-neutral-200 hover:border-neutral-400'
-                    } ${!hasProjects ? 'opacity-50 grayscale-[30%]' : ''}`}
+                    } ${hasProjects ? 'opacity-50 grayscale-[30%]' : ''}`}
                   >
                     <div className="aspect-video bg-neutral-100 relative">
                       {previewUrl ? (
