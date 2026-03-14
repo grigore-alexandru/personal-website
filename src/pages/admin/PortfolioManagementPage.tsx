@@ -69,6 +69,25 @@ export function PortfolioManagementPage() {
     loadData();
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedIds(new Set());
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+        if (isFiltered) return;
+        const activeEl = document.activeElement as HTMLElement | null;
+        const isInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT');
+        if (isInput) return;
+        e.preventDefault();
+        setSelectedIds(new Set(filteredProjects.map((p) => p.id)));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFiltered, filteredProjects]);
+
   const loadData = async () => {
     setLoading(true);
     const types = await loadProjectTypes();
@@ -550,16 +569,19 @@ export function PortfolioManagementPage() {
           className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 bg-gray-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-gray-700"
           style={{ animation: 'slideUp 0.2s ease-out' }}
         >
-          <span className="text-sm font-semibold text-gray-200">
-            {selectedIds.size} selected
+          <span className="text-sm font-semibold">
+            {selectedIds.size} {selectedIds.size === 1 ? 'project' : 'projects'} selected
           </span>
           <div className="w-px h-5 bg-gray-600" />
+          <span className="text-xs text-gray-500 hidden sm:inline">Drag to reorder</span>
+          <div className="w-px h-5 bg-gray-600 hidden sm:block" />
           <button
             onClick={() => setSelectedIds(new Set())}
             className="text-sm font-medium text-gray-400 hover:text-white transition-colors"
           >
-            Deselect
+            Clear
           </button>
+          <kbd className="hidden sm:inline text-xs bg-gray-700 text-gray-400 px-1.5 py-0.5 rounded border border-gray-600">Esc</kbd>
         </div>
       )}
 
