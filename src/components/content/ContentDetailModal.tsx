@@ -1,5 +1,5 @@
-import { useEffect, useState, useRef } from 'react';
-import { X, Maximize } from 'lucide-react';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { X, Maximize, Link } from 'lucide-react';
 import YouTube from 'react-youtube';
 import { ContentWithProject } from '../../types';
 import { designTokens } from '../../styles/tokens';
@@ -50,6 +50,9 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
   const [iframeLoading, setIframeLoading] = useState(true);
   const [iframeError, setIframeError] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [naturalAspectRatio, setNaturalAspectRatio] = useState<number | null>(null);
+  const [showCopied, setShowCopied] = useState(false);
+  const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -57,11 +60,46 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
   const isPortrait = content.format === 'portrait';
   const isYoutube = !isImage && (content.platform === 'youtube' || content.url.includes('youtube.com') || content.url.includes('youtu.be'));
   const isVimeo = !isImage && !isYoutube && (content.platform === 'vimeo' || content.url.includes('vimeo.com'));
+  const isDirectFile = !isYoutube && !isVimeo;
 
   const youtubeDetails = isYoutube ? getYoutubeDetails(content.url) : { videoId: null, start: undefined };
   const vimeoUrl = isVimeo ? getVimeoEmbedUrl(content.url) : content.url;
 
   const year = content.published_at ? new Date(content.published_at).getFullYear() : null;
+
+  useEffect(() => {
+    if (!isDirectFile) return;
+    if (isImage) {
+      const img = new Image();
+      img.onload = () => {
+        if (img.naturalWidth && img.naturalHeight) {
+          setNaturalAspectRatio(img.naturalWidth / img.naturalHeight);
+        }
+      };
+      img.src = content.url;
+    }
+  }, [content.url, isImage, isDirectFile]);
+
+  const handleVideoMetadata = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
+    const video = e.currentTarget;
+    if (video.videoWidth && video.videoHeight) {
+      setNaturalAspectRatio(video.videoWidth / video.videoHeight);
+    }
+  }, []);
+
+  const handleShare = useCallback(() => {
+    const shareUrl = window.location.href;
+    navigator.clipboard.writeText(shareUrl).catch(() => {});
+    setShowCopied(true);
+    if (copiedTimeoutRef.current) clearTimeout(copiedTimeoutRef.current);
+    copiedTimeoutRef.current = setTimeout(() => setShowCopied(false), 2200);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimeoutRef.current) clearTimeout(copiedTimeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -122,7 +160,7 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
         /* 4. Strictly enforced max-height using calc() to guarantee it never overflows the viewport */
         className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[calc(100vh-2rem)] md:max-h-[calc(100vh-4rem)] overflow-hidden animate-scaleIn flex flex-col relative"
       >
-        {/* 5. Header is now explicitly flex-shrink-0 instead of sticky. 
+        {/* 5. Header is now explicitly flex-shrink-0 instead of sticky.
                This completely prevents the scrollable content from ever overlapping it. */}
         <div className="flex-shrink-0 z-10 flex items-center justify-between p-5 md:p-6 border-b border-gray-200 bg-white shadow-sm">
           <div>
@@ -131,13 +169,43 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
               <p className="text-sm text-gray-500 font-medium">{year}</p>
             )}
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0 ml-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-            aria-label="Close modal"
-          >
-            <X className="w-5 h-5 text-gray-600" />
-          </button>
+          <div className="flex items-center gap-1 flex-shrink-0 ml-4 relative">
+            <button
+              onClick={handleShare}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              aria-label="Copy link to clipboard"
+            >
+              <Link className="w-5 h-5 text-gray-600" />
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              aria-label="Close modal"
+            >
+              <X className="w-5 h-5 text-gray-600" />
+            </button>
+            {showCopied && (
+              <div className="absolute top-full right-0 mt-2 animate-copiedFadeIn z-50">
+                <div
+                  className="flex items-center gap-2 px-4 py-2.5 bg-white rounded-lg text-sm font-medium text-gray-800 whitespace-nowrap"
+                  style={{
+                    boxShadow: designTokens.shadows.lifted,
+                    border: `1px solid ${designTokens.colors.neutral[200]}`,
+                  }}
+                >
+                  <span
+                    className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: designTokens.colors.success[500] }}
+                  >
+                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                      <path d="M1 4l2.5 2.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                  Link copied to clipboard
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* 6. The scrollable content is now natively isolated from the header */}
@@ -145,11 +213,17 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
           <div className="p-5 md:p-8 space-y-8">
             <div
               className="relative bg-gray-100 rounded-lg overflow-hidden animate-slideIn mx-auto shadow-inner"
-              style={{
-                aspectRatio: isPortrait ? '9/16' : '16/9',
-                // Slightly tweaked the portrait width constraint so it doesn't look too massive on desktop
-                maxWidth: isPortrait ? '320px' : '100%',
-              }}
+              style={
+                isDirectFile && naturalAspectRatio !== null
+                  ? {
+                      aspectRatio: String(naturalAspectRatio),
+                      maxWidth: naturalAspectRatio < 1 ? '320px' : '100%',
+                    }
+                  : {
+                      aspectRatio: isPortrait ? '9/16' : '16/9',
+                      maxWidth: isPortrait ? '320px' : '100%',
+                    }
+              }
             >
               {isImage ? (
                 <>
@@ -167,6 +241,14 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
                     <Maximize className="w-5 h-5 text-white" />
                   </button>
                 </>
+              ) : isDirectFile ? (
+                <video
+                  src={content.url}
+                  className="w-full h-full object-contain bg-black"
+                  controls
+                  onLoadedMetadata={handleVideoMetadata}
+                  onError={() => setIframeError(true)}
+                />
               ) : (
                 <div className="w-full h-full relative">
                   {iframeLoading && !iframeError && (
@@ -328,6 +410,25 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
           }
         }
 
+        @keyframes copiedFadeIn {
+          0% {
+            opacity: 0;
+            transform: translateY(-6px) scale(0.96);
+          }
+          15% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+          80% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(-4px) scale(0.97);
+          }
+        }
+
         .animate-fadeIn {
           animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -340,6 +441,10 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
         .animate-slideIn {
           animation: slideInContent 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s forwards;
           opacity: 0;
+        }
+
+        .animate-copiedFadeIn {
+          animation: copiedFadeIn 2.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
       `}</style>
     </div>
