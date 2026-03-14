@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, DragEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Sparkles, Save, Trash2, AlertCircle, Loader2, Image as ImageIcon, Video, UploadCloud } from 'lucide-react';
 import { AdminLayout } from '../../../components/admin/AdminLayout';
@@ -97,6 +97,30 @@ interface ProjectOption {
   typeName: string;
 }
 
+function titleFromFileName(fileName: string): string {
+  const withoutExt = fileName.replace(/\.[^/.]+$/, '');
+  return withoutExt
+    .replace(/[-_. ]+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function loadImageDimensions(file: File): Promise<{ width: number; height: number }> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve({ width: img.naturalWidth, height: img.naturalHeight });
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Failed to load image dimensions'));
+    };
+    img.src = url;
+  });
+}
+
 export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
   const navigate = useNavigate();
   const { contentId } = useParams<{ contentId: string }>();
@@ -114,6 +138,7 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
   const [isUploadingMainImage, setIsUploadingMainImage] = useState(false);
   const [uploadStage, setUploadStage] = useState('');
   const [originalProjectId, setOriginalProjectId] = useState<string | null>(null);
+  const [isDraggingMain, setIsDraggingMain] = useState(false);
 
   const thumbnailInputRef  = useRef<HTMLInputElement>(null);
   const mainImageInputRef  = useRef<HTMLInputElement>(null);
@@ -222,6 +247,18 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
     setFormData({ ...formData, slug: slugify(formData.title) });
   };
 
+  const applyFileNameMeta = (file: File) => {
+    setFormData((prev) => {
+      if (prev.title.trim()) return prev;
+      const derived = titleFromFileName(file.name);
+      return {
+        ...prev,
+        title: derived,
+        slug: prev.slug.trim() ? prev.slug : slugify(derived),
+      };
+    });
+  };
+
   const deducePlatformFromUrl = (url: string): typeof formData.platform => {
     if (!url) return '';
     const lower = url.toLowerCase();
@@ -254,16 +291,25 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
     }
   };
 
-  const handleThumbnailFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processFile = async (file: File) => {
     const isVideoFile = ALLOWED_VIDEO_MIME.includes(file.type);
     const isImageFile = ALLOWED_IMAGE_MIME.includes(file.type);
 
     if (!isVideoFile && !isImageFile) {
       showToast('error', 'Invalid file type. Upload an image (JPEG, PNG, WebP) or video (MP4, WebM, MOV).');
       return;
+    }
+
+    applyFileNameMeta(file);
+
+    if (isImageFile) {
+      try {
+        const { width, height } = await loadImageDimensions(file);
+        const detected: 'portrait' | 'landscape' = height > width ? 'portrait' : 'landscape';
+        setFormData((prev) => ({ ...prev, format: detected }));
+      } catch {
+        // silently ignore dimension detection failure
+      }
     }
 
     await clearExistingThumbnail(formData.thumbnail);
@@ -310,28 +356,48 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
     }
   };
 
+  const handleThumbnailFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await processFile(file);
+  };
+
   const handleReplaceThumbnail = async () => {
     await clearExistingThumbnail(formData.thumbnail);
     setFormData((prev) => ({ ...prev, thumbnail: null }));
     thumbnailInputRef.current?.click();
   };
 
-  const handleMainImageFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processMainImageFile = async (file: File) => {
     if (!ALLOWED_IMAGE_MIME.includes(file.type)) {
       showToast('error', 'Invalid file type. Please upload a JPEG, PNG, or WebP image.');
       return;
+    }
+
+    applyFileNameMeta(file);
+
+    try {
+      const { width, height } = await loadImageDimensions(file);
+      const detected: 'portrait' | 'landscape' = height > width ? 'portrait' : 'landscape';
+      setFormData((prev) => ({ ...prev, format: detected }));
+    } catch {
+      // silently ignore dimension detection failure
     }
 
     setIsUploadingMainImage(true);
     setUploadStage('Processing main image...');
 
     try {
+      const currentFormat = await new Promise<'portrait' | 'landscape'>((resolve) => {
+        setFormData((prev) => {
+          resolve(prev.format);
+          return prev;
+        });
+      });
+
       const [mainResult, thumbResult] = await Promise.all([
         uploadContentMainImage(file, (stage) => setUploadStage(`Main: ${stage}`)),
-        processAndUploadContentPoster(file, formData.format === 'portrait', (stage) =>
+        processAndUploadContentPoster(file, currentFormat === 'portrait', (stage) =>
           setUploadStage(`Thumbnail: ${stage}`)
         ),
       ]);
@@ -350,6 +416,30 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
       setUploadStage('');
       if (mainImageInputRef.current) mainImageInputRef.current.value = '';
     }
+  };
+
+  const handleMainImageFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await processMainImageFile(file);
+  };
+
+  const handleMainDragOver = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (!isUploadingMainImage) setIsDraggingMain(true);
+  };
+
+  const handleMainDragLeave = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDraggingMain(false);
+  };
+
+  const handleMainDrop = async (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDraggingMain(false);
+    if (isUploadingMainImage) return;
+    const file = e.dataTransfer.files?.[0];
+    if (file) await processMainImageFile(file);
   };
 
   const addContributor = () => {
@@ -735,6 +825,7 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
                     inputRef={thumbnailInputRef}
                     accept={[...ALLOWED_IMAGE_MIME, ...ALLOWED_VIDEO_MIME].join(',')}
                     onFileSelect={handleThumbnailFileSelect}
+                    onFileDrop={processFile}
                     onReplace={handleReplaceThumbnail}
                     hint="Image (JPEG, PNG, WebP) or Video clip (MP4, WebM, MOV)"
                   />
@@ -768,7 +859,19 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
                     Upload one image. A high-res version is saved as the main URL and a compressed thumbnail is auto-generated for the grid.
                   </p>
                   {!formData.url ? (
-                    <div>
+                    <div
+                      onDragOver={handleMainDragOver}
+                      onDragLeave={handleMainDragLeave}
+                      onDrop={handleMainDrop}
+                      onClick={() => !isUploadingMainImage && mainImageInputRef.current?.click()}
+                      className={`w-full border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer
+                        ${isDraggingMain
+                          ? 'border-black bg-gray-50'
+                          : 'border-gray-300 hover:border-black'
+                        }
+                        ${isUploadingMainImage ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}
+                      `}
+                    >
                       <input
                         ref={mainImageInputRef}
                         type="file"
@@ -776,25 +879,20 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
                         onChange={handleMainImageFileSelect}
                         className="hidden"
                       />
-                      <button
-                        type="button"
-                        onClick={() => mainImageInputRef.current?.click()}
-                        disabled={isUploadingMainImage}
-                        className="w-full border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isUploadingMainImage ? (
-                          <div className="flex flex-col items-center gap-2">
-                            <Loader2 size={32} className="animate-spin text-gray-400" />
-                            <p className="text-sm text-gray-600">{uploadStage}</p>
-                          </div>
-                        ) : (
-                          <div className="flex flex-col items-center gap-2">
-                            <UploadCloud size={32} className="text-gray-400" />
-                            <p className="text-sm font-medium text-gray-700">Click to upload image</p>
-                            <p className="text-xs text-gray-500">JPEG, PNG, or WebP — thumbnail auto-generated</p>
-                          </div>
-                        )}
-                      </button>
+                      {isUploadingMainImage ? (
+                        <div className="flex flex-col items-center gap-2">
+                          <Loader2 size={32} className="animate-spin text-gray-400" />
+                          <p className="text-sm text-gray-600">{uploadStage}</p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-2">
+                          <UploadCloud size={32} className={isDraggingMain ? 'text-black' : 'text-gray-400'} />
+                          <p className="text-sm font-medium text-gray-700">
+                            {isDraggingMain ? 'Drop to upload' : 'Click or drag and drop to upload'}
+                          </p>
+                          <p className="text-xs text-gray-500">JPEG, PNG, or WebP — thumbnail auto-generated</p>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -836,6 +934,26 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
                       message={validationErrors.find((e) => e.field === 'thumbnail')!.message}
                     />
                   )}
+                </div>
+
+                {/* Separate thumbnail for image type */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Thumbnail</label>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Upload an image or short video clip for an animated hover preview.
+                  </p>
+                  <ThumbnailUploadZone
+                    thumbnail={formData.thumbnail}
+                    posterUrl={posterUrl}
+                    isUploading={isUploadingThumbnail}
+                    uploadStage={uploadStage}
+                    inputRef={thumbnailInputRef}
+                    accept={[...ALLOWED_IMAGE_MIME, ...ALLOWED_VIDEO_MIME].join(',')}
+                    onFileSelect={handleThumbnailFileSelect}
+                    onFileDrop={processFile}
+                    onReplace={handleReplaceThumbnail}
+                    hint="Image (JPEG, PNG, WebP) or Video clip (MP4, WebM, MOV)"
+                  />
                 </div>
               </div>
             </section>
@@ -962,6 +1080,7 @@ interface ThumbnailUploadZoneProps {
   inputRef: React.RefObject<HTMLInputElement>;
   accept: string;
   onFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onFileDrop: (file: File) => void;
   onReplace: () => void;
   hint: string;
 }
@@ -974,9 +1093,30 @@ function ThumbnailUploadZone({
   inputRef,
   accept,
   onFileSelect,
+  onFileDrop,
   onReplace,
   hint,
 }: ThumbnailUploadZoneProps) {
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (!isUploading) setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (isUploading) return;
+    const file = e.dataTransfer.files?.[0];
+    if (file) onFileDrop(file);
+  };
+
   if (!thumbnail) {
     return (
       <div>
@@ -987,11 +1127,15 @@ function ThumbnailUploadZone({
           onChange={onFileSelect}
           className="hidden"
         />
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          disabled={isUploading}
-          className="w-full border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={() => !isUploading && inputRef.current?.click()}
+          className={`w-full border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer
+            ${isDragging ? 'border-black bg-gray-50' : 'border-gray-300 hover:border-black'}
+            ${isUploading ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}
+          `}
         >
           {isUploading ? (
             <div className="flex flex-col items-center gap-2">
@@ -1000,12 +1144,14 @@ function ThumbnailUploadZone({
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2">
-              <UploadCloud size={32} className="text-gray-400" />
-              <p className="text-sm font-medium text-gray-700">Click to upload thumbnail</p>
+              <UploadCloud size={32} className={isDragging ? 'text-black' : 'text-gray-400'} />
+              <p className="text-sm font-medium text-gray-700">
+                {isDragging ? 'Drop to upload' : 'Click or drag and drop to upload'}
+              </p>
               <p className="text-xs text-gray-500">{hint}</p>
             </div>
           )}
-        </button>
+        </div>
       </div>
     );
   }
