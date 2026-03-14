@@ -17,7 +17,7 @@ export async function loadAllPublishedContent(): Promise<ContentWithProject[]> {
       )
     `)
     .eq('is_draft', false)
-    .order('order_index', { ascending: true })
+    .order('order_index', { ascending: false })
     .order('created_at', { ascending: false });
 
   if (error) {

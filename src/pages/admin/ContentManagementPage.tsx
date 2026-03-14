@@ -89,7 +89,7 @@ export function ContentManagementPage() {
         const q = searchQuery.toLowerCase();
         return c.title.toLowerCase().includes(q);
       })
-      .sort((a, b) => a.order_index - b.order_index);
+      .sort((a, b) => b.order_index - a.order_index);
   }, [content, activeFilter, typeFilter, searchQuery]);
 
   const handleEdit = (contentId: string) => {

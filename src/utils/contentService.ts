@@ -144,7 +144,7 @@ export async function loadAllContentForAdmin(): Promise<Content[]> {
   const { data, error } = await supabase
     .from('content')
     .select('*, content_type:content_types(*)')
-    .order('order_index', { ascending: true })
+    .order('order_index', { ascending: false })
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -405,7 +405,7 @@ export async function loadPublishedContentWithProjects(
     .from('content')
     .select('*, content_type:content_types(*)')
     .eq('is_draft', false)
-    .order('order_index', { ascending: true })
+    .order('order_index', { ascending: false })
     .range(offset, offset + limit - 1);
 
   if (contentError) {
