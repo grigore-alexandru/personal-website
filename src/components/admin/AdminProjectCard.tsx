@@ -109,12 +109,6 @@ export function AdminProjectCard({
 
         <div className="flex-1 p-5 pt-12 md:pt-5">
           <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
-            {isSelected && !isDragging && (
-              <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center shadow flex-shrink-0">
-                <Check size={11} className="text-white" strokeWidth={3} />
-              </div>
-            )}
-
             <span
               className={`inline-flex px-3 py-1 rounded-full text-xs font-bold ${
                 project.is_draft
@@ -174,6 +168,11 @@ export function AdminProjectCard({
                     alt={project.title}
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
                   />
+                  {isSelected && !isDragging && (
+                    <div className="absolute top-2 left-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-md z-10">
+                      <Check size={13} className="text-white" strokeWidth={3} />
+                    </div>
+                  )}
                 </div>
               </div>
             )}
