@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CreditCard as Edit, MoreVertical, Loader2, Video, Image as ImageIcon, GripVertical } from 'lucide-react';
+import { CreditCard as Edit, MoreVertical, Loader2, Video, Image as ImageIcon, GripVertical, Check } from 'lucide-react';
 import { designTokens } from '../../styles/tokens';
 import { ProgressiveImage } from '../ui/ProgressiveImage';
 
@@ -19,11 +19,17 @@ interface AdminContentCardProps {
   onToggleStatus: (contentId: string, currentIsDraft: boolean) => Promise<void>;
   onDelete: (contentId: string) => void;
   onDragStart: (e: React.DragEvent, contentId: string) => void;
-  onDragOver: (e: React.DragEvent) => void;
+  onDragOver: (e: React.DragEvent, targetId: string) => void;
   onDrop: (e: React.DragEvent, targetId: string) => void;
   onDragEnd: () => void;
+  onCardClick?: (e: React.MouseEvent, contentId: string) => void;
   isDragging?: boolean;
   isDragOver?: boolean;
+  isSelected?: boolean;
+  isDraggingActive?: boolean;
+  dragCount?: number;
+  isPivot?: boolean;
+  cardRef?: (el: HTMLElement | null) => void;
 }
 
 export function AdminContentCard({
@@ -35,8 +41,14 @@ export function AdminContentCard({
   onDragOver,
   onDrop,
   onDragEnd,
+  onCardClick,
   isDragging,
   isDragOver,
+  isSelected,
+  isDraggingActive,
+  dragCount = 0,
+  isPivot,
+  cardRef,
 }: AdminContentCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
@@ -54,22 +66,50 @@ export function AdminContentCard({
   const thumbnailUrl = content.thumbnail?.poster ?? null;
   const isVideo = content.type_name?.toLowerCase() === 'video';
 
+  const isGhosted = isDraggingActive && !isDragging && !isDragOver;
+
   return (
     <article
+      ref={cardRef}
       draggable
       onDragStart={(e) => onDragStart(e, content.id)}
-      onDragOver={onDragOver}
+      onDragOver={(e) => onDragOver(e, content.id)}
       onDrop={(e) => onDrop(e, content.id)}
       onDragEnd={onDragEnd}
-      className={`relative bg-white border rounded-lg overflow-hidden transition-all duration-300 group cursor-move flex flex-col h-full ${
-        isDragging ? 'opacity-50 scale-95' : ''
-      } ${isDragOver ? 'border-black border-2 bg-gray-50' : 'border-gray-200 hover:shadow-lg hover:border-gray-300'}`}
+      onClick={(e) => onCardClick?.(e, content.id)}
+      className={`relative bg-white border rounded-lg overflow-hidden transition-all duration-200 group cursor-move flex flex-col h-full ${
+        isDragging ? 'opacity-40 scale-95 shadow-none' : ''
+      } ${
+        isDragOver
+          ? 'border-blue-500 border-2 bg-blue-50 shadow-lg shadow-blue-100'
+          : isSelected
+          ? 'border-blue-500 border-2 shadow-md shadow-blue-100'
+          : 'border-gray-200 hover:shadow-lg hover:border-gray-300'
+      } ${isGhosted ? 'opacity-40' : ''}`}
     >
-      <div className="absolute top-2 left-2 z-10">
-        <div className="bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs font-bold">
-          #{content.order_index}
+      {isSelected && !isDragging && (
+        <div className="absolute top-2 left-2 z-20">
+          <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center shadow">
+            <Check size={11} className="text-white" strokeWidth={3} />
+          </div>
         </div>
-      </div>
+      )}
+
+      {!isSelected && (
+        <div className="absolute top-2 left-2 z-10">
+          <div className="bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs font-bold">
+            #{content.order_index}
+          </div>
+        </div>
+      )}
+
+      {isPivot && dragCount > 1 && (
+        <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+          <div className="bg-blue-600 text-white text-sm font-bold px-3 py-1.5 rounded-full shadow-lg">
+            Moving {dragCount}
+          </div>
+        </div>
+      )}
 
       <div className="absolute top-2 right-2 z-10 flex items-center gap-2">
         <span
@@ -154,9 +194,9 @@ export function AdminContentCard({
       <div className="flex-1 flex flex-col p-3">
         <div className="flex items-center gap-1.5 mb-2">
           {isVideo ? (
-            <Video size={14} className="text-purple-600 flex-shrink-0" />
+            <Video size={14} className="text-gray-500 flex-shrink-0" />
           ) : (
-            <ImageIcon size={14} className="text-blue-600 flex-shrink-0" />
+            <ImageIcon size={14} className="text-gray-500 flex-shrink-0" />
           )}
           <h3
             className="font-bold text-gray-900 truncate"
@@ -178,14 +218,17 @@ export function AdminContentCard({
             {content.format}
           </span>
           {content.platform && (
-            <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-medium capitalize whitespace-nowrap">
+            <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-medium capitalize whitespace-nowrap">
               {content.platform}
             </span>
           )}
         </div>
 
         <button
-          onClick={() => onEdit(content.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(content.id);
+          }}
           className="w-full mt-auto inline-flex items-center justify-center gap-1.5 px-2 py-1.5 text-white bg-black font-medium rounded hover:bg-gray-800 transition-colors duration-200 text-xs"
         >
           <Edit size={12} />
