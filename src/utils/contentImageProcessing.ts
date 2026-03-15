@@ -4,7 +4,7 @@ const CONTENT_MEDIA_BUCKET = 'content-media';
 const MAX_FILE_SIZE = 7 * 1024 * 1024;
 const POSTER_MAX_WIDTH_LANDSCAPE = 480;
 const POSTER_MAX_WIDTH_PORTRAIT = 480;
-const POSTER_QUALITY = 0.80;
+const POSTER_QUALITY = 0.60;
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
 
 export interface ProcessedContentImages {
