@@ -46,6 +46,14 @@ export function BulkUploadPage() {
   }, []);
 
   useEffect(() => {
+    return () => {
+      items.forEach((item) => {
+        if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
+      });
+    };
+  }, []);
+
+  useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
       if (hasStaged) {
         e.preventDefault();
@@ -207,6 +215,17 @@ export function BulkUploadPage() {
     setPhase('uploading');
   };
 
+  const handleViewFailures = useCallback(() => {
+    const failedIds = items
+      .filter((i) => i.status === 'error')
+      .map((i) => i.localId);
+    if (failedIds.length === 0) return;
+    setSelection({
+      activeId: failedIds[0],
+      selectedIds: new Set(failedIds),
+    });
+  }, [items]);
+
   const activeItem = items.find((i) => i.localId === selection.activeId) ?? null;
   const selectedCount = selection.selectedIds.size;
   const pendingCount = items.filter((i) => i.status === 'pending').length;
@@ -357,6 +376,8 @@ export function BulkUploadPage() {
                   )
                 }
                 onDone={() => showToast('success', 'Bulk upload complete')}
+                onViewFailures={handleViewFailures}
+                onGoToContent={() => navigate('/admin/content')}
                 showToast={showToast}
               />
             )}
