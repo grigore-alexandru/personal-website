@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Loader2, X, Eye, EyeOff } from 'lucide-react';
+import { Plus, Loader2, X, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { AdminLayout } from '../../components/admin/AdminLayout';
 import { AdminContentCard } from '../../components/admin/AdminContentCard';
@@ -116,6 +116,27 @@ export function ContentManagementPage() {
       .sort((a, b) => b.order_index - a.order_index);
   }, [content, activeFilter, typeFilter, searchQuery]);
 
+  const isFiltered = activeFilter !== 'all' || typeFilter !== 'all' || searchQuery.trim() !== '';
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedIds(new Set());
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+        if (isFiltered) return;
+        const activeEl = document.activeElement as HTMLElement | null;
+        const isInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT');
+        if (isInput) return;
+        e.preventDefault();
+        setSelectedIds(new Set(filteredContent.map((c) => c.id)));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFiltered, filteredContent]);
+
   const handleEdit = (contentId: string) => {
     navigate(`/admin/content/edit/${contentId}`);
   };
@@ -163,6 +184,7 @@ export function ContentManagementPage() {
   };
 
   const handleCardClick = useCallback((e: React.MouseEvent, contentId: string) => {
+    if (isFiltered) return;
     const isMulti = e.ctrlKey || e.metaKey;
     if (isMulti) {
       setSelectedIds((prev) => {
@@ -177,22 +199,22 @@ export function ContentManagementPage() {
     } else {
       setSelectedIds(new Set([contentId]));
     }
-  }, []);
+  }, [isFiltered]);
 
   const handleDragStart = (e: React.DragEvent, contentId: string) => {
+    if (isFiltered) return;
     if (!selectedIds.has(contentId)) {
       setSelectedIds(new Set([contentId]));
     }
-
     setDraggedId(contentId);
     isDraggingRef.current = true;
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/html', contentId);
-
     startAutoScroll();
   };
 
   const handleDragOver = (e: React.DragEvent, targetId: string) => {
+    if (isFiltered) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     setDragOverId(targetId);
@@ -203,55 +225,48 @@ export function ContentManagementPage() {
     e.preventDefault();
     stopAutoScroll();
 
+    if (isFiltered) return;
+
     const currentDraggedId = draggedId;
     const currentSelected = new Set(selectedIds);
 
+    setDraggedId(null);
+    setDragOverId(null);
+
     if (!currentDraggedId) return;
 
-    const idsToMove = currentSelected.size > 0 ? [...currentSelected] : [currentDraggedId];
+    const idsToMove = new Set(currentSelected.size > 0 ? [...currentSelected] : [currentDraggedId]);
 
-    if (idsToMove.length === 1 && idsToMove[0] === targetId) {
-      setDraggedId(null);
-      setDragOverId(null);
-      return;
-    }
+    if (idsToMove.size === 1 && idsToMove.has(targetId)) return;
 
-    const targetIndex = filteredContent.findIndex((c) => c.id === targetId);
-    if (targetIndex === -1) return;
+    if (idsToMove.has(targetId)) return;
 
-    const movingItems = filteredContent.filter((c) => idsToMove.includes(c.id));
-    const stationaryItems = filteredContent.filter((c) => !idsToMove.includes(c.id));
+    const visualList = [...filteredContent];
+
+    const targetVisualIdx = visualList.findIndex((c) => c.id === targetId);
+    if (targetVisualIdx === -1) return;
+
+    const movingItems = visualList.filter((c) => idsToMove.has(c.id));
+    const stationaryItems = visualList.filter((c) => !idsToMove.has(c.id));
 
     const targetInStationary = stationaryItems.findIndex((c) => c.id === targetId);
 
-    let insertIndex: number;
-    if (targetInStationary === -1) {
-      insertIndex = stationaryItems.length;
-    } else {
-      const draggedPivot = filteredContent.findIndex((c) => c.id === currentDraggedId);
-      insertIndex = draggedPivot < targetIndex ? targetInStationary + 1 : targetInStationary;
-    }
-
-    const newOrder = [
-      ...stationaryItems.slice(0, insertIndex),
+    const newVisualOrder = [
+      ...stationaryItems.slice(0, targetInStationary),
       ...movingItems,
-      ...stationaryItems.slice(insertIndex),
+      ...stationaryItems.slice(targetInStationary),
     ];
 
-    const updatedItems = newOrder.map((item, index) => ({
+    const total = newVisualOrder.length;
+    const updatedItems = newVisualOrder.map((item, visualIdx) => ({
       ...item,
-      order_index: index,
+      order_index: total - 1 - visualIdx,
     }));
 
     setContent((prev) => {
-      const updated = [...prev];
-      updatedItems.forEach((item) => {
-        const idx = updated.findIndex((c) => c.id === item.id);
-        if (idx !== -1) {
-          updated[idx] = item;
-        }
-      });
-      return updated;
+      const map = new Map(prev.map((c) => [c.id, c]));
+      updatedItems.forEach((item) => map.set(item.id, item));
+      return [...map.values()];
     });
 
     const orderUpdates = updatedItems.map((item) => ({
@@ -264,12 +279,9 @@ export function ContentManagementPage() {
       showToast('error', result.error || 'Failed to update order');
       loadData();
     } else {
-      const count = idsToMove.length;
+      const count = idsToMove.size;
       showToast('success', count > 1 ? `Moved ${count} items` : 'Content order updated');
     }
-
-    setDraggedId(null);
-    setDragOverId(null);
   };
 
   const handleDragEnd = () => {
@@ -340,6 +352,7 @@ export function ContentManagementPage() {
   );
 
   const handleGridMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isFiltered) return;
     const target = e.target as HTMLElement;
     const isCard = target.closest('article');
     if (isCard) return;
@@ -506,6 +519,13 @@ export function ContentManagementPage() {
           )}
         </div>
       </div>
+
+      {isFiltered && (
+        <div className="mb-4 flex items-center gap-2 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+          <AlertCircle size={16} className="flex-shrink-0" />
+          <span>Clear filters to enable drag-and-drop reordering</span>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
