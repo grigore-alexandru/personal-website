@@ -114,11 +114,11 @@ Deno.serve(async (req: Request) => {
     return new Response(null, { status: 200, headers: corsHeaders });
   }
 
-  const accessKey = Deno.env.get("MEGA_S4_ACCESS_KEY");
-  const secretKey = Deno.env.get("MEGA_S4_SECRET_KEY");
-  const endpoint = Deno.env.get("MEGA_S4_ENDPOINT") ?? "https://s3.eu-central-1.s4.mega.io";
-  const region = Deno.env.get("MEGA_S4_REGION") ?? "eu-central-1";
-  const accountId = Deno.env.get("MEGA_S4_ACCOUNT_ID") ?? "";
+  const accessKey = Deno.env.get("VITE_MEGA_S4_ACCESS_KEY") ?? Deno.env.get("MEGA_S4_ACCESS_KEY");
+  const secretKey = Deno.env.get("VITE_MEGA_S4_SECRET_KEY") ?? Deno.env.get("MEGA_S4_SECRET_KEY");
+  const endpoint = Deno.env.get("VITE_MEGA_S4_ENDPOINT") ?? Deno.env.get("MEGA_S4_ENDPOINT") ?? "https://s3.eu-central-1.s4.mega.io";
+  const region = Deno.env.get("VITE_MEGA_S4_REGION") ?? Deno.env.get("MEGA_S4_REGION") ?? "eu-central-1";
+  const accountId = Deno.env.get("VITE_MEGA_S4_ACCOUNT_ID") ?? Deno.env.get("MEGA_S4_ACCOUNT_ID") ?? "";
 
   if (!accessKey || !secretKey) {
     return jsonError("Storage credentials not configured", 500);
