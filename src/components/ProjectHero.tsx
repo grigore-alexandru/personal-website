@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { designTokens } from '../styles/tokens';
-import MetaTriplet from './MetaTriplet';
 
 interface ProjectHeroProps {
   bgUrl: string;
@@ -11,8 +10,10 @@ interface ProjectHeroProps {
 }
 
 const ProjectHero: React.FC<ProjectHeroProps> = ({ bgUrl, title, type, client, date }) => {
-  const [scrollY, setScrollY] = useState(0);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const bgRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number>(0);
+  const scrollYRef = useRef(0);
 
   useEffect(() => {
     const img = new Image();
@@ -22,39 +23,48 @@ const ProjectHero: React.FC<ProjectHeroProps> = ({ bgUrl, title, type, client, d
   }, [bgUrl]);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
+    const onScroll = () => {
+      scrollYRef.current = window.scrollY;
+      if (!rafRef.current) {
+        rafRef.current = requestAnimationFrame(() => {
+          if (bgRef.current) {
+            bgRef.current.style.transform = `translateY(${scrollYRef.current * 0.4}px)`;
+          }
+          rafRef.current = 0;
+        });
+      }
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, []);
 
   return (
     <section className="relative h-screen overflow-hidden">
-      {/* Parallax Background */}
+      {!imageLoaded && (
+        <div className="absolute inset-0 bg-gray-200 animate-pulse" />
+      )}
+
       <div
+        ref={bgRef}
         className={`absolute inset-0 bg-cover bg-center transition-opacity duration-500 ${
           imageLoaded ? 'opacity-100' : 'opacity-0'
         }`}
         style={{
           backgroundImage: `url("${bgUrl}")`,
-          transform: `translateY(${scrollY * 0.5}px)`,
-          scale: '1.1',
+          scale: '1.15',
+          willChange: 'transform',
         }}
       />
 
-      {!imageLoaded && (
-        <div className="absolute inset-0 bg-gray-200 animate-pulse" />
-      )}
-      
-      {/* Overlay */}
       <div className="absolute inset-0 bg-black bg-opacity-40" />
-      
-      {/* Content */}
+
       <div className="relative z-10 h-full flex items-center justify-center text-center px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl w-full">
-          <h1 
+          <h1
             className="text-white font-bold mb-6 sm:mb-8 animate-fade-in-up text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl leading-tight"
             style={{
               fontFamily: designTokens.typography.fontFamily,
@@ -65,11 +75,10 @@ const ProjectHero: React.FC<ProjectHeroProps> = ({ bgUrl, title, type, client, d
           >
             {title}
           </h1>
-          
-          {/* Project Meta Details */}
+
           <div className="animate-fade-in-up px-4" style={{ animationDelay: '0.2s' }}>
             <div className="inline-flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3 sm:gap-4 md:gap-6 px-4 sm:px-6 py-3 sm:py-4 bg-black/30 backdrop-blur-sm rounded-2xl sm:rounded-full border border-white/20 max-w-full">
-              <span 
+              <span
                 className="uppercase font-medium text-white/90 text-xs sm:text-sm whitespace-nowrap"
                 style={{
                   fontFamily: designTokens.typography.fontFamily,
@@ -79,10 +88,10 @@ const ProjectHero: React.FC<ProjectHeroProps> = ({ bgUrl, title, type, client, d
               >
                 {type}
               </span>
-              
+
               <span className="text-white/40 hidden sm:inline">•</span>
-              
-              <span 
+
+              <span
                 className="uppercase font-medium text-white/90 text-xs sm:text-sm whitespace-nowrap"
                 style={{
                   fontFamily: designTokens.typography.fontFamily,
@@ -92,10 +101,10 @@ const ProjectHero: React.FC<ProjectHeroProps> = ({ bgUrl, title, type, client, d
               >
                 {client}
               </span>
-              
+
               <span className="text-white/40 hidden sm:inline">•</span>
-              
-              <span 
+
+              <span
                 className="uppercase font-medium text-white/90 text-xs sm:text-sm whitespace-nowrap"
                 style={{
                   fontFamily: designTokens.typography.fontFamily,
