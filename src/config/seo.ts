@@ -1,5 +1,5 @@
 export const SITE_NAME = 'Silviu-Alexandru Grigore';
-export const SITE_URL = 'https://sweet-vacherin-65bc21.netlify.app/';
+export const SITE_URL = 'https://sweet-vacherin-65bc21.netlify.app';
 export const SITE_DESCRIPTION =
   'Award-winning video production studio specializing in cinematic storytelling. Explore a portfolio of advertisements, documentaries, and commercial productions.';
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.jpg`;
