@@ -5,7 +5,7 @@ import { X, Film, Users } from 'lucide-react';
 import { SearchBar } from '../components/ui/SearchBar';
 import { ContentWithProject } from '../types';
 import { loadPublishedContentWithProjects, countPublishedContent, loadContentBySlug } from '../utils/contentService';
-import { loadAllClients } from '../utils/portfolioService';
+import { loadAllClients, loadProjectTypes } from '../utils/portfolioService';
 import { ContentGridItem } from '../components/ContentGridItem';
 import { ContentGridItemSkeleton } from '../components/ui/SkeletonLoader';
 import Header from '../components/Header';
@@ -38,6 +38,9 @@ export function ContentPortfolioPage() {
   const [clientOptions, setClientOptions] = useState<{ value: string; label: string }[]>([
     { value: 'all', label: 'All Clients' },
   ]);
+  const [typeOptions, setTypeOptions] = useState<{ value: string; label: string }[]>([
+    { value: 'all', label: 'All Types' },
+  ]);
 
   // Track which item indexes have finished loading their poster image
   const [loadedSet, setLoadedSet] = useState<Set<number>>(new Set());
@@ -58,6 +61,12 @@ export function ContentPortfolioPage() {
       setClientOptions([
         { value: 'all', label: 'All Clients' },
         ...clients.map(c => ({ value: c, label: c })),
+      ]);
+    });
+    loadProjectTypes().then(types => {
+      setTypeOptions([
+        { value: 'all', label: 'All Types' },
+        ...types.map(t => ({ value: t.name, label: t.name })),
       ]);
     });
   }, []);
@@ -166,18 +175,6 @@ export function ContentPortfolioPage() {
 
     return () => { cancelled = true; };
   }, [slug, content, navigate, modalContent]);
-
-  const typeOptions = useMemo(() => {
-    const types = new Set<string>();
-    content.forEach((item) => {
-      if (item.project_info?.project_type_name) types.add(item.project_info.project_type_name);
-    });
-    return [
-      { value: 'all', label: 'All Types' },
-      ...Array.from(types).sort().map(t => ({ value: t, label: t })),
-    ];
-  }, [content]);
-
 
   const filteredContent = useMemo(() => {
     return content.filter((item) => {

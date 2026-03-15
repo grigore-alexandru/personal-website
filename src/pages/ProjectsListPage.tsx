@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Film, Users } from 'lucide-react';
+import { X, Film, Users } from 'lucide-react';
 import { SearchBar } from '../components/ui/SearchBar';
 import { Project, ProjectType } from '../types';
 import { loadProjects, countProjects } from '../utils/dataLoader';
@@ -161,8 +161,8 @@ const ProjectsListPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <section className="max-w-4xl mx-auto px-6 pt-24 pb-8">
-        <div className="flex flex-col sm:flex-row gap-3 mb-8">
+      <main className="max-w-screen-xl mx-auto px-6 pt-12 pb-16">
+        <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
@@ -190,22 +190,24 @@ const ProjectsListPage: React.FC = () => {
         </div>
 
         {hasActiveFilters && (
-          <div className="mb-6 flex justify-end">
+          <div className="mb-6 flex items-center justify-between">
+            <p
+              className="text-neutral-500"
+              style={{ fontFamily: designTokens.typography.fontFamily, fontSize: '14px' }}
+            >
+              Showing {filteredProjects.length} of {projects.length} items
+            </p>
             <button
               onClick={clearFilters}
-              className="text-sm text-gray-600 hover:text-black underline"
-              style={{
-                fontFamily: designTokens.typography.fontFamily,
-                fontSize: designTokens.typography.sizes.sm,
-              }}
+              className="flex items-center gap-1.5 text-neutral-500 hover:text-neutral-900 transition-colors duration-150"
+              style={{ fontFamily: designTokens.typography.fontFamily, fontSize: '14px' }}
             >
+              <X size={14} />
               Clear filters
             </button>
           </div>
         )}
-      </section>
 
-      <section className="pb-16">
         <ProjectGrid
           projects={filteredProjects}
           initialLoading={initialLoading}
@@ -215,7 +217,7 @@ const ProjectsListPage: React.FC = () => {
           onImageLoad={handleImageLoad}
           observerTarget={!searchQuery.trim() && typeFilter === 'all' && clientFilter === 'all' ? observerTarget : undefined}
         />
-      </section>
+      </main>
     </div>
   );
 };
