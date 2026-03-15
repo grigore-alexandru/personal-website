@@ -213,10 +213,18 @@ export const MetricsSkeleton: React.FC = () => (
 );
 
 export const GallerySkeleton: React.FC = () => (
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-6xl mx-auto px-8 py-12">
-    {[...Array(4)].map((_, i) => (
-      <Skeleton key={i} className="w-full" style={{ aspectRatio: '16/10' }} />
-    ))}
+  <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <Skeleton height={30} width="30%" className="mb-8" />
+    <div className="relative overflow-hidden rounded-lg skeleton-shimmer" style={{ aspectRatio: '16 / 9' }} />
+    <div className="mt-5 text-center">
+      <Skeleton height={18} width="40%" className="mx-auto mb-2" />
+      <Skeleton height={14} width="60%" className="mx-auto" />
+    </div>
+    <div className="flex justify-center mt-4 gap-2">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="w-2 h-2 rounded-full skeleton-shimmer" />
+      ))}
+    </div>
   </div>
 );
 
