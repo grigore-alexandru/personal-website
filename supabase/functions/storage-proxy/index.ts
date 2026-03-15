@@ -19,17 +19,26 @@ function getMegaS4PublicUrl(endpoint: string, accountId: string, bucket: string,
   return `${base}/${accountId}/${bucket}/${encodedKey}`;
 }
 
-async function buildAuthHeader(accessKey: string, secretKey: string, region: string, bucket: string, key: string, contentType: string, bodyHash: string, date: Date): Promise<string> {
+async function buildAuthHeader(
+  accessKey: string,
+  secretKey: string,
+  region: string,
+  host: string,
+  canonicalPath: string,
+  contentType: string,
+  bodyHash: string,
+  date: Date
+): Promise<string> {
   const amzDate = date.toISOString().replace(/[:\-]|\.\d{3}/g, "").slice(0, 15) + "Z";
   const dateStamp = amzDate.slice(0, 8);
   const credentialScope = `${dateStamp}/${region}/s3/aws4_request`;
 
-  const canonicalHeaders = `content-type:${contentType}\nhost:${new URL(`https://s3.${region}.s4.mega.io`).host}\nx-amz-content-sha256:${bodyHash}\nx-amz-date:${amzDate}\n`;
+  const canonicalHeaders = `content-type:${contentType}\nhost:${host}\nx-amz-content-sha256:${bodyHash}\nx-amz-date:${amzDate}\n`;
   const signedHeaders = "content-type;host;x-amz-content-sha256;x-amz-date";
 
   const canonicalRequest = [
     "PUT",
-    `/${bucket}/${key}`,
+    canonicalPath,
     "",
     canonicalHeaders,
     signedHeaders,
@@ -68,16 +77,23 @@ async function buildAuthHeader(accessKey: string, secretKey: string, region: str
   return `AWS4-HMAC-SHA256 Credential=${accessKey}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
 }
 
-async function buildDeleteAuthHeader(accessKey: string, secretKey: string, region: string, bucket: string, key: string, date: Date): Promise<string> {
+async function buildDeleteAuthHeader(
+  accessKey: string,
+  secretKey: string,
+  region: string,
+  host: string,
+  canonicalPath: string,
+  date: Date
+): Promise<string> {
   const amzDate = date.toISOString().replace(/[:\-]|\.\d{3}/g, "").slice(0, 15) + "Z";
   const dateStamp = amzDate.slice(0, 8);
   const credentialScope = `${dateStamp}/${region}/s3/aws4_request`;
   const emptyHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
-  const canonicalHeaders = `host:${new URL(`https://s3.${region}.s4.mega.io`).host}\nx-amz-content-sha256:${emptyHash}\nx-amz-date:${amzDate}\n`;
+  const canonicalHeaders = `host:${host}\nx-amz-content-sha256:${emptyHash}\nx-amz-date:${amzDate}\n`;
   const signedHeaders = "host;x-amz-content-sha256;x-amz-date";
 
-  const canonicalRequest = ["DELETE", `/${bucket}/${key}`, "", canonicalHeaders, signedHeaders, emptyHash].join("\n");
+  const canonicalRequest = ["DELETE", canonicalPath, "", canonicalHeaders, signedHeaders, emptyHash].join("\n");
 
   const encoder = new TextEncoder();
   const hash = async (data: Uint8Array): Promise<string> => {
@@ -114,15 +130,18 @@ Deno.serve(async (req: Request) => {
     return new Response(null, { status: 200, headers: corsHeaders });
   }
 
-  const accessKey = Deno.env.get("VITE_MEGA_S4_ACCESS_KEY") ?? Deno.env.get("MEGA_S4_ACCESS_KEY");
-  const secretKey = Deno.env.get("VITE_MEGA_S4_SECRET_KEY") ?? Deno.env.get("MEGA_S4_SECRET_KEY");
-  const endpoint = Deno.env.get("VITE_MEGA_S4_ENDPOINT") ?? Deno.env.get("MEGA_S4_ENDPOINT") ?? "https://s3.eu-central-1.s4.mega.io";
-  const region = Deno.env.get("VITE_MEGA_S4_REGION") ?? Deno.env.get("MEGA_S4_REGION") ?? "eu-central-1";
-  const accountId = Deno.env.get("VITE_MEGA_S4_ACCOUNT_ID") ?? Deno.env.get("MEGA_S4_ACCOUNT_ID") ?? "";
+  const accessKey = Deno.env.get("MEGA_S4_ACCESS_KEY");
+  const secretKey = Deno.env.get("MEGA_S4_SECRET_KEY");
+  const endpoint = Deno.env.get("MEGA_S4_ENDPOINT") ?? "https://s3.eu-central-1.s4.mega.io";
+  const region = Deno.env.get("MEGA_S4_REGION") ?? "eu-central-1";
+  const accountId = Deno.env.get("MEGA_S4_ACCOUNT_ID") ?? "";
 
   if (!accessKey || !secretKey) {
     return jsonError("Storage credentials not configured", 500);
   }
+
+  const endpointBase = endpoint.replace(/\/$/, "");
+  const host = new URL(endpointBase).host;
 
   try {
     if (req.method === "POST") {
@@ -148,9 +167,10 @@ Deno.serve(async (req: Request) => {
       const now = new Date();
       const amzDate = now.toISOString().replace(/[:\-]|\.\d{3}/g, "").slice(0, 15) + "Z";
 
-      const authHeader = await buildAuthHeader(accessKey, secretKey, region, bucket, key, contentType, bodyHash, now);
+      const canonicalPath = `/${accountId}/${bucket}/${key}`;
+      const s3Url = `${endpointBase}/${accountId}/${bucket}/${key}`;
 
-      const s3Url = `${endpoint.replace(/\/$/, "")}/${bucket}/${key}`;
+      const authHeader = await buildAuthHeader(accessKey, secretKey, region, host, canonicalPath, contentType, bodyHash, now);
 
       const s3Response = await fetch(s3Url, {
         method: "PUT",
@@ -188,9 +208,10 @@ Deno.serve(async (req: Request) => {
       const amzDate = now.toISOString().replace(/[:\-]|\.\d{3}/g, "").slice(0, 15) + "Z";
       const emptyHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
-      const authHeader = await buildDeleteAuthHeader(accessKey, secretKey, region, bucket, key, now);
+      const canonicalPath = `/${accountId}/${bucket}/${key}`;
+      const s3Url = `${endpointBase}/${accountId}/${bucket}/${key}`;
 
-      const s3Url = `${endpoint.replace(/\/$/, "")}/${bucket}/${key}`;
+      const authHeader = await buildDeleteAuthHeader(accessKey, secretKey, region, host, canonicalPath, now);
 
       const s3Response = await fetch(s3Url, {
         method: "DELETE",
