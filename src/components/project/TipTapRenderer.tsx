@@ -1,10 +1,39 @@
 import React from 'react';
+import DOMPurify from 'dompurify';
 import { generateHTML } from '@tiptap/html';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
 import { TipTapContent } from '../../types';
 import { designTokens } from '../../styles/tokens';
+
+const TIPTAP_SANITIZE_CONFIG: DOMPurify.Config = {
+  ALLOWED_TAGS: [
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'p', 'strong', 'em', 'ul', 'ol', 'li',
+    'a', 'br', 'img', 'blockquote', 'code', 'pre',
+  ],
+  ALLOWED_ATTR: ['href', 'rel', 'target', 'src', 'alt', 'width', 'height'],
+  ALLOW_DATA_ATTR: false,
+  FORCE_BODY: false,
+};
+
+DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+  if (node.tagName === 'A') {
+    const href = node.getAttribute('href') ?? '';
+    if (!/^https?:\/\//i.test(href)) {
+      node.removeAttribute('href');
+    }
+    node.setAttribute('rel', 'noopener noreferrer');
+    node.setAttribute('target', '_blank');
+  }
+  if (node.tagName === 'IMG') {
+    const src = node.getAttribute('src') ?? '';
+    if (!/^https?:\/\//i.test(src) && !src.startsWith('/')) {
+      node.removeAttribute('src');
+    }
+  }
+});
 
 interface TipTapRendererProps {
   content: TipTapContent;
@@ -31,10 +60,12 @@ const TipTapRenderer: React.FC<TipTapRendererProps> = ({ content, className = ''
         }),
       ]);
 
+      const safeHtml = DOMPurify.sanitize(html, TIPTAP_SANITIZE_CONFIG) as string;
+
       return (
         <div
           className={`tiptap-rendered ${className}`}
-          dangerouslySetInnerHTML={{ __html: html }}
+          dangerouslySetInnerHTML={{ __html: safeHtml }}
         />
       );
     } catch {

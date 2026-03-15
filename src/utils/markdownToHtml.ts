@@ -1,3 +1,24 @@
+import DOMPurify from 'dompurify';
+
+const SANITIZE_CONFIG: DOMPurify.Config = {
+  ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'strong', 'em', 'ul', 'ol', 'li', 'a', 'br'],
+  ALLOWED_ATTR: ['href', 'rel', 'target'],
+  ALLOW_DATA_ATTR: false,
+  FORCE_BODY: false,
+  HOOKS_AFTER_SANITIZE_ATTRIBUTES: undefined,
+};
+
+DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+  if (node.tagName === 'A') {
+    const href = node.getAttribute('href') ?? '';
+    if (!/^https?:\/\//i.test(href)) {
+      node.removeAttribute('href');
+    }
+    node.setAttribute('rel', 'noopener noreferrer');
+    node.setAttribute('target', '_blank');
+  }
+});
+
 export function markdownToHtml(markdown: string): string {
   let html = markdown;
 
@@ -22,5 +43,5 @@ export function markdownToHtml(markdown: string): string {
   html = html.replace(/<p><ul>/g, '<ul>');
   html = html.replace(/<\/ul><\/p>/g, '</ul>');
 
-  return html;
+  return DOMPurify.sanitize(html, SANITIZE_CONFIG) as string;
 }
