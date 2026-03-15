@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Film, Users } from 'lucide-react';
+import SEO from '../components/SEO';
+import { SITE_URL } from '../config/seo';
 import { SearchBar } from '../components/ui/SearchBar';
 import { Project, ProjectType } from '../types';
 import { loadProjects, countProjects } from '../utils/dataLoader';
@@ -161,6 +163,11 @@ const ProjectsListPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEO
+        title="Projects"
+        description="Browse all projects — commercial campaigns, documentary films, and brand storytelling."
+        canonicalUrl={`${SITE_URL}/portfolio/projects`}
+      />
       <main className="max-w-screen-xl mx-auto px-6 pt-12 pb-16">
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <SearchBar

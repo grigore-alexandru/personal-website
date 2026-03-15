@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import SEO from '../components/SEO';
+import { SITE_URL } from '../config/seo';
 import { useUrlFilter, useClearUrlFilters } from '../hooks/useUrlFilters';
 import { X, Film, Users } from 'lucide-react';
 import { SearchBar } from '../components/ui/SearchBar';
@@ -222,8 +224,57 @@ export function ContentPortfolioPage() {
 
   const gridClasses = "fluid-grid";
 
+  const seoProps = useMemo(() => {
+    if (modalContent) {
+      const thumbnail =
+        modalContent.thumbnail && 'poster' in modalContent.thumbnail
+          ? modalContent.thumbnail.poster
+          : undefined;
+      const isVideo = modalContent.content_type?.slug === 'video';
+      const structuredData = isVideo
+        ? {
+            '@context': 'https://schema.org',
+            '@type': 'VideoObject',
+            name: modalContent.title,
+            description: modalContent.caption ?? undefined,
+            thumbnailUrl: thumbnail,
+            url: modalContent.url,
+            uploadDate: modalContent.published_at ?? modalContent.created_at,
+          }
+        : {
+            '@context': 'https://schema.org',
+            '@type': 'ImageObject',
+            name: modalContent.title,
+            description: modalContent.caption ?? undefined,
+            contentUrl: modalContent.url,
+            thumbnailUrl: thumbnail,
+          };
+      return {
+        title: modalContent.title,
+        description: modalContent.caption ?? undefined,
+        canonicalUrl: `${SITE_URL}/portfolio/content/${modalContent.slug}`,
+        ogType: isVideo ? 'video.other' : 'website',
+        ogImage: thumbnail,
+        structuredData,
+      };
+    }
+    return {
+      title: 'Content Portfolio',
+      description: 'Browse the full content portfolio — videos, photos, and productions across clients and formats.',
+      canonicalUrl: `${SITE_URL}/portfolio/content`,
+      structuredData: {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Content Portfolio',
+        description: 'A curated collection of video and photo productions.',
+        url: `${SITE_URL}/portfolio/content`,
+      },
+    };
+  }, [modalContent]);
+
   return (
     <div className="min-h-screen bg-white">
+      <SEO {...seoProps} />
       <Header />
 
       {/* Adjust pt-12 to lower spacing above the search bar */}

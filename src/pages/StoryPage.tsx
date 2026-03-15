@@ -1,6 +1,8 @@
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import { designTokens } from '../styles/tokens';
+import SEO from '../components/SEO';
+import { SITE_URL } from '../config/seo';
 
 // ─── Reusable primitives ──────────────────────────────────────────────────────
 
@@ -349,6 +351,11 @@ const StoryPage: React.FC = () => {
       className="min-h-screen bg-white"
       style={{ fontFamily: designTokens.typography.fontFamily }}
     >
+      <SEO
+        title="Our Story"
+        description="Learn the story behind Cinematic Studio — our philosophy, our craft, and the people who bring it to life."
+        canonicalUrl={`${SITE_URL}/story`}
+      />
       {/* ── HERO ──────────────────────────────────────────────────────────── */}
       <HeroSection />
 

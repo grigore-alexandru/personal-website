@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { designTokens } from '../styles/tokens';
 import { Button } from '../components/forms/Button';
+import SEO from '../components/SEO';
+import { SITE_URL } from '../config/seo';
 
 type HoveredPanel = 'left' | 'right' | null;
 
@@ -120,6 +122,11 @@ const PortfolioLandingPage: React.FC = () => {
 
   return (
     <div className="relative w-full overflow-hidden" style={{ height: 'calc(100vh - 80px)' }}>
+      <SEO
+        title="Portfolio"
+        description="Explore the full portfolio of projects and content — from brand commercials to documentary films."
+        canonicalUrl={`${SITE_URL}/portfolio`}
+      />
       <div
         className="grid gap-4 p-4 h-full md:gap-6 md:p-6 animate-fade-in"
         style={{

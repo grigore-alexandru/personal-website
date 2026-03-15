@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Calendar, X } from 'lucide-react';
+import SEO from '../components/SEO';
+import { SITE_URL } from '../config/seo';
 import { SearchBar } from '../components/ui/SearchBar';
 import { useUrlFilter, useClearUrlFilters } from '../hooks/useUrlFilters';
 import { BlogPost, loadAllPosts, countAllPosts } from '../utils/blogLoader';
@@ -124,6 +126,11 @@ const BlogListPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEO
+        title="Blog"
+        description="Articles, insights, and behind-the-scenes stories from the studio."
+        canonicalUrl={`${SITE_URL}/blog`}
+      />
       <section className="max-w-4xl mx-auto px-6 pt-24 pb-8">
         <div className="flex flex-col sm:flex-row gap-3 mb-8">
           <SearchBar

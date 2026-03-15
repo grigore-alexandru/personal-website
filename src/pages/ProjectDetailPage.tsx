@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Project } from '../types';
+import SEO from '../components/SEO';
+import { SITE_URL } from '../config/seo';
 import { loadProject, loadProjects } from '../utils/dataLoader';
 import { designTokens } from '../styles/tokens';
 import ProjectHero from '../components/ProjectHero';
@@ -85,6 +87,22 @@ const ProjectDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white pb-20">
+      <SEO
+        title={project.title}
+        description={`${project.project_type.name} project for ${project.client_name}.`}
+        canonicalUrl={`${SITE_URL}/portfolio/project/${project.slug}`}
+        ogType="article"
+        ogImage={project.hero_image_large}
+        structuredData={{
+          '@context': 'https://schema.org',
+          '@type': 'CreativeWork',
+          name: project.title,
+          description: `${project.project_type.name} project for ${project.client_name}.`,
+          image: project.hero_image_large,
+          url: `${SITE_URL}/portfolio/project/${project.slug}`,
+          creator: { '@type': 'Organization', name: 'Cinematic Studio' },
+        }}
+      />
       <ProjectHero
         bgUrl={project.hero_image_large}
         title={project.title}

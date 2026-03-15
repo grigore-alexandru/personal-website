@@ -2,6 +2,8 @@ import React, { useRef } from 'react';
 import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import { ArrowRight, Camera, Film, Star, Mail, Zap, Heart } from 'lucide-react';
 import { Button } from '../components/forms/Button';
+import SEO from '../components/SEO';
+import { SITE_URL } from '../config/seo';
 
 const FadeIn: React.FC<{ children?: React.ReactNode; delay?: number; className?: string }> = ({
   children,
@@ -425,6 +427,11 @@ const Contact = () => (
 export default function HomePage() {
   return (
     <div className="bg-surface text-display overflow-hidden selection:bg-accent selection:text-white">
+      <SEO
+        title="Cinematic Studio"
+        description="Award-winning video production studio specializing in cinematic storytelling. Explore a portfolio of advertisements, documentaries, and commercial productions."
+        canonicalUrl={SITE_URL}
+      />
       <Hero />
       <Manifesto />
       <Story />

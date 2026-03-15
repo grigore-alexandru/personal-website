@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { loadPost, BlogPost } from '../utils/blogLoader';
+import SEO from '../components/SEO';
+import { SITE_URL } from '../config/seo';
 import { designTokens } from '../styles/tokens';
 import { generateHTML } from '@tiptap/html';
 import StarterKit from '@tiptap/starter-kit';
@@ -106,6 +108,23 @@ const BlogPostPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEO
+        title={post.title}
+        description={post.excerpt || undefined}
+        canonicalUrl={`${SITE_URL}/blog/${post.slug}`}
+        ogType="article"
+        ogImage={post.heroImageLarge ?? undefined}
+        structuredData={{
+          '@context': 'https://schema.org',
+          '@type': 'BlogPosting',
+          headline: post.title,
+          description: post.excerpt || undefined,
+          image: post.heroImageLarge ?? undefined,
+          url: `${SITE_URL}/blog/${post.slug}`,
+          datePublished: post.publishedAt,
+          author: { '@type': 'Organization', name: 'Cinematic Studio' },
+        }}
+      />
       {/* Back Button */}
       {showBackButton && (
         <Link
