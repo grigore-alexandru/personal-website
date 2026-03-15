@@ -1,4 +1,4 @@
-export const SITE_NAME = 'Cinematic Studio';
+export const SITE_NAME = 'Silviu-Alexandru Grigore';
 export const SITE_URL = 'https://yoursite.com';
 export const SITE_DESCRIPTION =
   'Award-winning video production studio specializing in cinematic storytelling. Explore a portfolio of advertisements, documentaries, and commercial productions.';
