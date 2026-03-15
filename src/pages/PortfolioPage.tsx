@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Film } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Film, Users } from 'lucide-react';
 import { SearchBar } from '../components/ui/SearchBar';
 import { Project, Filter, ProjectType } from '../types';
 import { loadProjects } from '../utils/dataLoader';
@@ -7,13 +7,16 @@ import { loadProjectTypes } from '../utils/portfolioService';
 import CustomDropdown from '../components/forms/CustomDropdown';
 import MasonryGrid from '../components/MasonryGrid';
 import { designTokens } from '../styles/tokens';
+import { useUrlFilter, useClearUrlFilters } from '../hooks/useUrlFilters';
+import { X } from 'lucide-react';
 
 const PortfolioPage: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useUrlFilter('q', '');
   const [loading, setLoading] = useState(true);
-  const [typeFilter, setTypeFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useUrlFilter('type', 'all');
+  const [clientFilter, setClientFilter] = useUrlFilter('client', 'all');
   const [typeOptions, setTypeOptions] = useState<{ value: string; label: string }[]>([
     { value: 'all', label: 'All Types' },
   ]);
@@ -46,6 +49,15 @@ const PortfolioPage: React.FC = () => {
     fetchData();
   }, []);
 
+  const clientOptions = useMemo(() => {
+    const clients = new Set<string>();
+    projects.forEach(p => { if (p.client_name) clients.add(p.client_name); });
+    return [
+      { value: 'all', label: 'All Clients' },
+      ...Array.from(clients).sort().map(c => ({ value: c, label: c })),
+    ];
+  }, [projects]);
+
   useEffect(() => {
     let filtered = projects;
 
@@ -64,15 +76,18 @@ const PortfolioPage: React.FC = () => {
       );
     }
 
+    if (clientFilter !== 'all') {
+      filtered = filtered.filter(project =>
+        project.client_name === clientFilter
+      );
+    }
+
     setFilteredProjects(filtered);
-  }, [projects, searchQuery, typeFilter]);
+  }, [projects, searchQuery, typeFilter, clientFilter]);
 
-  const clearFilters = () => {
-    setSearchQuery('');
-    setTypeFilter('all');
-  };
+  const clearFilters = useClearUrlFilters(['q', 'type', 'client']);
 
-  const hasActiveFilters = searchQuery.trim() !== '' || typeFilter !== 'all';
+  const hasActiveFilters = searchQuery.trim() !== '' || typeFilter !== 'all' || clientFilter !== 'all';
 
   return (
     <div className="min-h-screen bg-white">
@@ -89,21 +104,35 @@ const PortfolioPage: React.FC = () => {
             options={typeOptions}
             value={typeFilter}
             onChange={(val) => setTypeFilter(val)}
-            icon={<Film size={18} className="text-gray-400" />}
-            className="sm:w-64"
+            icon={<Film size={16} />}
+            ariaLabel="Filter by project type"
+            className="w-full sm:w-44 lg:w-52"
+          />
+
+          <CustomDropdown
+            options={clientOptions}
+            value={clientFilter}
+            onChange={setClientFilter}
+            icon={<Users size={16} />}
+            ariaLabel="Filter by client"
+            className="w-full sm:w-44 lg:w-52"
           />
         </div>
 
         {hasActiveFilters && (
-          <div className="mb-6 flex justify-end">
+          <div className="mb-6 flex items-center justify-between">
+            <p
+              className="text-neutral-500"
+              style={{ fontFamily: designTokens.typography.fontFamily, fontSize: '14px' }}
+            >
+              Showing {filteredProjects.length} of {projects.length} projects
+            </p>
             <button
               onClick={clearFilters}
-              className="text-sm text-gray-600 hover:text-black underline"
-              style={{
-                fontFamily: designTokens.typography.fontFamily,
-                fontSize: designTokens.typography.sizes.sm,
-              }}
+              className="flex items-center gap-1.5 text-neutral-500 hover:text-neutral-900 transition-colors duration-150"
+              style={{ fontFamily: designTokens.typography.fontFamily, fontSize: '14px' }}
             >
+              <X size={14} />
               Clear filters
             </button>
           </div>
