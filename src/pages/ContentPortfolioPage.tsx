@@ -30,6 +30,7 @@ export function ContentPortfolioPage() {
   const { slug } = useParams<{ slug?: string }>();
 
   const [content, setContent] = useState<ContentWithProject[]>([]);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [mediaFilter, setMediaFilter] = useUrlFilter('media', 'all');
   const [typeFilter, setTypeFilter] = useUrlFilter('type', 'all');
@@ -58,6 +59,7 @@ export function ContentPortfolioPage() {
   const [modalContent, setModalContent] = useState<ContentWithProject | null>(null);
   const [modalLoading, setModalLoading] = useState(false);
   const savedScrollY = useRef(0);
+  const lastFetchedSlugRef = useRef<string | null>(null);
 
   useEffect(() => {
     return () => {
@@ -91,15 +93,21 @@ export function ContentPortfolioPage() {
   const loadContent = async () => {
     currentBatchLoadedRef.current = false;
     batchSizeRef.current = CONTENT_PER_PAGE;
-    const [data, total] = await Promise.all([
-      loadPublishedContentWithProjects(CONTENT_PER_PAGE, 0),
-      countPublishedContent()
-    ]);
-    setContent(data);
-    setTotalContent(total);
-    setHasMore(data.length < total);
-    setLoadedSet(new Set());
-    scheduleBatchFallback();
+    try {
+      const [data, total] = await Promise.all([
+        loadPublishedContentWithProjects(CONTENT_PER_PAGE, 0),
+        countPublishedContent()
+      ]);
+      setContent(data);
+      setTotalContent(total);
+      setHasMore(data.length < total);
+      setLoadedSet(new Set());
+      scheduleBatchFallback();
+    } catch (error) {
+      console.error('Error loading content:', error);
+    } finally {
+      setInitialLoading(false);
+    }
   };
 
   const handleItemLoad = useCallback((index: number) => {
@@ -163,11 +171,15 @@ export function ContentPortfolioPage() {
 
   useEffect(() => {
     if (!slug) {
-      if (modalContent) {
-        document.body.style.overflow = '';
-        window.scrollTo({ top: savedScrollY.current, behavior: 'instant' });
-        setModalContent(null);
-      }
+      lastFetchedSlugRef.current = null;
+      setModalContent(prev => {
+        if (prev) {
+          document.body.style.overflow = '';
+          window.scrollTo({ top: savedScrollY.current, behavior: 'instant' });
+          return null;
+        }
+        return prev;
+      });
       return;
     }
 
@@ -178,7 +190,10 @@ export function ContentPortfolioPage() {
       return;
     }
 
+    if (lastFetchedSlugRef.current === slug) return;
+
     let cancelled = false;
+    lastFetchedSlugRef.current = slug;
     setModalLoading(true);
     loadContentBySlug(slug).then(data => {
       if (cancelled) return;
@@ -186,13 +201,14 @@ export function ContentPortfolioPage() {
         savedScrollY.current = window.scrollY;
         setModalContent(data);
       } else {
+        lastFetchedSlugRef.current = null;
         navigate('/portfolio/content', { replace: true });
       }
       setModalLoading(false);
     });
 
     return () => { cancelled = true; };
-  }, [slug, content, navigate, modalContent]);
+  }, [slug, content, navigate]);
 
   const filteredContent = useMemo(() => {
     return content.filter((item) => {
@@ -217,7 +233,7 @@ export function ContentPortfolioPage() {
 
   const isModalOpen = !!slug;
 
-  const isInitialLoad = content.length === 0 && !hasActiveFilters;
+  const isInitialLoad = initialLoading && content.length === 0;
   const skeletonCount = CONTENT_PER_PAGE;
 
   const displayItems = hasActiveFilters ? filteredContent : content;
@@ -347,6 +363,15 @@ export function ContentPortfolioPage() {
                   <ContentGridItemSkeleton />
                 </div>
               ))}
+            </div>
+          ) : !initialLoading && content.length === 0 && !hasActiveFilters ? (
+            <div className="text-center py-20">
+              <p
+                className="text-neutral-400"
+                style={{ fontFamily: designTokens.typography.fontFamily, fontSize: designTokens.typography.sizes.sm }}
+              >
+                No content published yet
+              </p>
             </div>
           ) : hasActiveFilters && filteredContent.length === 0 ? (
             <div className="text-center py-20">
