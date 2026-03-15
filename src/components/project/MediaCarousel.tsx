@@ -112,7 +112,6 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ items }) => {
   const active = items[currentIndex].content;
 
   const isImage = active.content_type?.slug === 'image' || (!active.platform && !active.format);
-  const isPortrait = active.format === 'portrait';
   const isYoutube = !isImage && (active.platform === 'youtube' || active.url.includes('youtube.com') || active.url.includes('youtu.be'));
   const isVimeo = !isImage && !isYoutube && (active.platform === 'vimeo' || active.url.includes('vimeo.com'));
 
@@ -137,19 +136,12 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ items }) => {
     }),
   };
 
-  const containerAspect = isPortrait ? '9 / 16' : '16 / 9';
-  const maxContainerHeight = isPortrait ? '70vh' : undefined;
-
   return (
     <>
       <div className="relative">
         <div
-          className="relative overflow-hidden rounded-lg bg-neutral-950 mx-auto"
-          style={{
-            aspectRatio: containerAspect,
-            maxHeight: maxContainerHeight,
-            maxWidth: isPortrait ? '400px' : undefined,
-          }}
+          className="relative overflow-hidden rounded-lg bg-neutral-950 mx-auto w-full"
+          style={{ aspectRatio: '16 / 9' }}
         >
           <AnimatePresence initial={false} custom={direction} mode="wait">
             <motion.div
