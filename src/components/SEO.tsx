@@ -1,3 +1,4 @@
+import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { SEOProps, SITE_NAME, defaultSEO } from '../config/seo';
 
