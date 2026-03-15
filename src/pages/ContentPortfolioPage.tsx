@@ -5,6 +5,7 @@ import { X, Film, Users } from 'lucide-react';
 import { SearchBar } from '../components/ui/SearchBar';
 import { ContentWithProject } from '../types';
 import { loadPublishedContentWithProjects, countPublishedContent, loadContentBySlug } from '../utils/contentService';
+import { loadAllClients } from '../utils/portfolioService';
 import { ContentGridItem } from '../components/ContentGridItem';
 import { ContentGridItemSkeleton } from '../components/ui/SkeletonLoader';
 import Header from '../components/Header';
@@ -34,6 +35,9 @@ export function ContentPortfolioPage() {
   const [searchQuery, setSearchQuery] = useUrlFilter('q', '');
   const [hasMore, setHasMore] = useState(true);
   const [totalContent, setTotalContent] = useState(0);
+  const [clientOptions, setClientOptions] = useState<{ value: string; label: string }[]>([
+    { value: 'all', label: 'All Clients' },
+  ]);
 
   // Track which item indexes have finished loading their poster image
   const [loadedSet, setLoadedSet] = useState<Set<number>>(new Set());
@@ -50,6 +54,12 @@ export function ContentPortfolioPage() {
 
   useEffect(() => {
     loadContent();
+    loadAllClients().then(clients => {
+      setClientOptions([
+        { value: 'all', label: 'All Clients' },
+        ...clients.map(c => ({ value: c, label: c })),
+      ]);
+    });
   }, []);
 
   const loadContent = async () => {
@@ -168,16 +178,6 @@ export function ContentPortfolioPage() {
     ];
   }, [content]);
 
-  const clientOptions = useMemo(() => {
-    const clients = new Set<string>();
-    content.forEach((item) => {
-      if (item.project_info?.client_name) clients.add(item.project_info.client_name);
-    });
-    return [
-      { value: 'all', label: 'All Clients' },
-      ...Array.from(clients).sort().map(c => ({ value: c, label: c })),
-    ];
-  }, [content]);
 
   const filteredContent = useMemo(() => {
     return content.filter((item) => {

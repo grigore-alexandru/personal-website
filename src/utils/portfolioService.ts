@@ -199,6 +199,22 @@ export async function loadProjectTypes(): Promise<ProjectType[]> {
   return data || [];
 }
 
+export async function loadAllClients(): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('projects')
+    .select('client_name')
+    .eq('is_draft', false)
+    .order('client_name');
+
+  if (error) {
+    console.error('Error loading clients:', error);
+    return [];
+  }
+
+  const unique = Array.from(new Set((data || []).map((r: { client_name: string }) => r.client_name).filter(Boolean)));
+  return unique.sort();
+}
+
 export async function toggleProjectDraft(
   projectId: string,
   isDraft: boolean

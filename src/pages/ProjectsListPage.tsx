@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Film } from 'lucide-react';
+import { Film, Users } from 'lucide-react';
 import { SearchBar } from '../components/ui/SearchBar';
 import { Project, ProjectType } from '../types';
 import { loadProjects, countProjects } from '../utils/dataLoader';
-import { loadProjectTypes } from '../utils/portfolioService';
+import { loadProjectTypes, loadAllClients } from '../utils/portfolioService';
 import CustomDropdown from '../components/forms/CustomDropdown';
 import ProjectGrid from '../components/project/ProjectGrid';
 import { designTokens } from '../styles/tokens';
@@ -18,8 +18,12 @@ const ProjectsListPage: React.FC = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [typeFilter, setTypeFilter] = useUrlFilter('type', 'all');
+  const [clientFilter, setClientFilter] = useUrlFilter('client', 'all');
   const [typeOptions, setTypeOptions] = useState<{ value: string; label: string }[]>([
     { value: 'all', label: 'All Types' },
+  ]);
+  const [clientOptions, setClientOptions] = useState<{ value: string; label: string }[]>([
+    { value: 'all', label: 'All Clients' },
   ]);
   const [hasMore, setHasMore] = useState(true);
   const [totalProjects, setTotalProjects] = useState(0);
@@ -30,10 +34,11 @@ const ProjectsListPage: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [projectsData, typesData, total] = await Promise.all([
+        const [projectsData, typesData, total, clients] = await Promise.all([
           loadProjects(BATCH_SIZE, 0),
           loadProjectTypes(),
           countProjects(),
+          loadAllClients(),
         ]);
 
         setTotalProjects(total);
@@ -47,6 +52,10 @@ const ProjectsListPage: React.FC = () => {
             value: t.slug,
             label: t.name,
           })),
+        ]);
+        setClientOptions([
+          { value: 'all', label: 'All Clients' },
+          ...clients.map(c => ({ value: c, label: c })),
         ]);
       } catch (error) {
         console.error('Error loading projects:', error);
@@ -69,7 +78,7 @@ const ProjectsListPage: React.FC = () => {
   }, [filteredProjects.length, viewportImagesLoaded]);
 
   const loadMoreProjects = useCallback(async () => {
-    if (loadingMore || !hasMore || searchQuery.trim() || typeFilter !== 'all') return;
+    if (loadingMore || !hasMore || searchQuery.trim() || typeFilter !== 'all' || clientFilter !== 'all') return;
 
     setLoadingMore(true);
     setViewportImagesLoaded(false);
@@ -84,7 +93,7 @@ const ProjectsListPage: React.FC = () => {
     } finally {
       setLoadingMore(false);
     }
-  }, [projects.length, hasMore, loadingMore, totalProjects, searchQuery, typeFilter]);
+  }, [projects.length, hasMore, loadingMore, totalProjects, searchQuery, typeFilter, clientFilter]);
 
   useEffect(() => {
     if (!viewportImagesLoaded) return;
@@ -128,17 +137,23 @@ const ProjectsListPage: React.FC = () => {
       );
     }
 
+    if (clientFilter !== 'all') {
+      filtered = filtered.filter(project =>
+        project.client_name === clientFilter
+      );
+    }
+
     setFilteredProjects(filtered);
-  }, [projects, searchQuery, typeFilter]);
+  }, [projects, searchQuery, typeFilter, clientFilter]);
 
   useEffect(() => {
     loadedCountRef.current = 0;
     setViewportImagesLoaded(false);
-  }, [searchQuery, typeFilter]);
+  }, [searchQuery, typeFilter, clientFilter]);
 
-  const clearFilters = useClearUrlFilters(['q', 'type']);
+  const clearFilters = useClearUrlFilters(['q', 'type', 'client']);
 
-  const hasActiveFilters = searchQuery.trim() !== '' || typeFilter !== 'all';
+  const hasActiveFilters = searchQuery.trim() !== '' || typeFilter !== 'all' || clientFilter !== 'all';
 
   const skeletonCount = totalProjects > 0
     ? Math.min(totalProjects, BATCH_SIZE)
@@ -159,8 +174,18 @@ const ProjectsListPage: React.FC = () => {
             options={typeOptions}
             value={typeFilter}
             onChange={(val) => setTypeFilter(val)}
-            icon={<Film size={18} className="text-gray-400" />}
-            className="sm:w-64"
+            icon={<Film size={16} />}
+            ariaLabel="Filter by project type"
+            className="w-full sm:w-44 lg:w-52"
+          />
+
+          <CustomDropdown
+            options={clientOptions}
+            value={clientFilter}
+            onChange={(val) => setClientFilter(val)}
+            icon={<Users size={16} />}
+            ariaLabel="Filter by client"
+            className="w-full sm:w-44 lg:w-52"
           />
         </div>
 
@@ -184,11 +209,11 @@ const ProjectsListPage: React.FC = () => {
         <ProjectGrid
           projects={filteredProjects}
           initialLoading={initialLoading}
-          loadingMore={loadingMore && !searchQuery.trim() && typeFilter === 'all'}
+          loadingMore={loadingMore && !searchQuery.trim() && typeFilter === 'all' && clientFilter === 'all'}
           skeletonCount={skeletonCount}
           batchSize={BATCH_SIZE}
           onImageLoad={handleImageLoad}
-          observerTarget={!searchQuery.trim() && typeFilter === 'all' ? observerTarget : undefined}
+          observerTarget={!searchQuery.trim() && typeFilter === 'all' && clientFilter === 'all' ? observerTarget : undefined}
         />
       </section>
     </div>
