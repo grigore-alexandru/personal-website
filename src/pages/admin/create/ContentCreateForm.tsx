@@ -34,6 +34,8 @@ import {
 } from '../../../utils/contentImageProcessing';
 import { uploadContentMainImage } from '../../../utils/imageUpload';
 import { ContentType, isVideoThumbnail, ContentThumbnailVideo, ContentThumbnailImage, ContentContributor } from '../../../types';
+import { titleFromFileName } from '../../../utils/titleFromFileName';
+import { loadImageDimensions } from '../../../utils/loadImageDimensions';
 
 const ALLOWED_VIDEO_MIME = ['video/mp4', 'video/webm', 'video/quicktime'];
 const ALLOWED_IMAGE_MIME = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -97,29 +99,6 @@ interface ProjectOption {
   typeName: string;
 }
 
-function titleFromFileName(fileName: string): string {
-  const withoutExt = fileName.replace(/\.[^/.]+$/, '');
-  return withoutExt
-    .replace(/[-_. ]+/g, ' ')
-    .trim()
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-function loadImageDimensions(file: File): Promise<{ width: number; height: number }> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve({ width: img.naturalWidth, height: img.naturalHeight });
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error('Failed to load image dimensions'));
-    };
-    img.src = url;
-  });
-}
 
 export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
   const navigate = useNavigate();
