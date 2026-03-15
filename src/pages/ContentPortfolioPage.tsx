@@ -171,9 +171,6 @@ export function ContentPortfolioPage() {
 
   const isModalOpen = !!slug;
 
-  // New Fluid Grid Layout Strategy:
-  // We use CSS Container Queries (cqw) to perfectly calculate the row height
-  // based on the actual width of the columns, maintaining a strict 1.6 ratio.
   const gridClasses = "fluid-grid";
 
   return (
@@ -181,29 +178,6 @@ export function ContentPortfolioPage() {
       <Header />
 
       <main className="max-w-screen-xl mx-auto px-6 pt-24 pb-16">
-        <div className="mb-10">
-          <h1
-            className="text-neutral-900 mb-1"
-            style={{
-              fontFamily: designTokens.typography.fontFamily,
-              fontSize: designTokens.typography.sizes.lg,
-              fontWeight: designTokens.typography.weights.bold,
-              lineHeight: designTokens.typography.lineHeights.heading,
-            }}
-          >
-            Portfolio
-          </h1>
-          <p
-            className="text-neutral-500"
-            style={{
-              fontFamily: designTokens.typography.fontFamily,
-              fontSize: designTokens.typography.sizes.xs,
-            }}
-          >
-            Explore our collection of creative work
-          </p>
-        </div>
-
         {/* ── Filter bar ── */}
         <div className="flex flex-col sm:flex-row gap-3 mb-8">
           <SearchBar
@@ -328,41 +302,34 @@ export function ContentPortfolioPage() {
         ) : null
       )}
 
-      {/* ── CSS Grid and Animations ── */}
       <style>{`
         /* FLUID GRID SYSTEM */
         .fluid-grid {
           display: grid;
-          gap: 2rem; /* Tailwind's gap-8 = 32px */
+          gap: 2rem; 
           grid-template-columns: 1fr;
-          grid-auto-rows: auto; /* Mobile relies on natural content height */
+          grid-auto-rows: auto; 
           grid-auto-flow: row dense;
           width: 100%;
         }
 
-        /* sm & md (640px to 1023px): 2 columns */
         @media (min-width: 640px) {
           .fluid-grid {
             grid-template-columns: repeat(2, 1fr);
-            /* (100% container width - 1 gap of 2rem) / 2 cols / 1.6 ratio */
             grid-auto-rows: calc(((100cqw - 2rem) / 2) / 1.6);
           }
         }
 
-        /* lg & xl (1024px to 1535px): 3 columns */
         @media (min-width: 1024px) {
           .fluid-grid {
             grid-template-columns: repeat(3, 1fr);
-            /* (100% container width - 2 gaps of 2rem) / 3 cols / 1.6 ratio */
             grid-auto-rows: calc(((100cqw - 4rem) / 3) / 1.6);
           }
         }
 
-        /* 2xl (1536px+): 4 columns */
         @media (min-width: 1536px) {
           .fluid-grid {
             grid-template-columns: repeat(4, 1fr);
-            /* (100% container width - 3 gaps of 2rem) / 4 cols / 1.6 ratio */
             grid-auto-rows: calc(((100cqw - 6rem) / 4) / 1.6);
           }
         }
