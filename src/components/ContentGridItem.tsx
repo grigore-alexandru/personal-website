@@ -61,44 +61,63 @@ export function ContentGridItem({ content, onClick, onLoad }: ContentGridItemPro
     >
       {videoThumb && (
         <>
-          <ProgressiveImage
-            src={videoThumb.poster}
-            alt={content.title}
-            onLoad={onLoad}
-            className={`object-cover transition-[transform,filter,opacity] duration-[350ms] ease-in-out ${
-              isHovering
-                ? 'opacity-0 scale-[1.02]'
-                : 'opacity-100 scale-100 saturate-[0.3]'
-            }`}
-          />
-          <video
-            ref={videoRef}
-            src={videoThumb.hover_video}
-            loop
-            muted
-            playsInline
-            preload="none"
-            // Switched to ease-smooth
-            className={`absolute inset-0 w-full h-full object-cover transition-[transform,opacity] duration-[350ms] ease-in-out ${
-              isHovering
-                ? 'opacity-100 scale-[1.02]'
-                : 'opacity-0 scale-100'
-            }`}
-          />
+          <div
+            className="absolute inset-0 will-change-transform"
+            style={{
+              transform: isHovering ? 'scale(1.06)' : 'scale(1)',
+              transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+            }}
+          >
+            <ProgressiveImage
+              src={videoThumb.poster}
+              alt={content.title}
+              onLoad={onLoad}
+              className={`object-cover transition-[filter,opacity] duration-[350ms] ease-in-out ${
+                isHovering
+                  ? 'opacity-0'
+                  : 'opacity-100 saturate-[0.3]'
+              }`}
+            />
+          </div>
+          <div
+            className="absolute inset-0 will-change-transform"
+            style={{
+              transform: isHovering ? 'scale(1.06)' : 'scale(1)',
+              transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+            }}
+          >
+            <video
+              ref={videoRef}
+              src={videoThumb.hover_video}
+              loop
+              muted
+              playsInline
+              preload="none"
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[350ms] ease-in-out ${
+                isHovering ? 'opacity-100' : 'opacity-0'
+              }`}
+            />
+          </div>
         </>
       )}
 
       {imageThumb && (
-        <ProgressiveImage
-          src={imageThumb.poster}
-          alt={content.title}
-          onLoad={onLoad}
-          className={`object-cover transition-[transform,filter] duration-[350ms] ease-in-out ${
-            isHovering
-              ? 'scale-[1.02] saturate-100'
-              : 'scale-100 saturate-[0.3]'
-          }`}
-        />
+        <div
+          className="absolute inset-0 will-change-transform"
+          style={{
+            transform: isHovering ? 'scale(1.06)' : 'scale(1)',
+            transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+          }}
+        >
+          <ProgressiveImage
+            src={imageThumb.poster}
+            alt={content.title}
+            onLoad={onLoad}
+            className={`object-cover transition-[filter] duration-[350ms] ease-in-out ${
+              isHovering ? 'saturate-100' : 'saturate-[0.3]'
+            }`}
+          />
+        </div>
       )}
 
       {!thumbnail && (
