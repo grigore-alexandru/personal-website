@@ -155,7 +155,7 @@ export function ContentPortfolioPage() {
     });
 
     return () => { cancelled = true; };
-  }, [slug, content]);
+  }, [slug, content, navigate, modalContent]);
 
   const typeOptions = useMemo(() => {
     const types = new Set<string>();
@@ -202,8 +202,6 @@ export function ContentPortfolioPage() {
 
   const isModalOpen = !!slug;
 
-  // How many skeleton placeholders to show: fill up to CONTENT_PER_PAGE slots
-  // while the initial fetch is in flight (content.length === 0 and no filters active).
   const isInitialLoad = content.length === 0 && !hasActiveFilters;
   const skeletonCount = CONTENT_PER_PAGE;
 
@@ -215,9 +213,10 @@ export function ContentPortfolioPage() {
     <div className="min-h-screen bg-white">
       <Header />
 
-      <main className="max-w-screen-xl mx-auto px-6 pt-8 pb-16">
+      {/* Adjust pt-12 to lower spacing above the search bar */}
+      <main className="max-w-screen-xl mx-auto px-6 pt-12 pb-16">
         {/* ── Filter bar ── */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-8">
+        <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
@@ -271,10 +270,9 @@ export function ContentPortfolioPage() {
           </div>
         )}
 
-        {/* ── Grid wrapped in an inline-size container ── */}
-        <div style={{ containerType: 'inline-size' }} className="w-full">
+        {/* ── Grid wrapped in a full width container ── */}
+        <div className="w-full">
           {isInitialLoad ? (
-            /* Initial page load — show full skeleton grid immediately */
             <div className={gridClasses}>
               {Array.from({ length: skeletonCount }).map((_, i) => (
                 <div
@@ -315,7 +313,6 @@ export function ContentPortfolioPage() {
                           : undefined
                       }
                     >
-                      {/* Skeleton sits underneath; fades away once poster is loaded */}
                       <div
                         className={`absolute inset-0 transition-opacity duration-400 ${
                           isLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'
@@ -324,7 +321,6 @@ export function ContentPortfolioPage() {
                         <ContentGridItemSkeleton isPortrait={isPortrait} />
                       </div>
 
-                      {/* Content fades in on top once poster is loaded */}
                       <div
                         className={`absolute inset-0 transition-opacity duration-400 ${
                           isLoaded ? 'opacity-100' : 'opacity-0'
@@ -340,7 +336,6 @@ export function ContentPortfolioPage() {
                   );
                 })}
 
-                {/* "Next batch" skeleton placeholders — shown while loadingMore */}
                 {loadingMore && !hasActiveFilters &&
                   Array.from({ length: CONTENT_PER_PAGE }).map((_, i) => (
                     <div
@@ -377,29 +372,31 @@ export function ContentPortfolioPage() {
           display: grid;
           gap: 2rem;
           grid-template-columns: 1fr;
-          grid-auto-rows: auto;
+          /* Calculated height for mobile instead of auto to prevent 0px collapse */
+          grid-auto-rows: calc(100vw / 1.6);
           grid-auto-flow: row dense;
           width: 100%;
         }
 
+        /* Swapped cqw to vw for better compatibility on older devices like Safari 15 and below */
         @media (min-width: 640px) {
           .fluid-grid {
             grid-template-columns: repeat(2, 1fr);
-            grid-auto-rows: calc(((100cqw - 2rem) / 2) / 1.6);
+            grid-auto-rows: calc(((100vw - 2rem) / 2) / 1.6);
           }
         }
 
         @media (min-width: 1024px) {
           .fluid-grid {
             grid-template-columns: repeat(3, 1fr);
-            grid-auto-rows: calc(((100cqw - 4rem) / 3) / 1.6);
+            grid-auto-rows: calc(((100vw - 4rem) / 3) / 1.6);
           }
         }
 
         @media (min-width: 1536px) {
           .fluid-grid {
             grid-template-columns: repeat(4, 1fr);
-            grid-auto-rows: calc(((100cqw - 6rem) / 4) / 1.6);
+            grid-auto-rows: calc(((100vw - 6rem) / 4) / 1.6);
           }
         }
 
