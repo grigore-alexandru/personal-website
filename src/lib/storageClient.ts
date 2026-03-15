@@ -103,7 +103,7 @@ export function parseStorageUrl(url: string): ParsedStorageUrl | null {
     return { type: 'supabase', bucket: supabaseMatch[1], path: supabaseMatch[2] };
   }
 
-  const megaEndpoint = 'https://s3.eu-central-1.s4.mega.io';
+  const megaEndpoint = import.meta.env.VITE_MEGA_S4_ENDPOINT ?? 'https://s3.eu-central-1.s4.mega.io';
   const accountId = import.meta.env.VITE_MEGA_S4_ACCOUNT_ID ?? '';
 
   if (url.startsWith(megaEndpoint)) {
