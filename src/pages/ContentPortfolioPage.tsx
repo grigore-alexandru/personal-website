@@ -60,12 +60,17 @@ export function ContentPortfolioPage() {
   const [modalLoading, setModalLoading] = useState(false);
   const savedScrollY = useRef(0);
   const lastFetchedSlugRef = useRef<string | null>(null);
+  const contentRef = useRef<ContentWithProject[]>([]);
 
   useEffect(() => {
     return () => {
       if (batchTimeoutRef.current) clearTimeout(batchTimeoutRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    contentRef.current = content;
+  }, [content]);
 
   useEffect(() => {
     loadContent();
@@ -183,7 +188,7 @@ export function ContentPortfolioPage() {
       return;
     }
 
-    const cached = content.find(c => c.slug === slug);
+    const cached = contentRef.current.find(c => c.slug === slug);
     if (cached) {
       savedScrollY.current = window.scrollY;
       setModalContent(cached);
@@ -204,11 +209,12 @@ export function ContentPortfolioPage() {
         lastFetchedSlugRef.current = null;
         navigate('/portfolio/content', { replace: true });
       }
-      setModalLoading(false);
+    }).finally(() => {
+      if (!cancelled) setModalLoading(false);
     });
 
     return () => { cancelled = true; };
-  }, [slug, content, navigate]);
+  }, [slug, navigate]);
 
   const filteredContent = useMemo(() => {
     return content.filter((item) => {
