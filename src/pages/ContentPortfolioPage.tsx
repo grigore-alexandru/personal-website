@@ -315,7 +315,7 @@ export function ContentPortfolioPage() {
                   return (
                     <div
                       key={item.id}
-                      className={`relative h-full w-full ${isPortrait ? 'sm:row-span-2' : 'sm:row-span-1'}`}
+                      className={`relative h-full w-full ${isPortrait ? 'row-span-2' : 'row-span-1'}`}
                       style={
                         index < CONTENT_PER_PAGE
                           ? {
