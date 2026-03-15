@@ -228,11 +228,11 @@ export function AdminContentCard({
           )}
         </div>
 
-        <div className="mb-2">
+        <div className="mb-2 min-w-0">
           {projectId ? (
-            <div className="flex items-center gap-1 px-1.5 py-1 bg-teal-50 border border-teal-200 rounded text-xs text-teal-700 font-medium min-w-0">
+            <div className="flex items-center gap-1 px-1.5 py-1 bg-teal-50 border border-teal-200 rounded text-xs text-teal-700 font-medium overflow-hidden">
               <FolderOpen size={11} className="flex-shrink-0" />
-              <span className="truncate">{projectTitle}</span>
+              <span className="truncate min-w-0 flex-1">{projectTitle}</span>
             </div>
           ) : (
             <div className="flex items-center gap-1 px-1.5 py-1 bg-amber-50 border border-amber-200 rounded text-xs text-amber-700 font-medium">

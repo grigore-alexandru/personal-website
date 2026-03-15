@@ -154,8 +154,7 @@ export async function loadAllContentForAdmin(): Promise<ContentAdminItem[]> {
       .order('created_at', { ascending: false }),
     supabase
       .from('project_content')
-      .select('content_id, project:projects(id, title)')
-      .order('created_at', { ascending: true }),
+      .select('content_id, project_id, projects(id, title)'),
   ]);
 
   if (contentResult.error) {
@@ -166,9 +165,10 @@ export async function loadAllContentForAdmin(): Promise<ContentAdminItem[]> {
   const projectMap = new Map<string, { id: string; title: string }>();
   if (!projectContentResult.error && projectContentResult.data) {
     for (const row of projectContentResult.data) {
-      const project = row.project as unknown as { id: string; title: string } | null;
+      const projects = row.projects as unknown as { id: string; title: string } | { id: string; title: string }[] | null;
+      const project = Array.isArray(projects) ? projects[0] : projects;
       if (project && !projectMap.has(row.content_id)) {
-        projectMap.set(row.content_id, project);
+        projectMap.set(row.content_id, { id: project.id, title: project.title });
       }
     }
   }
