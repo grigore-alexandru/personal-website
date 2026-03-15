@@ -70,7 +70,7 @@ interface ValidationError {
   message: string;
 }
 
-type FormMode = 'create' | 'edit';
+type FormMode = 'create' | 'edit' | 'bulk';
 
 const initialFormData: ContentFormData = {
   type: 'video',

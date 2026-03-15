@@ -20,6 +20,7 @@ const BlogCreateForm = lazy(() => import('./pages/admin/create/BlogCreateForm').
 const ProjectCreateForm = lazy(() => import('./pages/admin/create/ProjectCreateForm').then(module => ({ default: module.ProjectCreateForm })));
 const ContentCreateForm = lazy(() => import('./pages/admin/create/ContentCreateForm').then(module => ({ default: module.ContentCreateForm })));
 const MediaCompressorPage = lazy(() => import('./pages/admin/MediaCompressorPage'));
+const BulkUploadPage = lazy(() => import('./pages/admin/BulkUploadPage').then(module => ({ default: module.BulkUploadPage })));
 
 const PageLoader = () => (
   <div className="min-h-screen bg-white flex items-center justify-center">
@@ -126,6 +127,14 @@ function App() {
           element={
             <ProtectedRoute>
               <ContentManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/content/bulk"
+          element={
+            <ProtectedRoute>
+              <BulkUploadPage />
             </ProtectedRoute>
           }
         />

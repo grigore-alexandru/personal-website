@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Loader2, X, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Plus, Loader2, X, Eye, EyeOff, AlertCircle, Layers } from 'lucide-react';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { AdminLayout } from '../../components/admin/AdminLayout';
 import { AdminContentCard } from '../../components/admin/AdminContentCard';
@@ -443,13 +443,22 @@ export function ContentManagementPage() {
             Manage media content ({content.length} {content.length === 1 ? 'item' : 'items'})
           </p>
         </div>
-        <button
-          onClick={() => navigate('/admin/content/create')}
-          className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-medium"
-        >
-          <Plus size={20} />
-          <span>New Content</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate('/admin/content/bulk')}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors font-medium"
+          >
+            <Layers size={18} />
+            <span>Bulk Upload</span>
+          </button>
+          <button
+            onClick={() => navigate('/admin/content/create')}
+            className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-medium"
+          >
+            <Plus size={20} />
+            <span>New Content</span>
+          </button>
+        </div>
       </div>
 
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
