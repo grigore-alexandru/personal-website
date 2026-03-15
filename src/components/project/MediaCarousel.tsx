@@ -52,6 +52,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ items }) => {
   const [direction, setDirection] = useState(0);
   const [iframeError, setIframeError] = useState(false);
   const [iframeLoading, setIframeLoading] = useState(true);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const instaRef = useRef<HTMLDivElement>(null);
 
@@ -60,6 +61,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ items }) => {
     setCurrentIndex(index);
     setIframeError(false);
     setIframeLoading(true);
+    setImageLoaded(false);
   }, [currentIndex]);
 
   const goToPrevious = useCallback(() => {
@@ -68,6 +70,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ items }) => {
     setCurrentIndex(newIndex);
     setIframeError(false);
     setIframeLoading(true);
+    setImageLoaded(false);
   }, [currentIndex, items.length]);
 
   const goToNext = useCallback(() => {
@@ -76,6 +79,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ items }) => {
     setCurrentIndex(newIndex);
     setIframeError(false);
     setIframeLoading(true);
+    setImageLoaded(false);
   }, [currentIndex, items.length]);
 
   useEffect(() => {
@@ -159,12 +163,36 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ items }) => {
               className="absolute inset-0 flex items-center justify-center"
             >
               {isImage ? (
-                <img
-                  src={active.url}
-                  alt={active.title}
-                  className="w-full h-full object-contain"
-                  loading="lazy"
-                />
+                <div className="relative w-full h-full flex items-center justify-center">
+                  {!imageLoaded && (
+                    <div
+                      className="absolute inset-0 flex items-center justify-center z-10"
+                      style={{ transition: 'opacity 300ms ease', opacity: imageLoaded ? 0 : 1 }}
+                    >
+                      <div
+                        className="rounded-full animate-spin"
+                        style={{
+                          width: 36,
+                          height: 36,
+                          border: '2px solid rgba(255,255,255,0.15)',
+                          borderTopColor: 'rgba(255,255,255,0.75)',
+                        }}
+                      />
+                    </div>
+                  )}
+                  <img
+                    src={active.url}
+                    alt={active.title}
+                    className="w-full h-full object-contain"
+                    loading="lazy"
+                    decoding="async"
+                    style={{
+                      opacity: imageLoaded ? 1 : 0,
+                      transition: 'opacity 400ms ease',
+                    }}
+                    onLoad={() => setImageLoaded(true)}
+                  />
+                </div>
               ) : active.platform === 'instagram' ? (
                 <div
                   ref={instaRef}
