@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { X, Film, Users } from 'lucide-react';
+import { X, Film, Users, Image, Video, LayoutGrid } from 'lucide-react';
 import { SearchBar } from '../components/ui/SearchBar';
 import { ContentWithProject } from '../types';
 import { loadPublishedContentWithProjects, countPublishedContent, loadContentBySlug } from '../utils/contentService';
@@ -16,9 +16,9 @@ type MediaFilter = 'all' | 'videos' | 'photos';
 const CONTENT_PER_PAGE = 12;
 
 const MEDIA_OPTIONS = [
-  { value: 'all',    label: 'All Media'  },
-  { value: 'videos', label: 'Videos'     },
-  { value: 'photos', label: 'Photos'     },
+  { value: 'all',    label: 'All Media', icon: <LayoutGrid size={14} /> },
+  { value: 'videos', label: 'Videos',    icon: <Video      size={14} /> },
+  { value: 'photos', label: 'Photos',    icon: <Image      size={14} /> },
 ];
 
 export function ContentPortfolioPage() {
@@ -221,12 +221,12 @@ export function ContentPortfolioPage() {
 
       <main className="max-w-screen-xl mx-auto px-6 pt-24 pb-16">
         {/* ── Filter bar ── */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-8">
+        <div className="flex flex-col sm:flex-row gap-2 mb-8">
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
-            placeholder="Search by title..."
-            className="flex-1"
+            placeholder="Search..."
+            className="w-full sm:w-44 lg:w-56"
           />
 
           <CustomDropdown
@@ -234,25 +234,25 @@ export function ContentPortfolioPage() {
             value={mediaFilter}
             onChange={(v) => setMediaFilter(v as MediaFilter)}
             ariaLabel="Filter by media type"
-            className="w-full sm:w-40 lg:w-44"
+            className="w-full sm:w-36"
           />
 
           <CustomDropdown
             options={typeOptions}
             value={typeFilter}
             onChange={setTypeFilter}
-            icon={<Film size={16} />}
+            icon={<Film size={14} />}
             ariaLabel="Filter by project type"
-            className="w-full sm:w-44 lg:w-52"
+            className="w-full sm:w-40 lg:w-48"
           />
 
           <CustomDropdown
             options={clientOptions}
             value={clientFilter}
             onChange={setClientFilter}
-            icon={<Users size={16} />}
+            icon={<Users size={14} />}
             ariaLabel="Filter by client"
-            className="w-full sm:w-44 lg:w-52"
+            className="w-full sm:w-40 lg:w-48"
           />
         </div>
 

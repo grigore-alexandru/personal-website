@@ -6,6 +6,7 @@ import { designTokens } from '../../styles/tokens';
 export interface DropdownOption {
   value: string;
   label: string;
+  icon?: React.ReactNode;
 }
 
 interface CustomDropdownProps {
@@ -141,14 +142,14 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
           fontWeight: designTokens.typography.weights.regular,
         }}
       >
-        {/* Left icon */}
-        {icon && (
+        {/* Left icon — prefer selected option's icon, fall back to prop icon */}
+        {(selectedOption?.icon ?? icon) && (
           <span
             className={`flex-shrink-0 transition-colors duration-200 ${
-              isOpen ? 'text-blue-500' : 'text-neutral-400'
+              isOpen ? 'text-blue-500' : isDefault ? 'text-neutral-400' : 'text-neutral-600'
             }`}
           >
-            {icon}
+            {selectedOption?.icon ?? icon}
           </span>
         )}
 
@@ -201,7 +202,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
                       role="option"
                       aria-selected={isSelected}
                       className={[
-                        'w-full text-left px-3 py-2.5 truncate',
+                        'w-full text-left px-3 py-2.5 flex items-center gap-2',
                         'transition-colors duration-150',
                         isSelected
                           ? 'bg-blue-500 text-white font-medium'
@@ -215,7 +216,12 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
                           : designTokens.typography.weights.regular,
                       }}
                     >
-                      {option.label}
+                      {option.icon && (
+                        <span className={`flex-shrink-0 ${isSelected ? 'text-white' : 'text-neutral-400'}`}>
+                          {option.icon}
+                        </span>
+                      )}
+                      <span className="truncate">{option.label}</span>
                     </button>
                   </li>
                 );
