@@ -26,7 +26,6 @@ export function ContentPortfolioPage() {
   const { slug } = useParams<{ slug?: string }>();
 
   const [content, setContent] = useState<ContentWithProject[]>([]);
-  const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [mediaFilter, setMediaFilter] = useState<MediaFilter>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -34,6 +33,14 @@ export function ContentPortfolioPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [hasMore, setHasMore] = useState(true);
   const [totalContent, setTotalContent] = useState(0);
+
+  // Track which item indexes have finished loading their poster image
+  const [loadedSet, setLoadedSet] = useState<Set<number>>(new Set());
+  // Number of items currently "in flight" (fetched but poster not yet loaded)
+  const batchSizeRef = useRef(CONTENT_PER_PAGE);
+  // Whether the current batch has fully loaded — controls when next fetch is allowed
+  const currentBatchLoadedRef = useRef(false);
+
   const observerTarget = useRef<HTMLDivElement>(null);
 
   const [modalContent, setModalContent] = useState<ContentWithProject | null>(null);
@@ -45,7 +52,8 @@ export function ContentPortfolioPage() {
   }, []);
 
   const loadContent = async () => {
-    setLoading(true);
+    currentBatchLoadedRef.current = false;
+    batchSizeRef.current = CONTENT_PER_PAGE;
     const [data, total] = await Promise.all([
       loadPublishedContentWithProjects(CONTENT_PER_PAGE, 0),
       countPublishedContent()
@@ -53,28 +61,57 @@ export function ContentPortfolioPage() {
     setContent(data);
     setTotalContent(total);
     setHasMore(data.length < total);
-    setLoading(false);
+    // Reset loaded tracking
+    setLoadedSet(new Set());
   };
 
-  const loadMoreContent = useCallback(async () => {
-    if (loadingMore || !hasMore || hasActiveFilters) return;
+  const handleItemLoad = useCallback((index: number) => {
+    setLoadedSet(prev => {
+      const next = new Set(prev);
+      next.add(index);
+      // When every item in the current batch (0 .. content.length-1) has loaded,
+      // mark the batch as complete so the intersection observer can trigger the next fetch.
+      if (next.size >= batchSizeRef.current) {
+        currentBatchLoadedRef.current = true;
+      }
+      return next;
+    });
+  }, []);
 
+  const loadMoreContent = useCallback(async () => {
+    if (loadingMore || !hasMore || !currentBatchLoadedRef.current) return;
+
+    currentBatchLoadedRef.current = false;
     setLoadingMore(true);
     try {
-      const newContent = await loadPublishedContentWithProjects(CONTENT_PER_PAGE, content.length);
-      setContent(prev => [...prev, ...newContent]);
-      setHasMore(content.length + newContent.length < totalContent);
+      const offset = content.length;
+      const newContent = await loadPublishedContentWithProjects(CONTENT_PER_PAGE, offset);
+      setContent(prev => {
+        const merged = [...prev, ...newContent];
+        batchSizeRef.current = merged.length;
+        return merged;
+      });
+      setHasMore(offset + newContent.length < totalContent);
     } catch (error) {
       console.error('Error loading more content:', error);
+      currentBatchLoadedRef.current = true; // allow retry on error
     } finally {
       setLoadingMore(false);
     }
   }, [content.length, hasMore, loadingMore, totalContent]);
 
+  const hasActiveFilters = mediaFilter !== 'all' || typeFilter !== 'all' || clientFilter !== 'all' || searchQuery !== '';
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       entries => {
-        if (entries[0].isIntersecting && hasMore && !loadingMore && !hasActiveFilters) {
+        if (
+          entries[0].isIntersecting &&
+          hasMore &&
+          !loadingMore &&
+          !hasActiveFilters &&
+          currentBatchLoadedRef.current
+        ) {
           loadMoreContent();
         }
       },
@@ -84,7 +121,7 @@ export function ContentPortfolioPage() {
     const currentTarget = observerTarget.current;
     if (currentTarget) observer.observe(currentTarget);
     return () => { if (currentTarget) observer.unobserve(currentTarget); };
-  }, [hasMore, loadingMore, loadMoreContent]);
+  }, [hasMore, loadingMore, loadMoreContent, hasActiveFilters]);
 
   useEffect(() => {
     if (!slug) {
@@ -141,8 +178,6 @@ export function ContentPortfolioPage() {
     ];
   }, [content]);
 
-  const hasActiveFilters = mediaFilter !== 'all' || typeFilter !== 'all' || clientFilter !== 'all' || searchQuery !== '';
-
   const filteredContent = useMemo(() => {
     return content.filter((item) => {
       if (mediaFilter === 'videos' && item.content_type.slug !== 'video') return false;
@@ -170,6 +205,13 @@ export function ContentPortfolioPage() {
   };
 
   const isModalOpen = !!slug;
+
+  // How many skeleton placeholders to show: fill up to CONTENT_PER_PAGE slots
+  // while the initial fetch is in flight (content.length === 0 and no filters active).
+  const isInitialLoad = content.length === 0 && !hasActiveFilters;
+  const skeletonCount = CONTENT_PER_PAGE;
+
+  const displayItems = hasActiveFilters ? filteredContent : content;
 
   const gridClasses = "fluid-grid";
 
@@ -235,15 +277,20 @@ export function ContentPortfolioPage() {
 
         {/* ── Grid wrapped in an inline-size container ── */}
         <div style={{ containerType: 'inline-size' }} className="w-full">
-          {loading ? (
+          {isInitialLoad ? (
+            /* Initial page load — show full skeleton grid immediately */
             <div className={gridClasses}>
-              {Array.from({ length: 12 }).map((_, i) => (
-                <div key={i} className="h-full w-full" style={{ animation: `fadeIn 0.3s ease-in-out ${i * 50}ms both` }}>
+              {Array.from({ length: skeletonCount }).map((_, i) => (
+                <div
+                  key={`init-skeleton-${i}`}
+                  className="h-full w-full"
+                  style={{ animation: `fadeIn 0.25s ease-out ${i * 30}ms both` }}
+                >
                   <ContentGridItemSkeleton />
                 </div>
               ))}
             </div>
-          ) : filteredContent.length === 0 ? (
+          ) : hasActiveFilters && filteredContent.length === 0 ? (
             <div className="text-center py-20">
               <p
                 className="text-neutral-400"
@@ -255,34 +302,60 @@ export function ContentPortfolioPage() {
           ) : (
             <>
               <div className={gridClasses}>
-                {filteredContent.map((item, index) => {
+                {displayItems.map((item, index) => {
                   const isPortrait = item.format === 'portrait';
+                  const isLoaded = loadedSet.has(index);
                   return (
                     <div
                       key={item.id}
-                      className={`h-full w-full ${isPortrait ? 'sm:row-span-2' : 'sm:row-span-1'}`}
-                      style={{
-                        opacity: 0,
-                        transform: 'translateY(20px)',
-                        animation: `fadeInUp 0.6s ease-out ${Math.min(index, 12) * 0.05}s forwards`,
-                      }}
+                      className={`relative h-full w-full ${isPortrait ? 'sm:row-span-2' : 'sm:row-span-1'}`}
+                      style={
+                        index < CONTENT_PER_PAGE
+                          ? {
+                              opacity: 0,
+                              transform: 'translateY(12px)',
+                              animation: `fadeInUp 0.5s ease-out ${Math.min(index, 11) * 0.04}s forwards`,
+                            }
+                          : undefined
+                      }
                     >
-                      <ContentGridItem content={item} onClick={() => handleContentClick(item)} />
+                      {/* Skeleton sits underneath; fades away once poster is loaded */}
+                      <div
+                        className={`absolute inset-0 transition-opacity duration-400 ${
+                          isLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'
+                        }`}
+                      >
+                        <ContentGridItemSkeleton isPortrait={isPortrait} />
+                      </div>
+
+                      {/* Content fades in on top once poster is loaded */}
+                      <div
+                        className={`absolute inset-0 transition-opacity duration-400 ${
+                          isLoaded ? 'opacity-100' : 'opacity-0'
+                        }`}
+                      >
+                        <ContentGridItem
+                          content={item}
+                          onClick={() => handleContentClick(item)}
+                          onLoad={() => handleItemLoad(index)}
+                        />
+                      </div>
                     </div>
                   );
                 })}
 
-                {loadingMore && !hasActiveFilters && (
-                  Array.from({ length: 6 }).map((_, i) => (
+                {/* "Next batch" skeleton placeholders — shown while loadingMore */}
+                {loadingMore && !hasActiveFilters &&
+                  Array.from({ length: CONTENT_PER_PAGE }).map((_, i) => (
                     <div
-                      key={`skeleton-${i}`}
+                      key={`batch-skeleton-${i}`}
                       className="h-full w-full"
-                      style={{ animation: `fadeIn 0.3s ease-in-out ${i * 50}ms both` }}
+                      style={{ animation: `fadeIn 0.25s ease-out ${i * 30}ms both` }}
                     >
                       <ContentGridItemSkeleton />
                     </div>
                   ))
-                )}
+                }
               </div>
 
               {!hasActiveFilters && <div ref={observerTarget} className="h-4 mt-6" />}
@@ -306,9 +379,9 @@ export function ContentPortfolioPage() {
         /* FLUID GRID SYSTEM */
         .fluid-grid {
           display: grid;
-          gap: 2rem; 
+          gap: 2rem;
           grid-template-columns: 1fr;
-          grid-auto-rows: auto; 
+          grid-auto-rows: auto;
           grid-auto-flow: row dense;
           width: 100%;
         }
