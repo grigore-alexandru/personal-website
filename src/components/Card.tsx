@@ -6,9 +6,10 @@ import { ProgressiveImage } from './ui/ProgressiveImage';
 
 interface CardProps {
   project: Project;
+  onImageLoad?: () => void;
 }
 
-const Card: React.FC<CardProps> = ({ project }) => {
+const Card: React.FC<CardProps> = ({ project, onImageLoad }) => {
   const year = new Date(project.created_at).getFullYear();
 
   return (
@@ -24,6 +25,7 @@ const Card: React.FC<CardProps> = ({ project }) => {
           src={project.hero_image_thumbnail}
           alt={project.title}
           className="object-cover saturate-[0.2] scale-100 group-hover:saturate-100 group-hover:scale-[1.015] transition-all duration-900 ease-smooth"
+          onLoad={onImageLoad}
         />
       </div>
 

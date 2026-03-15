@@ -1,21 +1,21 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Film } from 'lucide-react';
 import { SearchBar } from '../components/ui/SearchBar';
-import { Project, Filter, ProjectType } from '../types';
+import { Project, ProjectType } from '../types';
 import { loadProjects, countProjects } from '../utils/dataLoader';
 import { loadProjectTypes } from '../utils/portfolioService';
 import CustomDropdown from '../components/forms/CustomDropdown';
-import MasonryGrid from '../TRASH/MasonryGrid';
+import ProjectGrid from '../components/project/ProjectGrid';
 import { designTokens } from '../styles/tokens';
 import { useUrlFilter, useClearUrlFilters } from '../hooks/useUrlFilters';
 
-const PROJECTS_PER_PAGE = 24;
+const BATCH_SIZE = 12;
 
 const ProjectsListPage: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [searchQuery, setSearchQuery] = useUrlFilter('q', '');
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [typeFilter, setTypeFilter] = useUrlFilter('type', 'all');
   const [typeOptions, setTypeOptions] = useState<{ value: string; label: string }[]>([
@@ -23,20 +23,22 @@ const ProjectsListPage: React.FC = () => {
   ]);
   const [hasMore, setHasMore] = useState(true);
   const [totalProjects, setTotalProjects] = useState(0);
+  const [viewportImagesLoaded, setViewportImagesLoaded] = useState(false);
+  const loadedCountRef = useRef(0);
   const observerTarget = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [projectsData, typesData, total] = await Promise.all([
-          loadProjects(PROJECTS_PER_PAGE, 0),
+          loadProjects(BATCH_SIZE, 0),
           loadProjectTypes(),
           countProjects(),
         ]);
 
+        setTotalProjects(total);
         setProjects(projectsData);
         setFilteredProjects(projectsData);
-        setTotalProjects(total);
         setHasMore(projectsData.length < total);
 
         setTypeOptions([
@@ -49,19 +51,32 @@ const ProjectsListPage: React.FC = () => {
       } catch (error) {
         console.error('Error loading projects:', error);
       } finally {
-        setLoading(false);
+        setInitialLoading(false);
       }
     };
 
+    countProjects().then(total => setTotalProjects(total));
     fetchData();
   }, []);
+
+  const handleImageLoad = useCallback(() => {
+    if (viewportImagesLoaded) return;
+    loadedCountRef.current += 1;
+    const target = filteredProjects.length > 0 ? filteredProjects.length : BATCH_SIZE;
+    if (loadedCountRef.current >= target) {
+      setViewportImagesLoaded(true);
+    }
+  }, [filteredProjects.length, viewportImagesLoaded]);
 
   const loadMoreProjects = useCallback(async () => {
     if (loadingMore || !hasMore || searchQuery.trim() || typeFilter !== 'all') return;
 
     setLoadingMore(true);
+    setViewportImagesLoaded(false);
+    loadedCountRef.current = 0;
+
     try {
-      const newProjects = await loadProjects(PROJECTS_PER_PAGE, projects.length);
+      const newProjects = await loadProjects(BATCH_SIZE, projects.length);
       setProjects(prev => [...prev, ...newProjects]);
       setHasMore(projects.length + newProjects.length < totalProjects);
     } catch (error) {
@@ -72,6 +87,8 @@ const ProjectsListPage: React.FC = () => {
   }, [projects.length, hasMore, loadingMore, totalProjects, searchQuery, typeFilter]);
 
   useEffect(() => {
+    if (!viewportImagesLoaded) return;
+
     const observer = new IntersectionObserver(
       entries => {
         if (entries[0].isIntersecting && hasMore && !loadingMore) {
@@ -91,7 +108,7 @@ const ProjectsListPage: React.FC = () => {
         observer.unobserve(currentTarget);
       }
     };
-  }, [hasMore, loadingMore, loadMoreProjects]);
+  }, [hasMore, loadingMore, loadMoreProjects, viewportImagesLoaded]);
 
   useEffect(() => {
     let filtered = projects;
@@ -114,9 +131,18 @@ const ProjectsListPage: React.FC = () => {
     setFilteredProjects(filtered);
   }, [projects, searchQuery, typeFilter]);
 
+  useEffect(() => {
+    loadedCountRef.current = 0;
+    setViewportImagesLoaded(false);
+  }, [searchQuery, typeFilter]);
+
   const clearFilters = useClearUrlFilters(['q', 'type']);
 
   const hasActiveFilters = searchQuery.trim() !== '' || typeFilter !== 'all';
+
+  const skeletonCount = totalProjects > 0
+    ? Math.min(totalProjects, BATCH_SIZE)
+    : BATCH_SIZE;
 
   return (
     <div className="min-h-screen bg-white">
@@ -155,10 +181,13 @@ const ProjectsListPage: React.FC = () => {
       </section>
 
       <section className="pb-16">
-        <MasonryGrid
+        <ProjectGrid
           projects={filteredProjects}
-          loading={loading}
+          initialLoading={initialLoading}
           loadingMore={loadingMore && !searchQuery.trim() && typeFilter === 'all'}
+          skeletonCount={skeletonCount}
+          batchSize={BATCH_SIZE}
+          onImageLoad={handleImageLoad}
           observerTarget={!searchQuery.trim() && typeFilter === 'all' ? observerTarget : undefined}
         />
       </section>
