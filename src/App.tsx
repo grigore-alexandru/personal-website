@@ -5,6 +5,7 @@ import PublicLayout from './components/PublicLayout';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
 const UnderConstructionPage = lazy(() => import('./pages/UnderConstructionPage'));
+const StoryPage = lazy(() => import('./pages/StoryPage'));
 const PortfolioLandingPage = lazy(() => import('./pages/PortfolioLandingPage'));
 const ProjectsListPage = lazy(() => import('./pages/ProjectsListPage'));
 const ProjectDetailPage = lazy(() => import('./pages/ProjectDetailPage'));
@@ -45,6 +46,7 @@ function App() {
         <Routes>
           <Route path="/" element={<PublicLayout><HomePage /></PublicLayout>} />
         <Route path="/about" element={<PublicLayout><UnderConstructionPage /></PublicLayout>} />
+        <Route path="/story" element={<PublicLayout><StoryPage /></PublicLayout>} />
         <Route path="/portfolio" element={<PublicLayout><PortfolioLandingPage /></PublicLayout>} />
         <Route path="/portfolio/projects" element={<PublicLayout><ProjectsListPage /></PublicLayout>} />
         <Route path="/portfolio/project/:slug" element={<PublicLayout><ProjectDetailPage /></PublicLayout>} />
