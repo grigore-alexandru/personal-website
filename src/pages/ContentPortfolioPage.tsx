@@ -215,7 +215,7 @@ export function ContentPortfolioPage() {
     <div className="min-h-screen bg-white">
       <Header />
 
-      <main className="max-w-screen-xl mx-auto px-6 pt-24 pb-16">
+      <main className="max-w-screen-xl mx-auto px-6 pt-12 pb-16">
         {/* ── Filter bar ── */}
         <div className="flex flex-col sm:flex-row gap-3 mb-8">
           <SearchBar
