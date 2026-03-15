@@ -1,25 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
 import { Project } from '../types';
 import { loadProject, loadProjects } from '../utils/dataLoader';
 import { designTokens } from '../styles/tokens';
 import ProjectHero from '../components/ProjectHero';
 import ImpactMetrics from '../components/project/ImpactMetrics';
 import TipTapRenderer from '../components/project/TipTapRenderer';
-import GalleryGrid, { GalleryGridSkeleton } from '../components/project/GalleryGrid';
-import GalleryModal from '../components/project/GalleryModal';
+import MediaCarousel from '../components/project/MediaCarousel';
 import TasksList from '../components/project/TasksList';
 import Recommendation from '../components/project/Recommendation';
 import ProjectNavigation from '../components/project/ProjectNavigation';
-import { ProjectDetailHeroSkeleton, MetricsSkeleton, ContentBlockSkeleton } from '../components/ui/SkeletonLoader';
+import { ProjectDetailHeroSkeleton, MetricsSkeleton, ContentBlockSkeleton, GallerySkeleton } from '../components/ui/SkeletonLoader';
 
 const ProjectDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [allProjects, setAllProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -28,11 +25,13 @@ const ProjectDetailPage: React.FC = () => {
   useEffect(() => {
     const fetchProject = async () => {
       if (!slug) return;
+
       try {
         const [projectData, projectsData] = await Promise.all([
           loadProject(slug),
           loadProjects(),
         ]);
+
         setProject(projectData);
         setAllProjects(projectsData);
       } catch (error) {
@@ -41,6 +40,7 @@ const ProjectDetailPage: React.FC = () => {
         setLoading(false);
       }
     };
+
     fetchProject();
   }, [slug]);
 
@@ -50,9 +50,7 @@ const ProjectDetailPage: React.FC = () => {
         <ProjectDetailHeroSkeleton />
         <MetricsSkeleton />
         <ContentBlockSkeleton />
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <GalleryGridSkeleton count={6} />
-        </div>
+        <GallerySkeleton />
       </div>
     );
   }
@@ -63,7 +61,10 @@ const ProjectDetailPage: React.FC = () => {
         <div className="pt-20 flex items-center justify-center min-h-screen">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-black mb-4">Project Not Found</h1>
-            <Link to="/portfolio" className="text-gray-600 hover:text-black underline">
+            <Link
+              to="/portfolio"
+              className="text-gray-600 hover:text-black underline"
+            >
               Return to Portfolio
             </Link>
           </div>
@@ -74,7 +75,8 @@ const ProjectDetailPage: React.FC = () => {
 
   const currentIndex = allProjects.findIndex((p) => p.id === project.id);
   const prevProject = currentIndex > 0 ? allProjects[currentIndex - 1] : null;
-  const nextProject = currentIndex < allProjects.length - 1 ? allProjects[currentIndex + 1] : null;
+  const nextProject =
+    currentIndex < allProjects.length - 1 ? allProjects[currentIndex + 1] : null;
 
   const hasMetrics = project.impact_metrics && project.impact_metrics.length > 0;
   const hasContent = project.project_content.length > 0;
@@ -124,10 +126,7 @@ const ProjectDetailPage: React.FC = () => {
             >
               Gallery
             </h2>
-            <GalleryGrid
-              items={project.project_content}
-              onItemClick={(index) => setGalleryIndex(index)}
-            />
+            <MediaCarousel items={project.project_content} />
           </section>
         )}
 
@@ -172,17 +171,10 @@ const ProjectDetailPage: React.FC = () => {
         )}
       </div>
 
-      <ProjectNavigation prevProject={prevProject} nextProject={nextProject} />
-
-      <AnimatePresence>
-        {galleryIndex !== null && (
-          <GalleryModal
-            items={project.project_content}
-            initialIndex={galleryIndex}
-            onClose={() => setGalleryIndex(null)}
-          />
-        )}
-      </AnimatePresence>
+      <ProjectNavigation
+        prevProject={prevProject}
+        nextProject={nextProject}
+      />
     </div>
   );
 };
