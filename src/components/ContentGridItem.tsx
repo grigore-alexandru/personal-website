@@ -7,9 +7,10 @@ interface ContentGridItemProps {
   content: ContentWithProject;
   onClick: () => void;
   onLoad?: () => void;
+  fetchPriority?: 'high' | 'low' | 'auto';
 }
 
-export function ContentGridItem({ content, onClick, onLoad }: ContentGridItemProps) {
+export function ContentGridItem({ content, onClick, onLoad, fetchPriority }: ContentGridItemProps) {
   const [mouseHovering, setMouseHovering] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -72,6 +73,7 @@ export function ContentGridItem({ content, onClick, onLoad }: ContentGridItemPro
               src={videoThumb.poster}
               alt={content.title}
               onLoad={onLoad}
+              fetchPriority={fetchPriority}
               className={`object-cover transition-[filter,opacity] duration-[350ms] ease-in-out ${
                 isHovering
                   ? 'opacity-0'
@@ -113,6 +115,7 @@ export function ContentGridItem({ content, onClick, onLoad }: ContentGridItemPro
             src={imageThumb.poster}
             alt={content.title}
             onLoad={onLoad}
+            fetchPriority={fetchPriority}
             className={`object-cover transition-[filter] duration-[350ms] ease-in-out ${
               isHovering ? 'saturate-100' : 'saturate-[0.3]'
             }`}

@@ -394,6 +394,7 @@ export function ContentPortfolioPage() {
                           content={item}
                           onClick={() => handleContentClick(item)}
                           onLoad={() => handleItemLoad(index)}
+                          fetchPriority={index === 0 ? 'high' : undefined}
                         />
                       </div>
                     </div>

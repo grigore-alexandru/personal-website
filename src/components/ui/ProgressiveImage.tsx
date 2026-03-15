@@ -6,6 +6,7 @@ interface ProgressiveImageProps {
   className?: string;
   skeletonClassName?: string;
   eager?: boolean;
+  fetchPriority?: 'high' | 'low' | 'auto';
   onLoad?: () => void;
   style?: React.CSSProperties;
 }
@@ -16,6 +17,7 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
   className = '',
   skeletonClassName = '',
   eager = false,
+  fetchPriority,
   onLoad,
   style,
 }) => {
@@ -79,6 +81,7 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
           alt={alt}
           loading={eager ? 'eager' : 'lazy'}
           decoding="async"
+          fetchPriority={fetchPriority}
           className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${
             loaded ? 'opacity-100' : 'opacity-0'
           } ${className}`}

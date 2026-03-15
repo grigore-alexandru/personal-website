@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { Project } from '../types';
 import SEO from '../components/SEO';
 import { SITE_URL } from '../config/seo';
@@ -103,6 +104,11 @@ const ProjectDetailPage: React.FC = () => {
           creator: { '@type': 'Organization', name: 'Cinematic Studio' },
         }}
       />
+      {project.hero_image_large && (
+        <Helmet>
+          <link rel="preload" as="image" href={project.hero_image_large} fetchpriority="high" />
+        </Helmet>
+      )}
       <ProjectHero
         bgUrl={project.hero_image_large}
         title={project.title}

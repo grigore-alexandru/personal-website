@@ -1,9 +1,13 @@
 import React, { useRef } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import { ArrowRight, Camera, Film, Star, Mail, Zap, Heart } from 'lucide-react';
 import { Button } from '../components/forms/Button';
 import SEO from '../components/SEO';
 import { SITE_URL } from '../config/seo';
+
+const HERO_IMAGE_URL =
+  'https://lqbyvubbzexujviflunv.supabase.co/storage/v1/object/sign/website-media/HOMEPAGE_PERSON.webp?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iNTIzNTU4Yi1iZjk0LTRiMTItYmQ1Yy1kOGM4MzExZDQ5ZWYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ3ZWJzaXRlLW1lZGlhL0hPTUVQQUdFX1BFUlNPTi53ZWJwIiwiaWF0IjoxNzcxNDU0NDE3LCJleHAiOjE4MDI5OTA0MTd9.1oZku9dB0uQgki25AM_MPMrd5fYZ48aqPdevTsi50Jw';
 
 const FadeIn: React.FC<{ children?: React.ReactNode; delay?: number; className?: string }> = ({
   children,
@@ -131,8 +135,9 @@ const Hero = () => {
             <div className="absolute inset-0 bg-surface-highlight rounded-[3rem] transform rotate-3" />
             <div className="absolute inset-0 bg-white rounded-[3rem] shadow-soft overflow-hidden transform transition-transform hover:-rotate-1">
               <img
-                src="https://lqbyvubbzexujviflunv.supabase.co/storage/v1/object/sign/website-media/HOMEPAGE_PERSON.webp?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iNTIzNTU4Yi1iZjk0LTRiMTItYmQ1Yy1kOGM4MzExZDQ5ZWYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ3ZWJzaXRlLW1lZGlhL0hPTUVQQUdFX1BFUlNPTi53ZWJwIiwiaWF0IjoxNzcxNDU0NDE3LCJleHAiOjE4MDI5OTA0MTd9.1oZku9dB0uQgki25AM_MPMrd5fYZ48aqPdevTsi50Jw"
-                alt="Portrait"
+                src={HERO_IMAGE_URL}
+                alt="Silviu-Alexandru Grigore — Filmmaker and Visual Storyteller"
+                fetchPriority="high"
                 className="w-full h-full object-cover object-top"
               />
             </div>
@@ -427,6 +432,9 @@ const Contact = () => (
 export default function HomePage() {
   return (
     <div className="bg-surface text-display overflow-hidden selection:bg-accent selection:text-white">
+      <Helmet>
+        <link rel="preload" as="image" href={HERO_IMAGE_URL} fetchpriority="high" />
+      </Helmet>
       <SEO
         title="Cinematic Studio"
         description="Award-winning video production studio specializing in cinematic storytelling. Explore a portfolio of advertisements, documentaries, and commercial productions."
