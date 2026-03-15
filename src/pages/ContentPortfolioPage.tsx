@@ -48,12 +48,20 @@ export function ContentPortfolioPage() {
   const batchSizeRef = useRef(CONTENT_PER_PAGE);
   // Whether the current batch has fully loaded — controls when next fetch is allowed
   const currentBatchLoadedRef = useRef(false);
+  // Fallback timer to unblock infinite scroll if some items never fire onLoad
+  const batchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const observerTarget = useRef<HTMLDivElement>(null);
 
   const [modalContent, setModalContent] = useState<ContentWithProject | null>(null);
   const [modalLoading, setModalLoading] = useState(false);
   const savedScrollY = useRef(0);
+
+  useEffect(() => {
+    return () => {
+      if (batchTimeoutRef.current) clearTimeout(batchTimeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     loadContent();
@@ -71,6 +79,13 @@ export function ContentPortfolioPage() {
     });
   }, []);
 
+  const scheduleBatchFallback = () => {
+    if (batchTimeoutRef.current) clearTimeout(batchTimeoutRef.current);
+    batchTimeoutRef.current = setTimeout(() => {
+      currentBatchLoadedRef.current = true;
+    }, 8000);
+  };
+
   const loadContent = async () => {
     currentBatchLoadedRef.current = false;
     batchSizeRef.current = CONTENT_PER_PAGE;
@@ -81,8 +96,8 @@ export function ContentPortfolioPage() {
     setContent(data);
     setTotalContent(total);
     setHasMore(data.length < total);
-    // Reset loaded tracking
     setLoadedSet(new Set());
+    scheduleBatchFallback();
   };
 
   const handleItemLoad = useCallback((index: number) => {
@@ -112,9 +127,10 @@ export function ContentPortfolioPage() {
         return merged;
       });
       setHasMore(offset + newContent.length < totalContent);
+      scheduleBatchFallback();
     } catch (error) {
       console.error('Error loading more content:', error);
-      currentBatchLoadedRef.current = true; // allow retry on error
+      currentBatchLoadedRef.current = true;
     } finally {
       setLoadingMore(false);
     }
@@ -274,7 +290,7 @@ export function ContentPortfolioPage() {
               {Array.from({ length: skeletonCount }).map((_, i) => (
                 <div
                   key={`init-skeleton-${i}`}
-                  className="h-full w-full"
+                  className="relative sm:row-span-1 w-full h-full"
                   style={{ animation: `fadeIn 0.25s ease-out ${i * 30}ms both` }}
                 >
                   <ContentGridItemSkeleton />
@@ -337,7 +353,7 @@ export function ContentPortfolioPage() {
                   Array.from({ length: CONTENT_PER_PAGE }).map((_, i) => (
                     <div
                       key={`batch-skeleton-${i}`}
-                      className="h-full w-full"
+                      className="relative sm:row-span-1 w-full h-full"
                       style={{ animation: `fadeIn 0.25s ease-out ${i * 30}ms both` }}
                     >
                       <ContentGridItemSkeleton />

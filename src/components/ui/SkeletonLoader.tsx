@@ -165,12 +165,8 @@ export const ProjectDetailSkeleton: React.FC = () => (
   </div>
 );
 
-export const ContentGridItemSkeleton: React.FC<{ isPortrait?: boolean }> = ({ isPortrait }) => (
-  <div
-    className={`skeleton-shimmer rounded-token-md overflow-hidden w-full h-full ${
-      isPortrait ? '' : 'aspect-[16/10]'
-    }`}
-  />
+export const ContentGridItemSkeleton: React.FC<{ isPortrait?: boolean }> = () => (
+  <div className="skeleton-shimmer rounded-token-md overflow-hidden w-full h-full" />
 );
 
 export const HeroImageSkeleton: React.FC = () => (
