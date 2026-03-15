@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useUrlFilter, useClearUrlFilters } from '../hooks/useUrlFilters';
 import { X, Film, Users } from 'lucide-react';
 import { SearchBar } from '../components/ui/SearchBar';
 import { ContentWithProject } from '../types';
@@ -27,10 +28,10 @@ export function ContentPortfolioPage() {
 
   const [content, setContent] = useState<ContentWithProject[]>([]);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [mediaFilter, setMediaFilter] = useState<MediaFilter>('all');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
-  const [clientFilter, setClientFilter] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [mediaFilter, setMediaFilter] = useUrlFilter('media', 'all');
+  const [typeFilter, setTypeFilter] = useUrlFilter('type', 'all');
+  const [clientFilter, setClientFilter] = useUrlFilter('client', 'all');
+  const [searchQuery, setSearchQuery] = useUrlFilter('q', '');
   const [hasMore, setHasMore] = useState(true);
   const [totalContent, setTotalContent] = useState(0);
 
@@ -189,12 +190,7 @@ export function ContentPortfolioPage() {
     });
   }, [content, mediaFilter, typeFilter, clientFilter, searchQuery]);
 
-  const clearFilters = () => {
-    setMediaFilter('all');
-    setTypeFilter('all');
-    setClientFilter('all');
-    setSearchQuery('');
-  };
+  const clearFilters = useClearUrlFilters(['media', 'type', 'client', 'q']);
 
   const handleContentClick = (item: ContentWithProject) => {
     navigate(`/portfolio/content/${item.slug}`);
@@ -232,7 +228,7 @@ export function ContentPortfolioPage() {
           <CustomDropdown
             options={MEDIA_OPTIONS}
             value={mediaFilter}
-            onChange={(v) => setMediaFilter(v as MediaFilter)}
+            onChange={setMediaFilter}
             ariaLabel="Filter by media type"
             className="w-full sm:w-40 lg:w-44"
           />

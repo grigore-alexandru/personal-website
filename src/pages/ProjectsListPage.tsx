@@ -7,16 +7,17 @@ import { loadProjectTypes } from '../utils/portfolioService';
 import CustomDropdown from '../components/forms/CustomDropdown';
 import MasonryGrid from '../TRASH/MasonryGrid';
 import { designTokens } from '../styles/tokens';
+import { useUrlFilter, useClearUrlFilters } from '../hooks/useUrlFilters';
 
 const PROJECTS_PER_PAGE = 24;
 
 const ProjectsListPage: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useUrlFilter('q', '');
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [typeFilter, setTypeFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useUrlFilter('type', 'all');
   const [typeOptions, setTypeOptions] = useState<{ value: string; label: string }[]>([
     { value: 'all', label: 'All Types' },
   ]);
@@ -113,10 +114,7 @@ const ProjectsListPage: React.FC = () => {
     setFilteredProjects(filtered);
   }, [projects, searchQuery, typeFilter]);
 
-  const clearFilters = () => {
-    setSearchQuery('');
-    setTypeFilter('all');
-  };
+  const clearFilters = useClearUrlFilters(['q', 'type']);
 
   const hasActiveFilters = searchQuery.trim() !== '' || typeFilter !== 'all';
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Calendar, X } from 'lucide-react';
 import { SearchBar } from '../components/ui/SearchBar';
+import { useUrlFilter, useClearUrlFilters } from '../hooks/useUrlFilters';
 import { BlogPost, loadAllPosts, countAllPosts } from '../utils/blogLoader';
 import BlogPostCard from '../components/BlogPostCard';
 import CustomDropdown from '../components/forms/CustomDropdown';
@@ -15,10 +16,10 @@ const POSTS_PER_PAGE = 20;
 const BlogListPage: React.FC = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useUrlFilter('q', '');
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [dateFilter, setDateFilter] = useState<DateFilter>('all');
+  const [dateFilter, setDateFilter] = useUrlFilter('date', 'all');
   const [hasMore, setHasMore] = useState(true);
   const [totalPosts, setTotalPosts] = useState(0);
   const observerTarget = useRef<HTMLDivElement>(null);
@@ -97,7 +98,7 @@ const BlogListPage: React.FC = () => {
       const now = new Date();
       const cutoffDate = new Date();
 
-      switch (dateFilter) {
+      switch (dateFilter as DateFilter) {
         case 'week':
           cutoffDate.setDate(now.getDate() - 7);
           break;
@@ -117,10 +118,7 @@ const BlogListPage: React.FC = () => {
     setFilteredPosts(filtered);
   }, [posts, searchQuery, dateFilter]);
 
-  const clearFilters = () => {
-    setSearchQuery('');
-    setDateFilter('all');
-  };
+  const clearFilters = useClearUrlFilters(['q', 'date']);
 
   const hasActiveFilters = searchQuery.trim() !== '' || dateFilter !== 'all';
 
@@ -143,7 +141,7 @@ const BlogListPage: React.FC = () => {
               { value: 'year', label: 'Past Year' },
             ]}
             value={dateFilter}
-            onChange={(val) => setDateFilter(val as DateFilter)}
+            onChange={setDateFilter}
             icon={<Calendar size={18} className="text-gray-400" />}
             className="sm:w-48"
           />
