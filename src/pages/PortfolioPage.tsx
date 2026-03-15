@@ -76,7 +76,7 @@ const PortfolioPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <section className="max-w-4xl mx-auto px-6 pt-24 pb-8">
+      <section className="max-w-4xl mx-auto px-6 pt-12 pb-8">
         <div className="flex flex-col sm:flex-row gap-3 mb-8">
           <SearchBar
             value={searchQuery}
