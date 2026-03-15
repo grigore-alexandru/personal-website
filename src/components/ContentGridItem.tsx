@@ -65,9 +65,9 @@ export function ContentGridItem({ content, onClick, onLoad }: ContentGridItemPro
             src={videoThumb.poster}
             alt={content.title}
             onLoad={onLoad}
-            className={`object-cover transition-all duration-400 ease-smooth ${
+            className={`object-cover transition-[transform,filter,opacity] duration-[350ms] ease-in-out ${
               isHovering
-                ? 'opacity-0 scale-[1.002]'
+                ? 'opacity-0 scale-[1.02]'
                 : 'opacity-100 scale-100 saturate-[0.3]'
             }`}
           />
@@ -79,9 +79,9 @@ export function ContentGridItem({ content, onClick, onLoad }: ContentGridItemPro
             playsInline
             preload="none"
             // Switched to ease-smooth
-            className={`absolute inset-0 w-full h-full object-cover transition-all duration-400 ease-smooth ${
+            className={`absolute inset-0 w-full h-full object-cover transition-[transform,opacity] duration-[350ms] ease-in-out ${
               isHovering
-                ? 'opacity-100 scale-[1.002]'
+                ? 'opacity-100 scale-[1.02]'
                 : 'opacity-0 scale-100'
             }`}
           />
@@ -93,9 +93,9 @@ export function ContentGridItem({ content, onClick, onLoad }: ContentGridItemPro
           src={imageThumb.poster}
           alt={content.title}
           onLoad={onLoad}
-          className={`object-cover transition-all duration-400 ease-smooth ${
+          className={`object-cover transition-[transform,filter] duration-[350ms] ease-in-out ${
             isHovering
-              ? 'scale-[1.002] saturate-100'
+              ? 'scale-[1.02] saturate-100'
               : 'scale-100 saturate-[0.3]'
           }`}
         />
