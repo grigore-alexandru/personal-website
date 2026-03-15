@@ -10,6 +10,8 @@ export interface SEOProps {
   canonicalUrl?: string;
   ogType?: string;
   ogImage?: string;
+  ogVideo?: string;
+  ogVideoType?: string;
   structuredData?: Record<string, unknown>;
 }
 

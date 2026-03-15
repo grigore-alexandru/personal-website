@@ -8,6 +8,8 @@ const SEO: React.FC<SEOProps> = ({
   canonicalUrl,
   ogType,
   ogImage,
+  ogVideo,
+  ogVideoType = 'video/mp4',
   structuredData,
 }) => {
   const resolvedTitle = title
@@ -17,7 +19,7 @@ const SEO: React.FC<SEOProps> = ({
     : defaultSEO.title;
   const resolvedDescription = description || defaultSEO.description;
   const resolvedCanonical = canonicalUrl || defaultSEO.canonicalUrl;
-  const resolvedOgType = ogType || defaultSEO.ogType;
+  const resolvedOgType = ogVideo ? 'video.other' : (ogType || defaultSEO.ogType);
   const resolvedOgImage = ogImage || defaultSEO.ogImage;
 
   return (
@@ -31,9 +33,14 @@ const SEO: React.FC<SEOProps> = ({
       <meta property="og:type" content={resolvedOgType} />
       <meta property="og:url" content={resolvedCanonical} />
       <meta property="og:image" content={resolvedOgImage} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
       <meta property="og:site_name" content={SITE_NAME} />
 
-      <meta name="twitter:card" content="summary_large_image" />
+      {ogVideo && <meta property="og:video" content={ogVideo} />}
+      {ogVideo && <meta property="og:video:type" content={ogVideoType} />}
+
+      <meta name="twitter:card" content={ogVideo ? 'player' : 'summary_large_image'} />
       <meta name="twitter:title" content={resolvedTitle} />
       <meta name="twitter:description" content={resolvedDescription} />
       <meta name="twitter:image" content={resolvedOgImage} />

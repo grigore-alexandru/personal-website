@@ -4,6 +4,9 @@ import { ContentWithProject } from '../types';
 import { loadContentBySlug } from '../utils/contentService';
 import { ContentPortfolioPage } from './ContentPortfolioPage';
 import { ContentDetailModal } from '../components/content/ContentDetailModal';
+import SEO from '../components/SEO';
+import { getSocialThumbnailUrl } from '../lib/storageClient';
+import { SITE_URL } from '../config/seo';
 
 export function ContentDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -44,8 +47,23 @@ export function ContentDetailPage() {
     return null;
   }
 
+  const ogImage = content?.thumbnail?.poster
+    ? getSocialThumbnailUrl(content.thumbnail.poster)
+    : null;
+
+  const ogVideo = content?.url ?? null;
+
   return (
     <>
+      {content && (
+        <SEO
+          title={content.title}
+          description={content.caption ?? undefined}
+          canonicalUrl={`${SITE_URL}/portfolio/content/${content.slug}`}
+          ogImage={ogImage ?? undefined}
+          ogVideo={ogVideo ?? undefined}
+        />
+      )}
       <ContentPortfolioPage />
       {loading ? (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">

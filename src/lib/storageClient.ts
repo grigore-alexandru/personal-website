@@ -132,6 +132,19 @@ export function parseStorageUrl(url: string): ParsedStorageUrl | null {
   return null;
 }
 
+export function getSocialThumbnailUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+
+  const parsed = parseStorageUrl(url);
+
+  if (parsed?.type === 'supabase') {
+    const base = url.split('?')[0];
+    return `${base}?width=1200&quality=70&format=origin`;
+  }
+
+  return url;
+}
+
 export async function deleteByUrl(url: string | null): Promise<void> {
   if (!url) return;
 
