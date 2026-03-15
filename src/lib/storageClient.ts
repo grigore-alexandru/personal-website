@@ -1,7 +1,7 @@
-import { PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
-import { S3ServiceException } from '@aws-sdk/client-s3';
-import { s4Client, getMegaS4PublicUrl } from './s4';
+import { getMegaS4PublicUrl } from './s4';
 import { supabase } from './supabase';
+
+const STORAGE_PROXY_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/storage-proxy`;
 
 export interface StorageUploadResult {
   publicUrl: string;
@@ -14,46 +14,66 @@ export interface StorageError {
   code?: string;
 }
 
+async function getAuthHeader(): Promise<string> {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_ANON_KEY;
+  return `Bearer ${token}`;
+}
+
 export async function uploadBlob(
   blob: Blob,
   bucket: string,
   key: string,
   contentType: string
 ): Promise<StorageUploadResult> {
-  const arrayBuffer = await blob.arrayBuffer();
-  const body = new Uint8Array(arrayBuffer);
+  const formData = new FormData();
+  formData.append('file', new File([blob], key.split('/').pop() ?? 'upload', { type: contentType }));
+  formData.append('bucket', bucket);
+  formData.append('key', key);
+  formData.append('contentType', contentType);
 
-  try {
-    await s4Client.send(
-      new PutObjectCommand({
-        Bucket: bucket,
-        Key: key,
-        Body: body,
-        ContentType: contentType,
-      })
-    );
-  } catch (err) {
-    if (err instanceof S3ServiceException) {
-      throw new Error(`Storage upload failed [${err.name}]: ${err.message}`);
-    }
-    throw new Error(`Storage upload failed: ${String(err)}`);
+  const authHeader = await getAuthHeader();
+
+  const response = await fetch(STORAGE_PROXY_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: authHeader,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ error: 'Upload failed' }));
+    throw new Error(`Storage upload failed: ${err.error ?? response.status}`);
   }
 
+  const result = await response.json() as { publicUrl: string; bucket: string; key: string };
+
   return {
-    publicUrl: getMegaS4PublicUrl(bucket, key),
-    bucket,
-    key,
+    publicUrl: result.publicUrl,
+    bucket: result.bucket,
+    key: result.key,
   };
 }
 
 export async function deleteObject(bucket: string, key: string): Promise<void> {
   try {
-    await s4Client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
-  } catch (err) {
-    if (err instanceof S3ServiceException) {
-      console.error(`Storage delete failed [${err.name}]: ${err.message}`);
-      return;
+    const authHeader = await getAuthHeader();
+
+    const response = await fetch(STORAGE_PROXY_URL, {
+      method: 'DELETE',
+      headers: {
+        Authorization: authHeader,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ bucket, key }),
+    });
+
+    if (!response.ok && response.status !== 204 && response.status !== 404) {
+      const err = await response.json().catch(() => ({ error: 'Delete failed' }));
+      console.error(`Storage delete failed: ${err.error ?? response.status}`);
     }
+  } catch (err) {
     console.error(`Storage delete failed: ${String(err)}`);
   }
 }
@@ -83,7 +103,7 @@ export function parseStorageUrl(url: string): ParsedStorageUrl | null {
     return { type: 'supabase', bucket: supabaseMatch[1], path: supabaseMatch[2] };
   }
 
-  const megaEndpoint = (import.meta.env.VITE_MEGA_S4_ENDPOINT ?? 'https://s3.eu-central-1.s4.mega.io').replace(/\/$/, '');
+  const megaEndpoint = 'https://s3.eu-central-1.s4.mega.io';
   const accountId = import.meta.env.VITE_MEGA_S4_ACCOUNT_ID ?? '';
 
   if (url.startsWith(megaEndpoint)) {

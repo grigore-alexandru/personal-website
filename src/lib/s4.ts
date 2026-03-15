@@ -1,20 +1,8 @@
-import { S3Client } from '@aws-sdk/client-s3';
-
-const endpoint = import.meta.env.VITE_MEGA_S4_ENDPOINT ?? 'https://s3.eu-central-1.s4.mega.io';
-const region = import.meta.env.VITE_MEGA_S4_REGION ?? 'eu-central-1';
-const accessKeyId = import.meta.env.VITE_MEGA_S4_ACCESS_KEY ?? '';
-const secretAccessKey = import.meta.env.VITE_MEGA_S4_SECRET_KEY ?? '';
-
-export const s4Client = new S3Client({
-  endpoint,
-  region,
-  credentials: { accessKeyId, secretAccessKey },
-  forcePathStyle: true,
-});
+const MEGA_S4_ENDPOINT = 'https://s3.eu-central-1.s4.mega.io';
+const MEGA_S4_ACCOUNT_ID = import.meta.env.VITE_MEGA_S4_ACCOUNT_ID ?? '';
 
 export function getMegaS4PublicUrl(bucket: string, key: string): string {
-  const base = (import.meta.env.VITE_MEGA_S4_ENDPOINT ?? 'https://s3.eu-central-1.s4.mega.io').replace(/\/$/, '');
-  const accountId = import.meta.env.VITE_MEGA_S4_ACCOUNT_ID ?? '';
+  const base = MEGA_S4_ENDPOINT.replace(/\/$/, '');
   const encodedKey = key.split('/').map(encodeURIComponent).join('/');
-  return `${base}/${accountId}/${bucket}/${encodedKey}`;
+  return `${base}/${MEGA_S4_ACCOUNT_ID}/${bucket}/${encodedKey}`;
 }
