@@ -24,7 +24,7 @@ const Card: React.FC<CardProps> = ({ project, onImageLoad }) => {
         <ProgressiveImage
           src={project.hero_image_thumbnail}
           alt={project.title}
-          className="object-cover saturate-[0.2] scale-100 group-hover:saturate-100 group-hover:scale-[1.015] transition-all duration-900 ease-smooth"
+          className="object-cover saturate-[0.2] scale-100 group-hover:saturate-100 group-hover:scale-[1.02] transition-[transform,filter] duration-[350ms] ease-in-out"
           onLoad={onImageLoad}
         />
       </div>

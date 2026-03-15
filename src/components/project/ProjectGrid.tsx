@@ -26,7 +26,7 @@ const ProjectGrid: React.FC<ProjectGridProps> = ({
 
   if (initialLoading) {
     return (
-      <div className="max-w-screen-xl mx-auto px-6 pb-16">
+      <div className="pb-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: skeletonCount }).map((_, i) => (
             <div
@@ -43,14 +43,14 @@ const ProjectGrid: React.FC<ProjectGridProps> = ({
 
   if (!projects.length && !loadingMore) {
     return (
-      <div className="max-w-screen-xl mx-auto px-6 py-24 text-center">
+      <div className="py-24 text-center">
         <p className="text-neutral-400 text-sm tracking-wide">No projects match your criteria.</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-screen-xl mx-auto px-6 pb-16">
+    <div className="pb-16">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {projects.map((project, index) => {
           const isNew = !revealedRef.current.has(project.id);
