@@ -6,9 +6,10 @@ import { ProgressiveImage } from './ui/ProgressiveImage';
 interface ContentGridItemProps {
   content: ContentWithProject;
   onClick: () => void;
+  onLoad?: () => void;
 }
 
-export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
+export function ContentGridItem({ content, onClick, onLoad }: ContentGridItemProps) {
   const [mouseHovering, setMouseHovering] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -63,7 +64,7 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
           <ProgressiveImage
             src={videoThumb.poster}
             alt={content.title}
-            // Switched to ease-smooth for that premium curve
+            onLoad={onLoad}
             className={`object-cover transition-all duration-400 ease-smooth ${
               isHovering
                 ? 'opacity-0 scale-[1.002]'
@@ -91,7 +92,7 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
         <ProgressiveImage
           src={imageThumb.poster}
           alt={content.title}
-          // Switched to ease-smooth
+          onLoad={onLoad}
           className={`object-cover transition-all duration-400 ease-smooth ${
             isHovering
               ? 'scale-[1.002] saturate-100'
@@ -101,7 +102,10 @@ export function ContentGridItem({ content, onClick }: ContentGridItemProps) {
       )}
 
       {!thumbnail && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
+        <div
+          className="absolute inset-0 flex items-center justify-center bg-gray-200"
+          ref={(el) => { if (el) onLoad?.(); }}
+        >
           <span className="text-gray-400 text-sm">No thumbnail</span>
         </div>
       )}
