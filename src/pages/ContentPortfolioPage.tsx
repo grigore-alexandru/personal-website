@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { X, Film, Users, Image, Video, LayoutGrid } from 'lucide-react';
+import { X, Film, Users } from 'lucide-react';
 import { SearchBar } from '../components/ui/SearchBar';
 import { ContentWithProject } from '../types';
 import { loadPublishedContentWithProjects, countPublishedContent, loadContentBySlug } from '../utils/contentService';
@@ -16,9 +16,9 @@ type MediaFilter = 'all' | 'videos' | 'photos';
 const CONTENT_PER_PAGE = 12;
 
 const MEDIA_OPTIONS = [
-  { value: 'all',    label: 'All Media', icon: <LayoutGrid size={14} /> },
-  { value: 'videos', label: 'Videos',    icon: <Video      size={14} /> },
-  { value: 'photos', label: 'Photos',    icon: <Image      size={14} /> },
+  { value: 'all',    label: 'All Media'  },
+  { value: 'videos', label: 'Videos'     },
+  { value: 'photos', label: 'Photos'     },
 ];
 
 export function ContentPortfolioPage() {
@@ -26,6 +26,7 @@ export function ContentPortfolioPage() {
   const { slug } = useParams<{ slug?: string }>();
 
   const [content, setContent] = useState<ContentWithProject[]>([]);
+  const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [mediaFilter, setMediaFilter] = useState<MediaFilter>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -33,14 +34,6 @@ export function ContentPortfolioPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [hasMore, setHasMore] = useState(true);
   const [totalContent, setTotalContent] = useState(0);
-
-  // Track which item indexes have finished loading their poster image
-  const [loadedSet, setLoadedSet] = useState<Set<number>>(new Set());
-  // Number of items currently "in flight" (fetched but poster not yet loaded)
-  const batchSizeRef = useRef(CONTENT_PER_PAGE);
-  // Whether the current batch has fully loaded — controls when next fetch is allowed
-  const currentBatchLoadedRef = useRef(false);
-
   const observerTarget = useRef<HTMLDivElement>(null);
 
   const [modalContent, setModalContent] = useState<ContentWithProject | null>(null);
@@ -52,8 +45,7 @@ export function ContentPortfolioPage() {
   }, []);
 
   const loadContent = async () => {
-    currentBatchLoadedRef.current = false;
-    batchSizeRef.current = CONTENT_PER_PAGE;
+    setLoading(true);
     const [data, total] = await Promise.all([
       loadPublishedContentWithProjects(CONTENT_PER_PAGE, 0),
       countPublishedContent()
@@ -61,57 +53,28 @@ export function ContentPortfolioPage() {
     setContent(data);
     setTotalContent(total);
     setHasMore(data.length < total);
-    // Reset loaded tracking
-    setLoadedSet(new Set());
+    setLoading(false);
   };
 
-  const handleItemLoad = useCallback((index: number) => {
-    setLoadedSet(prev => {
-      const next = new Set(prev);
-      next.add(index);
-      // When every item in the current batch (0 .. content.length-1) has loaded,
-      // mark the batch as complete so the intersection observer can trigger the next fetch.
-      if (next.size >= batchSizeRef.current) {
-        currentBatchLoadedRef.current = true;
-      }
-      return next;
-    });
-  }, []);
-
   const loadMoreContent = useCallback(async () => {
-    if (loadingMore || !hasMore || !currentBatchLoadedRef.current) return;
+    if (loadingMore || !hasMore || hasActiveFilters) return;
 
-    currentBatchLoadedRef.current = false;
     setLoadingMore(true);
     try {
-      const offset = content.length;
-      const newContent = await loadPublishedContentWithProjects(CONTENT_PER_PAGE, offset);
-      setContent(prev => {
-        const merged = [...prev, ...newContent];
-        batchSizeRef.current = merged.length;
-        return merged;
-      });
-      setHasMore(offset + newContent.length < totalContent);
+      const newContent = await loadPublishedContentWithProjects(CONTENT_PER_PAGE, content.length);
+      setContent(prev => [...prev, ...newContent]);
+      setHasMore(content.length + newContent.length < totalContent);
     } catch (error) {
       console.error('Error loading more content:', error);
-      currentBatchLoadedRef.current = true; // allow retry on error
     } finally {
       setLoadingMore(false);
     }
   }, [content.length, hasMore, loadingMore, totalContent]);
 
-  const hasActiveFilters = mediaFilter !== 'all' || typeFilter !== 'all' || clientFilter !== 'all' || searchQuery !== '';
-
   useEffect(() => {
     const observer = new IntersectionObserver(
       entries => {
-        if (
-          entries[0].isIntersecting &&
-          hasMore &&
-          !loadingMore &&
-          !hasActiveFilters &&
-          currentBatchLoadedRef.current
-        ) {
+        if (entries[0].isIntersecting && hasMore && !loadingMore && !hasActiveFilters) {
           loadMoreContent();
         }
       },
@@ -121,7 +84,7 @@ export function ContentPortfolioPage() {
     const currentTarget = observerTarget.current;
     if (currentTarget) observer.observe(currentTarget);
     return () => { if (currentTarget) observer.unobserve(currentTarget); };
-  }, [hasMore, loadingMore, loadMoreContent, hasActiveFilters]);
+  }, [hasMore, loadingMore, loadMoreContent]);
 
   useEffect(() => {
     if (!slug) {
@@ -178,6 +141,8 @@ export function ContentPortfolioPage() {
     ];
   }, [content]);
 
+  const hasActiveFilters = mediaFilter !== 'all' || typeFilter !== 'all' || clientFilter !== 'all' || searchQuery !== '';
+
   const filteredContent = useMemo(() => {
     return content.filter((item) => {
       if (mediaFilter === 'videos' && item.content_type.slug !== 'video') return false;
@@ -206,13 +171,6 @@ export function ContentPortfolioPage() {
 
   const isModalOpen = !!slug;
 
-  // How many skeleton placeholders to show: fill up to CONTENT_PER_PAGE slots
-  // while the initial fetch is in flight (content.length === 0 and no filters active).
-  const isInitialLoad = content.length === 0 && !hasActiveFilters;
-  const skeletonCount = CONTENT_PER_PAGE;
-
-  const displayItems = hasActiveFilters ? filteredContent : content;
-
   const gridClasses = "fluid-grid";
 
   return (
@@ -221,12 +179,12 @@ export function ContentPortfolioPage() {
 
       <main className="max-w-screen-xl mx-auto px-6 pt-24 pb-16">
         {/* ── Filter bar ── */}
-        <div className="flex flex-col sm:flex-row gap-2 mb-8">
+        <div className="flex flex-col sm:flex-row gap-3 mb-8">
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
-            placeholder="Search..."
-            className="w-full sm:w-44 lg:w-56"
+            placeholder="Search by title..."
+            className="flex-1"
           />
 
           <CustomDropdown
@@ -234,25 +192,25 @@ export function ContentPortfolioPage() {
             value={mediaFilter}
             onChange={(v) => setMediaFilter(v as MediaFilter)}
             ariaLabel="Filter by media type"
-            className="w-full sm:w-36"
+            className="w-full sm:w-40 lg:w-44"
           />
 
           <CustomDropdown
             options={typeOptions}
             value={typeFilter}
             onChange={setTypeFilter}
-            icon={<Film size={14} />}
+            icon={<Film size={16} />}
             ariaLabel="Filter by project type"
-            className="w-full sm:w-40 lg:w-48"
+            className="w-full sm:w-44 lg:w-52"
           />
 
           <CustomDropdown
             options={clientOptions}
             value={clientFilter}
             onChange={setClientFilter}
-            icon={<Users size={14} />}
+            icon={<Users size={16} />}
             ariaLabel="Filter by client"
-            className="w-full sm:w-40 lg:w-48"
+            className="w-full sm:w-44 lg:w-52"
           />
         </div>
 
@@ -277,20 +235,15 @@ export function ContentPortfolioPage() {
 
         {/* ── Grid wrapped in an inline-size container ── */}
         <div style={{ containerType: 'inline-size' }} className="w-full">
-          {isInitialLoad ? (
-            /* Initial page load — show full skeleton grid immediately */
+          {loading ? (
             <div className={gridClasses}>
-              {Array.from({ length: skeletonCount }).map((_, i) => (
-                <div
-                  key={`init-skeleton-${i}`}
-                  className="h-full w-full"
-                  style={{ animation: `fadeIn 0.25s ease-out ${i * 30}ms both` }}
-                >
+              {Array.from({ length: 12 }).map((_, i) => (
+                <div key={i} className="h-full w-full" style={{ animation: `fadeIn 0.3s ease-in-out ${i * 50}ms both` }}>
                   <ContentGridItemSkeleton />
                 </div>
               ))}
             </div>
-          ) : hasActiveFilters && filteredContent.length === 0 ? (
+          ) : filteredContent.length === 0 ? (
             <div className="text-center py-20">
               <p
                 className="text-neutral-400"
@@ -302,60 +255,34 @@ export function ContentPortfolioPage() {
           ) : (
             <>
               <div className={gridClasses}>
-                {displayItems.map((item, index) => {
+                {filteredContent.map((item, index) => {
                   const isPortrait = item.format === 'portrait';
-                  const isLoaded = loadedSet.has(index);
                   return (
                     <div
                       key={item.id}
-                      className={`relative h-full w-full ${isPortrait ? 'sm:row-span-2' : 'sm:row-span-1'}`}
-                      style={
-                        index < CONTENT_PER_PAGE
-                          ? {
-                              opacity: 0,
-                              transform: 'translateY(12px)',
-                              animation: `fadeInUp 0.5s ease-out ${Math.min(index, 11) * 0.04}s forwards`,
-                            }
-                          : undefined
-                      }
+                      className={`h-full w-full ${isPortrait ? 'sm:row-span-2' : 'sm:row-span-1'}`}
+                      style={{
+                        opacity: 0,
+                        transform: 'translateY(20px)',
+                        animation: `fadeInUp 0.6s ease-out ${Math.min(index, 12) * 0.05}s forwards`,
+                      }}
                     >
-                      {/* Skeleton sits underneath; fades away once poster is loaded */}
-                      <div
-                        className={`absolute inset-0 transition-opacity duration-400 ${
-                          isLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'
-                        }`}
-                      >
-                        <ContentGridItemSkeleton isPortrait={isPortrait} />
-                      </div>
-
-                      {/* Content fades in on top once poster is loaded */}
-                      <div
-                        className={`absolute inset-0 transition-opacity duration-400 ${
-                          isLoaded ? 'opacity-100' : 'opacity-0'
-                        }`}
-                      >
-                        <ContentGridItem
-                          content={item}
-                          onClick={() => handleContentClick(item)}
-                          onLoad={() => handleItemLoad(index)}
-                        />
-                      </div>
+                      <ContentGridItem content={item} onClick={() => handleContentClick(item)} />
                     </div>
                   );
                 })}
 
-                {/* "Next batch" skeleton placeholders — shown while loadingMore */}
-                {loadingMore && !hasActiveFilters &&
-                  Array.from({ length: CONTENT_PER_PAGE }).map((_, i) => (
+                {loadingMore && !hasActiveFilters && (
+                  Array.from({ length: 6 }).map((_, i) => (
                     <div
-                      key={`batch-skeleton-${i}`}
+                      key={`skeleton-${i}`}
                       className="h-full w-full"
-                      style={{ animation: `fadeIn 0.25s ease-out ${i * 30}ms both` }}
+                      style={{ animation: `fadeIn 0.3s ease-in-out ${i * 50}ms both` }}
                     >
                       <ContentGridItemSkeleton />
                     </div>
                   ))
-                }
+                )}
               </div>
 
               {!hasActiveFilters && <div ref={observerTarget} className="h-4 mt-6" />}
@@ -379,9 +306,9 @@ export function ContentPortfolioPage() {
         /* FLUID GRID SYSTEM */
         .fluid-grid {
           display: grid;
-          gap: 2rem;
+          gap: 2rem; 
           grid-template-columns: 1fr;
-          grid-auto-rows: auto;
+          grid-auto-rows: auto; 
           grid-auto-flow: row dense;
           width: 100%;
         }
