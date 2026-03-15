@@ -45,8 +45,8 @@ export function BulkEditForm({
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-white border-l border-gray-100">
 
-      {/* Sticky header */}
-      <div className="sticky top-24 z-10 bg-white border-b border-gray-100 px-5 py-3">
+      {/* Fixed header — sits outside the scroll container */}
+      <div className="flex-shrink-0 bg-white border-b border-gray-100 px-5 py-3">
         <div className="flex items-center justify-between gap-2">
           <h3
             className="text-sm font-bold text-black truncate"
@@ -67,7 +67,7 @@ export function BulkEditForm({
       </div>
 
       {/* Scrollable body */}
-      <div className="overflow-y-auto p-5 space-y-5">
+      <div className="flex-1 overflow-y-auto p-5 space-y-5">
 
         {/* Preview thumbnail */}
         {!isMulti && (
