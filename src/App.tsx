@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import PublicLayout from './components/PublicLayout';
+import { initDataLayer } from './utils/analytics';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
 const UnderConstructionPage = lazy(() => import('./pages/UnderConstructionPage'));
@@ -29,15 +30,7 @@ const PageLoader = () => (
   </div>
 );
 
-declare global {
-  interface Window {
-    dataLayer: any[];
-  }
-}
-
-if (typeof window !== 'undefined' && !window.dataLayer) {
-  window.dataLayer = [];
-}
+initDataLayer();
 
 function App() {
   return (

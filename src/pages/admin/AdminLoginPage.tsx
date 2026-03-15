@@ -1,8 +1,11 @@
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, useRef, FormEvent } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { signIn } from '../../utils/authService';
 import { useAuth } from '../../hooks/useAuth';
+
+const COOLDOWN_THRESHOLD = 3;
+const COOLDOWN_SECONDS = 30;
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -10,6 +13,9 @@ export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [cooldownRemaining, setCooldownRemaining] = useState(0);
+  const failureCount = useRef(0);
+  const cooldownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated } = useAuth();
@@ -22,20 +28,52 @@ export default function AdminLoginPage() {
     }
   }, [isAuthenticated, navigate, from]);
 
+  useEffect(() => {
+    return () => {
+      if (cooldownTimer.current) clearInterval(cooldownTimer.current);
+    };
+  }, []);
+
+  const startCooldown = () => {
+    setCooldownRemaining(COOLDOWN_SECONDS);
+    cooldownTimer.current = setInterval(() => {
+      setCooldownRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(cooldownTimer.current!);
+          cooldownTimer.current = null;
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const isBlocked = cooldownRemaining > 0;
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (isBlocked) return;
+
     setError('');
     setLoading(true);
 
     const { user, error: authError } = await signIn(email, password);
 
     if (authError) {
-      setError(authError.message);
+      failureCount.current += 1;
+      if (failureCount.current >= COOLDOWN_THRESHOLD) {
+        failureCount.current = 0;
+        startCooldown();
+        setError(`Too many failed attempts. Please wait ${COOLDOWN_SECONDS} seconds.`);
+      } else {
+        setError(authError.message);
+      }
       setLoading(false);
       return;
     }
 
     if (user) {
+      failureCount.current = 0;
       setTimeout(() => {
         navigate(from, { replace: true });
       }, 300);
@@ -103,7 +141,7 @@ export default function AdminLoginPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || isBlocked}
             className="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-neutral-800 transition-all disabled:bg-neutral-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (
@@ -111,6 +149,8 @@ export default function AdminLoginPage() {
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 <span>Signing in...</span>
               </>
+            ) : isBlocked ? (
+              `Try again in ${cooldownRemaining}s`
             ) : (
               'Sign In'
             )}

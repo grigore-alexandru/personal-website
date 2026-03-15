@@ -56,8 +56,8 @@ export async function getCurrentUser(): Promise<User | null> {
 
 export async function checkAuthStatus(): Promise<boolean> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    return !!session;
+    const { data: { user } } = await supabase.auth.getUser();
+    return !!user;
   } catch (err) {
     return false;
   }
