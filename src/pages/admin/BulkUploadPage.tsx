@@ -19,17 +19,12 @@ import { BulkProjectSelector } from '../../components/admin/bulk/BulkProjectSele
 import { StagingGrid } from '../../components/admin/bulk/StagingGrid';
 import { BulkEditForm } from '../../components/admin/bulk/BulkEditForm';
 import { BulkProgressFooter } from '../../components/admin/bulk/BulkProgressFooter';
+import { ProjectOption } from '../../components/forms/ProjectSelector';
 
 const ALLOWED_IMAGE_MIME = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 const MAX_FILES = 100;
 
 type Phase = 'drop' | 'project' | 'staging' | 'uploading';
-
-interface ProjectOption {
-  id: string;
-  title: string;
-  typeName: string;
-}
 
 export function BulkUploadPage() {
   const navigate = useNavigate();

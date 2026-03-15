@@ -6,6 +6,8 @@ import { FormInput } from '../../../components/forms/FormInput';
 import { FormCheckbox } from '../../../components/forms/FormCheckbox';
 import { FormTextarea } from '../../../components/forms/FormTextarea';
 import { Button } from '../../../components/forms/Button';
+import { FormatToggle } from '../../../components/forms/FormatToggle';
+import { ProjectSelector, ProjectOption } from '../../../components/forms/ProjectSelector';
 import { ToastContainer } from '../../../components/ui/Toast';
 import { ValidationError as ValidationErrorComponent } from '../../../components/ui/ValidationError';
 import { VideoThumbnailHoverPreview } from '../../../components/admin/VideoThumbnailHoverPreview';
@@ -92,13 +94,6 @@ const initialFormData: ContentFormData = {
 interface ContentCreateFormProps {
   mode?: FormMode;
 }
-
-interface ProjectOption {
-  id: string;
-  title: string;
-  typeName: string;
-}
-
 
 export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
   const navigate = useNavigate();
@@ -733,18 +728,12 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
             <h2 className="text-lg font-bold text-black mb-4">Project Assignment</h2>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Assign to Project</label>
-              <select
-                value={formData.projectId || ''}
-                onChange={(e) => setFormData({ ...formData, projectId: e.target.value || null })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-              >
-                <option value="">None</option>
-                {projectOptions.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.title} ({p.typeName})
-                  </option>
-                ))}
-              </select>
+              <ProjectSelector
+                value={formData.projectId}
+                projects={projectOptions}
+                onChange={(id) => setFormData({ ...formData, projectId: id })}
+                placeholder="None"
+              />
             </div>
           </section>
 
@@ -1026,30 +1015,6 @@ export function ContentCreateForm({ mode = 'create' }: ContentCreateFormProps) {
 }
 
 // ── Sub-components ──────────────────────────────────────────────────────────
-
-interface FormatToggleProps {
-  value: 'landscape' | 'portrait';
-  onChange: (v: 'landscape' | 'portrait') => void;
-}
-
-function FormatToggle({ value, onChange }: FormatToggleProps) {
-  return (
-    <div className="inline-flex rounded-lg border border-gray-300 bg-white p-1">
-      {(['landscape', 'portrait'] as const).map((opt) => (
-        <button
-          key={opt}
-          type="button"
-          onClick={() => onChange(opt)}
-          className={`px-4 py-2 rounded-md font-medium capitalize transition-colors ${
-            value === opt ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-100'
-          }`}
-        >
-          {opt}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 interface ThumbnailUploadZoneProps {
   thumbnail: ThumbnailState;

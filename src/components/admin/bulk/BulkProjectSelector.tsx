@@ -1,10 +1,5 @@
 import { ChevronRight } from 'lucide-react';
-
-interface ProjectOption {
-  id: string;
-  title: string;
-  typeName: string;
-}
+import { ProjectOption } from '../../forms/ProjectSelector';
 
 interface BulkProjectSelectorProps {
   projects: ProjectOption[];
