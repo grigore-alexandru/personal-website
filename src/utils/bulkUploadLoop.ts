@@ -49,6 +49,8 @@ export async function runBulkUploadLoop(
 ): Promise<void> {
   const { onItemUpdate, onProgress, onDone, cancelRef } = callbacks;
 
+  cancelRef.current = false;
+
   let imageTypeId: string;
   try {
     imageTypeId = await resolveImageTypeId();
