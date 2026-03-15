@@ -171,25 +171,10 @@ export function ContentPortfolioPage() {
 
   const isModalOpen = !!slug;
 
-  // New Grid Layout Strategy:
-  // Mobile: 1 column, height relies entirely on aspect ratio.
-  // Tablet/Desktop: 2, 3, or 4 columns, dense packing, strict auto-rows to control size.
-  // Inside ContentPortfolioPage.tsx
-// Inside ContentPortfolioPage.tsx
-// Mobile: 1 col (full width)
-// sm (640px): 2 cols (~320px wide) -> 1.33 ratio
-// md (768px): 2 cols (~384px wide) -> 1.6 ratio (Perfect)
-// lg (1024px): 3 cols (~341px wide) -> 1.42 ratio
-// xl (1280px): 3 cols (~426px wide) -> 1.77 ratio
-// 2xl (1536px): 4 cols (~384px wide) -> 1.6 ratio (Perfect)
-
-const gridClasses = "grid justify-between gap-y-8 grid-flow-row-dense " +
-                      "grid-cols-1 auto-rows-auto " +                         // Mobile (<640px): 1 fluid col
-                      "sm:grid-cols-[repeat(2,280px)] sm:auto-rows-[175px] " +    // sm (640px+): 280/175 = 1.6
-                      "md:grid-cols-[repeat(2,330px)] md:auto-rows-[206px] " +    // md (768px+): 330/206 = 1.6
-                      "lg:grid-cols-[repeat(3,300px)] lg:auto-rows-[187px] " +    // lg (1024px+): 300/187 = 1.6
-                      "xl:grid-cols-[repeat(3,380px)] xl:auto-rows-[237px] " +    // xl (1280px+): 380/237 = 1.6
-                      "2xl:grid-cols-[repeat(4,340px)] 2xl:auto-rows-[212px]";    // 2xl (1536px+): 340/212 = 1.6
+  // New Fluid Grid Layout Strategy:
+  // We use CSS Container Queries (cqw) to perfectly calculate the row height
+  // based on the actual width of the columns, maintaining a strict 1.6 ratio.
+  const gridClasses = "fluid-grid";
 
   return (
     <div className="min-h-screen bg-white">
@@ -274,61 +259,62 @@ const gridClasses = "grid justify-between gap-y-8 grid-flow-row-dense " +
           </div>
         )}
 
-        {/* ── Grid ── */}
-        {loading ? (
-          <div className={gridClasses}>
-            {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} className="h-full w-full" style={{ animation: `fadeIn 0.3s ease-in-out ${i * 50}ms both` }}>
-                <ContentGridItemSkeleton />
-              </div>
-            ))}
-          </div>
-        ) : filteredContent.length === 0 ? (
-          <div className="text-center py-20">
-            <p
-              className="text-neutral-400"
-              style={{ fontFamily: designTokens.typography.fontFamily, fontSize: designTokens.typography.sizes.sm }}
-            >
-              No content found matching your filters
-            </p>
-          </div>
-        ) : (
-          <>
+        {/* ── Grid wrapped in an inline-size container ── */}
+        <div style={{ containerType: 'inline-size' }} className="w-full">
+          {loading ? (
             <div className={gridClasses}>
-              {filteredContent.map((item, index) => {
-                const isPortrait = item.format === 'portrait';
-                return (
-                  <div
-                    key={item.id}
-                    // This is the magic. No row spanning on mobile, native CSS span-2 on desktop.
-                    className={`h-full w-full ${isPortrait ? 'sm:row-span-2' : 'sm:row-span-1'}`}
-                    style={{
-                      opacity: 0,
-                      transform: 'translateY(20px)',
-                      animation: `fadeInUp 0.6s ease-out ${Math.min(index, 12) * 0.05}s forwards`,
-                    }}
-                  >
-                    <ContentGridItem content={item} onClick={() => handleContentClick(item)} />
-                  </div>
-                );
-              })}
-
-              {loadingMore && !hasActiveFilters && (
-                Array.from({ length: 6 }).map((_, i) => (
-                  <div
-                    key={`skeleton-${i}`}
-                    className="h-full w-full"
-                    style={{ animation: `fadeIn 0.3s ease-in-out ${i * 50}ms both` }}
-                  >
-                    <ContentGridItemSkeleton />
-                  </div>
-                ))
-              )}
+              {Array.from({ length: 12 }).map((_, i) => (
+                <div key={i} className="h-full w-full" style={{ animation: `fadeIn 0.3s ease-in-out ${i * 50}ms both` }}>
+                  <ContentGridItemSkeleton />
+                </div>
+              ))}
             </div>
+          ) : filteredContent.length === 0 ? (
+            <div className="text-center py-20">
+              <p
+                className="text-neutral-400"
+                style={{ fontFamily: designTokens.typography.fontFamily, fontSize: designTokens.typography.sizes.sm }}
+              >
+                No content found matching your filters
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className={gridClasses}>
+                {filteredContent.map((item, index) => {
+                  const isPortrait = item.format === 'portrait';
+                  return (
+                    <div
+                      key={item.id}
+                      className={`h-full w-full ${isPortrait ? 'sm:row-span-2' : 'sm:row-span-1'}`}
+                      style={{
+                        opacity: 0,
+                        transform: 'translateY(20px)',
+                        animation: `fadeInUp 0.6s ease-out ${Math.min(index, 12) * 0.05}s forwards`,
+                      }}
+                    >
+                      <ContentGridItem content={item} onClick={() => handleContentClick(item)} />
+                    </div>
+                  );
+                })}
 
-            {!hasActiveFilters && <div ref={observerTarget} className="h-4 mt-6" />}
-          </>
-        )}
+                {loadingMore && !hasActiveFilters && (
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <div
+                      key={`skeleton-${i}`}
+                      className="h-full w-full"
+                      style={{ animation: `fadeIn 0.3s ease-in-out ${i * 50}ms both` }}
+                    >
+                      <ContentGridItemSkeleton />
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {!hasActiveFilters && <div ref={observerTarget} className="h-4 mt-6" />}
+            </>
+          )}
+        </div>
       </main>
 
       {/* ── Detail modal overlay ── */}
@@ -342,8 +328,46 @@ const gridClasses = "grid justify-between gap-y-8 grid-flow-row-dense " +
         ) : null
       )}
 
-      {/* ONLY Animations remain here! Native CSS Grid handles all the math now. */}
+      {/* ── CSS Grid and Animations ── */}
       <style>{`
+        /* FLUID GRID SYSTEM */
+        .fluid-grid {
+          display: grid;
+          gap: 2rem; /* Tailwind's gap-8 = 32px */
+          grid-template-columns: 1fr;
+          grid-auto-rows: auto; /* Mobile relies on natural content height */
+          grid-auto-flow: row dense;
+          width: 100%;
+        }
+
+        /* sm & md (640px to 1023px): 2 columns */
+        @media (min-width: 640px) {
+          .fluid-grid {
+            grid-template-columns: repeat(2, 1fr);
+            /* (100% container width - 1 gap of 2rem) / 2 cols / 1.6 ratio */
+            grid-auto-rows: calc(((100cqw - 2rem) / 2) / 1.6);
+          }
+        }
+
+        /* lg & xl (1024px to 1535px): 3 columns */
+        @media (min-width: 1024px) {
+          .fluid-grid {
+            grid-template-columns: repeat(3, 1fr);
+            /* (100% container width - 2 gaps of 2rem) / 3 cols / 1.6 ratio */
+            grid-auto-rows: calc(((100cqw - 4rem) / 3) / 1.6);
+          }
+        }
+
+        /* 2xl (1536px+): 4 columns */
+        @media (min-width: 1536px) {
+          .fluid-grid {
+            grid-template-columns: repeat(4, 1fr);
+            /* (100% container width - 3 gaps of 2rem) / 4 cols / 1.6 ratio */
+            grid-auto-rows: calc(((100cqw - 6rem) / 4) / 1.6);
+          }
+        }
+
+        /* ANIMATIONS */
         @keyframes fadeInUp {
           to { opacity: 1; transform: translateY(0); }
         }
