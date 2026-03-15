@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CreditCard as Edit, MoreVertical, Loader2, Video, Image as ImageIcon, GripVertical, Check } from 'lucide-react';
+import { CreditCard as Edit, MoreVertical, Loader2, Video, Image as ImageIcon, GripVertical, Check, FolderOpen, Unlink } from 'lucide-react';
 import { designTokens } from '../../styles/tokens';
 import { ProgressiveImage } from '../ui/ProgressiveImage';
 
@@ -15,6 +15,8 @@ interface AdminContentCardProps {
     is_draft: boolean;
     order_index: number;
   };
+  projectId?: string | null;
+  projectTitle?: string | null;
   onEdit: (contentId: string) => void;
   onToggleStatus: (contentId: string, currentIsDraft: boolean) => Promise<void>;
   onDelete: (contentId: string) => void;
@@ -34,6 +36,8 @@ interface AdminContentCardProps {
 
 export function AdminContentCard({
   content,
+  projectId,
+  projectTitle,
   onEdit,
   onToggleStatus,
   onDelete,
@@ -77,7 +81,7 @@ export function AdminContentCard({
       onDrop={(e) => onDrop(e, content.id)}
       onDragEnd={onDragEnd}
       onClick={(e) => onCardClick?.(e, content.id)}
-      className={`relative bg-white border rounded-lg overflow-hidden transition-all duration-200 group cursor-move flex flex-col h-full ${
+      className={`relative bg-white border rounded-lg transition-all duration-200 group cursor-move flex flex-col h-full ${
         isDragging ? 'opacity-40 scale-95 shadow-none' : ''
       } ${
         isDragOver
@@ -169,7 +173,7 @@ export function AdminContentCard({
         </div>
       </div>
 
-      <div className="relative w-full pt-[100%] flex-shrink-0">
+      <div className="relative w-full pt-[100%] flex-shrink-0 overflow-hidden rounded-t-lg">
         {thumbnailUrl ? (
           <ProgressiveImage
             src={thumbnailUrl}
@@ -221,6 +225,20 @@ export function AdminContentCard({
             <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-medium capitalize whitespace-nowrap">
               {content.platform}
             </span>
+          )}
+        </div>
+
+        <div className="mb-2">
+          {projectId ? (
+            <div className="flex items-center gap-1 px-1.5 py-1 bg-teal-50 border border-teal-200 rounded text-xs text-teal-700 font-medium min-w-0">
+              <FolderOpen size={11} className="flex-shrink-0" />
+              <span className="truncate">{projectTitle}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1 px-1.5 py-1 bg-amber-50 border border-amber-200 rounded text-xs text-amber-700 font-medium">
+              <Unlink size={11} className="flex-shrink-0" />
+              <span className="whitespace-nowrap">Unassigned</span>
+            </div>
           )}
         </div>
 

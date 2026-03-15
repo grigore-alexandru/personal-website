@@ -13,6 +13,7 @@ import {
   toggleContentDraft,
   deleteContent,
   updateContentOrder,
+  type ContentAdminItem,
 } from '../../utils/contentService';
 import { supabase } from '../../lib/supabase';
 
@@ -27,6 +28,8 @@ interface ContentListItem {
   thumbnail: any;
   is_draft: boolean;
   order_index: number;
+  project_id: string | null;
+  project_title: string | null;
 }
 
 type FilterType = 'all' | 'published' | 'drafts';
@@ -80,7 +83,7 @@ export function ContentManagementPage() {
 
     const contentData = await loadAllContentForAdmin();
     setContent(
-      contentData.map((c) => ({
+      contentData.map((c: ContentAdminItem) => ({
         id: c.id,
         title: c.title,
         slug: c.slug,
@@ -91,6 +94,8 @@ export function ContentManagementPage() {
         thumbnail: c.thumbnail,
         is_draft: c.is_draft,
         order_index: c.order_index,
+        project_id: c.project_id,
+        project_title: c.project_title,
       }))
     );
 
@@ -580,6 +585,8 @@ export function ContentManagementPage() {
                 isDraggingActive={draggedId !== null}
                 dragCount={isDraggingMultiple ? selectedIds.size : 0}
                 isPivot={draggedId === contentItem.id}
+                projectId={contentItem.project_id}
+                projectTitle={contentItem.project_title}
                 cardRef={(el) => {
                   if (el) cardRefsMap.current.set(contentItem.id, el);
                   else cardRefsMap.current.delete(contentItem.id);

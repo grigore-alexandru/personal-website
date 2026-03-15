@@ -140,19 +140,47 @@ export async function toggleContentDraft(
   }
 }
 
-export async function loadAllContentForAdmin(): Promise<Content[]> {
-  const { data, error } = await supabase
-    .from('content')
-    .select('*, content_type:content_types(*)')
-    .order('order_index', { ascending: false })
-    .order('created_at', { ascending: false });
+export interface ContentAdminItem extends Content {
+  project_id: string | null;
+  project_title: string | null;
+}
 
-  if (error) {
-    console.error('Error loading content for admin:', error);
+export async function loadAllContentForAdmin(): Promise<ContentAdminItem[]> {
+  const [contentResult, projectContentResult] = await Promise.all([
+    supabase
+      .from('content')
+      .select('*, content_type:content_types(*)')
+      .order('order_index', { ascending: false })
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('project_content')
+      .select('content_id, project:projects(id, title)')
+      .order('created_at', { ascending: true }),
+  ]);
+
+  if (contentResult.error) {
+    console.error('Error loading content for admin:', contentResult.error);
     return [];
   }
 
-  return (data || []) as unknown as Content[];
+  const projectMap = new Map<string, { id: string; title: string }>();
+  if (!projectContentResult.error && projectContentResult.data) {
+    for (const row of projectContentResult.data) {
+      const project = row.project as unknown as { id: string; title: string } | null;
+      if (project && !projectMap.has(row.content_id)) {
+        projectMap.set(row.content_id, project);
+      }
+    }
+  }
+
+  return (contentResult.data || []).map((item) => {
+    const project = projectMap.get(item.id) ?? null;
+    return {
+      ...(item as unknown as Content),
+      project_id: project?.id ?? null,
+      project_title: project?.title ?? null,
+    };
+  });
 }
 
 export async function updateContentOrder(
