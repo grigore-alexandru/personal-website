@@ -9,11 +9,6 @@ export interface StorageUploadResult {
   key: string;
 }
 
-export interface StorageError {
-  message: string;
-  code?: string;
-}
-
 async function getAuthHeader(): Promise<string> {
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -26,34 +21,44 @@ export async function uploadBlob(
   key: string,
   contentType: string
 ): Promise<StorageUploadResult> {
-  const formData = new FormData();
-  formData.append('file', new File([blob], key.split('/').pop() ?? 'upload', { type: contentType }));
-  formData.append('bucket', bucket);
-  formData.append('key', key);
-  formData.append('contentType', contentType);
-
   const authHeader = await getAuthHeader();
 
-  const response = await fetch(STORAGE_PROXY_URL, {
-    method: 'POST',
-    headers: {
-      Authorization: authHeader,
-    },
-    body: formData,
-  });
+  // Step 1: Ask edge function for a presigned URL (no file data sent to Supabase)
+  const presignRes = await fetch(
+    `${STORAGE_PROXY_URL}?bucket=${encodeURIComponent(bucket)}&key=${encodeURIComponent(key)}`,
+    {
+      method: 'GET',
+      headers: { Authorization: authHeader },
+    }
+  );
 
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({ error: 'Upload failed' }));
-    throw new Error(`Storage upload failed: ${err.error ?? response.status}`);
+  if (!presignRes.ok) {
+    const err = await presignRes.json().catch(() => ({ error: 'Presign failed' }));
+    throw new Error(`Failed to get presigned URL: ${err.error ?? presignRes.status}`);
   }
 
-  const result = await response.json() as { publicUrl: string; bucket: string; key: string };
-
-  return {
-    publicUrl: result.publicUrl,
-    bucket: result.bucket,
-    key: result.key,
+  const { presignedUrl, publicUrl } = await presignRes.json() as {
+    presignedUrl: string;
+    publicUrl: string;
+    bucket: string;
+    key: string;
   };
+
+  // Step 2: Upload directly from browser to Mega S4 — Supabase never touches the body
+  const uploadRes = await fetch(presignedUrl, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': contentType,
+    },
+    body: blob,
+  });
+
+  if (!uploadRes.ok) {
+    const errText = await uploadRes.text().catch(() => '');
+    throw new Error(`Storage upload failed: ${uploadRes.status} ${errText}`);
+  }
+
+  return { publicUrl, bucket, key };
 }
 
 export async function deleteObject(bucket: string, key: string): Promise<void> {
@@ -89,11 +94,13 @@ export function generateStorageKey(folder: string, originalName: string, suffix:
   return `${folder}/${timestamp}-${random}-${base}-${suffix}.${ext}`;
 }
 
-interface ParsedStorageUrl {
-  type: 'supabase' | 'mega-s4' | 'unknown';
-  bucket: string;
-  path: string;
-}
+// ... keep parseStorageUrl, getSocialThumbnailUrl, deleteByUrl unchanged
+```
+
+The entire upload flow is now:
+```
+Browser → GET /storage-proxy?bucket=&key=  → Edge Function (generates presigned URL, no body)
+Browser → PUT https://s3.mega.io/...?X-Amz-...  → Mega S4 directly (Supabase never sees the body)
 
 export function parseStorageUrl(url: string): ParsedStorageUrl | null {
   if (!url) return null;
