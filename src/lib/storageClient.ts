@@ -9,6 +9,17 @@ export interface StorageUploadResult {
   key: string;
 }
 
+export interface StorageError {
+  message: string;
+  code?: string;
+}
+
+interface ParsedStorageUrl {
+  type: 'supabase' | 'mega-s4' | 'unknown';
+  bucket: string;
+  path: string;
+}
+
 async function getAuthHeader(): Promise<string> {
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -23,7 +34,7 @@ export async function uploadBlob(
 ): Promise<StorageUploadResult> {
   const authHeader = await getAuthHeader();
 
-  // Step 1: Ask edge function for a presigned URL (no file data sent to Supabase)
+  // Step 1: Ask edge function for a presigned URL — no file data sent to Supabase
   const presignRes = await fetch(
     `${STORAGE_PROXY_URL}?bucket=${encodeURIComponent(bucket)}&key=${encodeURIComponent(key)}`,
     {
@@ -87,20 +98,19 @@ export function getPublicUrl(bucket: string, key: string): string {
   return getMegaS4PublicUrl(bucket, key);
 }
 
-export function generateStorageKey(folder: string, originalName: string, suffix: string, ext: string): string {
+export function generateStorageKey(
+  folder: string,
+  originalName: string,
+  suffix: string,
+  ext: string
+): string {
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(2, 8);
-  const base = originalName.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9-_]/g, '_');
+  const base = originalName
+    .replace(/\.[^/.]+$/, '')
+    .replace(/[^a-zA-Z0-9-_]/g, '_');
   return `${folder}/${timestamp}-${random}-${base}-${suffix}.${ext}`;
 }
-
-// ... keep parseStorageUrl, getSocialThumbnailUrl, deleteByUrl unchanged
-```
-
-The entire upload flow is now:
-```
-Browser → GET /storage-proxy?bucket=&key=  → Edge Function (generates presigned URL, no body)
-Browser → PUT https://s3.mega.io/...?X-Amz-...  → Mega S4 directly (Supabase never sees the body)
 
 export function parseStorageUrl(url: string): ParsedStorageUrl | null {
   if (!url) return null;
@@ -118,22 +128,18 @@ export function parseStorageUrl(url: string): ParsedStorageUrl | null {
     const parts = rest.split('/');
 
     if (accountId && parts[0] === accountId && parts.length >= 3) {
-      const bucket = parts[1];
-      const keyParts = parts.slice(2);
       return {
         type: 'mega-s4',
-        bucket,
-        path: decodeURIComponent(keyParts.join('/')),
+        bucket: parts[1],
+        path: decodeURIComponent(parts.slice(2).join('/')),
       };
     }
 
     if (parts.length >= 2) {
-      const bucket = parts[0];
-      const keyParts = parts.slice(1);
       return {
         type: 'mega-s4',
-        bucket,
-        path: decodeURIComponent(keyParts.join('/')),
+        bucket: parts[0],
+        path: decodeURIComponent(parts.slice(1).join('/')),
       };
     }
   }
@@ -161,14 +167,11 @@ export function parseStorageUrl(url: string): ParsedStorageUrl | null {
 
 export function getSocialThumbnailUrl(url: string | null | undefined): string | null {
   if (!url) return null;
-
   const parsed = parseStorageUrl(url);
-
   if (parsed?.type === 'supabase') {
     const base = url.split('?')[0];
     return `${base}?width=1200&quality=70&format=origin`;
   }
-
   return url;
 }
 
@@ -183,9 +186,7 @@ export async function deleteByUrl(url: string | null): Promise<void> {
 
   if (parsed.type === 'supabase') {
     const { error } = await supabase.storage.from(parsed.bucket).remove([parsed.path]);
-    if (error) {
-      console.error('Supabase delete failed:', error.message);
-    }
+    if (error) console.error('Supabase delete failed:', error.message);
     return;
   }
 
