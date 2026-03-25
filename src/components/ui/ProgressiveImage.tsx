@@ -26,10 +26,11 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
   const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
+    let isMounted = true;
     setLoaded(false);
     setError(false);
 
-    if (!src) return;
+    if (!src) return () => { isMounted = false; };
 
     const img = new window.Image();
     img.src = src;
@@ -37,33 +38,40 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
     if (img.complete && img.naturalWidth > 0) {
       setLoaded(true);
       onLoad?.();
-      return;
+      return () => { isMounted = false; };
     }
 
     const handleLoad = () => {
       if (img.decode) {
         img.decode().then(() => {
-          setLoaded(true);
-          onLoad?.();
+          if (isMounted) {
+            setLoaded(true);
+            onLoad?.();
+          }
         }).catch(() => {
-          setLoaded(true);
-          onLoad?.();
+          if (isMounted) {
+            setLoaded(true);
+            onLoad?.();
+          }
         });
-      } else {
+      } else if (isMounted) {
         setLoaded(true);
         onLoad?.();
       }
     };
 
     const handleError = () => {
-      setError(true);
-      onLoad?.(); // Notify the parent so the skeleton loader can disappear!
+      if (isMounted) {
+        setError(true);
+        onLoad?.();
+      }
     };
 
     img.addEventListener('load', handleLoad);
     img.addEventListener('error', handleError);
 
     return () => {
+      isMounted = false;
       img.removeEventListener('load', handleLoad);
       img.removeEventListener('error', handleError);
     };

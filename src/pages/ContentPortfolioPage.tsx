@@ -54,6 +54,7 @@ export function ContentPortfolioPage() {
   // Fallback timer to unblock infinite scroll if some items never fire onLoad
   const batchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const isMountedRef = useRef(true);
   const observerTarget = useRef<HTMLDivElement>(null);
 
   const [modalContent, setModalContent] = useState<ContentWithProject | null>(null);
@@ -63,7 +64,9 @@ export function ContentPortfolioPage() {
   const contentRef = useRef<ContentWithProject[]>([]);
 
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
+      isMountedRef.current = false;
       if (batchTimeoutRef.current) clearTimeout(batchTimeoutRef.current);
     };
   }, []);
@@ -75,12 +78,14 @@ export function ContentPortfolioPage() {
   useEffect(() => {
     loadContent();
     loadAllClients().then(clients => {
+      if (!isMountedRef.current) return;
       setClientOptions([
         { value: 'all', label: 'All Clients' },
         ...clients.map(c => ({ value: c, label: c })),
       ]);
     });
     loadProjectTypes().then(types => {
+      if (!isMountedRef.current) return;
       setTypeOptions([
         { value: 'all', label: 'All Types' },
         ...types.map(t => ({ value: t.name, label: t.name })),
@@ -103,6 +108,7 @@ export function ContentPortfolioPage() {
         loadPublishedContentWithProjects(CONTENT_PER_PAGE, 0),
         countPublishedContent()
       ]);
+      if (!isMountedRef.current) return;
       setContent(data);
       setTotalContent(total);
       setHasMore(data.length < total);
@@ -111,7 +117,7 @@ export function ContentPortfolioPage() {
     } catch (error) {
       console.error('Error loading content:', error);
     } finally {
-      setInitialLoading(false);
+      if (isMountedRef.current) setInitialLoading(false);
     }
   };
 
@@ -136,6 +142,7 @@ export function ContentPortfolioPage() {
     try {
       const offset = content.length;
       const newContent = await loadPublishedContentWithProjects(CONTENT_PER_PAGE, offset);
+      if (!isMountedRef.current) return;
       setContent(prev => {
         const merged = [...prev, ...newContent];
         batchSizeRef.current = merged.length;
@@ -147,7 +154,7 @@ export function ContentPortfolioPage() {
       console.error('Error loading more content:', error);
       currentBatchLoadedRef.current = true;
     } finally {
-      setLoadingMore(false);
+      if (isMountedRef.current) setLoadingMore(false);
     }
   }, [content.length, hasMore, loadingMore, totalContent]);
 
