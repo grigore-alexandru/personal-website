@@ -441,6 +441,8 @@ export async function loadPublishedContentWithProjects(
     return [];
   }
 
+  const contentIds = (contentData || []).map((c) => c.id);
+
   const { data: projectContentData, error: projectContentError } = await supabase
     .from('project_content')
     .select(`
@@ -453,6 +455,7 @@ export async function loadPublishedContentWithProjects(
         project_type:project_types(name)
       )
     `)
+    .in('content_id', contentIds)
     .eq('project.is_draft', false);
 
   if (projectContentError) {
