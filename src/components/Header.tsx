@@ -43,7 +43,7 @@ const Header: React.FC = () => {
               letterSpacing: designTokens.typography.letterSpacings.wide,
             }}
           >
-            Silviu-Alexandru
+            Alexandru
           </span>
           <span
             className="text-lg font-bold tracking-wide"
