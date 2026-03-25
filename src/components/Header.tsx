@@ -134,6 +134,7 @@ const Header: React.FC = () => {
 
                   ? 'font-bold bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 shadow-sm'
 
+                  : 'hover:bg-gray-50'
 
               }`}
 
