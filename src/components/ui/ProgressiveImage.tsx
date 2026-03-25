@@ -55,7 +55,10 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
       }
     };
 
-    const handleError = () => setError(true);
+    const handleError = () => {
+      setError(true);
+      onLoad?.(); // Notify the parent so the skeleton loader can disappear!
+    };
 
     img.addEventListener('load', handleLoad);
     img.addEventListener('error', handleError);
