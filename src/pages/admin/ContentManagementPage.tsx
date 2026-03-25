@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Loader2, X, Eye, EyeOff, AlertCircle, Layers } from 'lucide-react';
+import { Plus, Loader2, X, Eye, EyeOff, AlertCircle, Layers, Trash2 } from 'lucide-react';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { AdminLayout } from '../../components/admin/AdminLayout';
 import { AdminContentCard } from '../../components/admin/AdminContentCard';
@@ -59,6 +59,7 @@ export function ContentManagementPage() {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
 
   const [rubberBand, setRubberBand] = useState<RubberBand>({
     startX: 0, startY: 0, currentX: 0, currentY: 0, active: false,
@@ -161,26 +162,31 @@ export function ContentManagementPage() {
     }
   };
 
-  const handleDelete = (contentId: string) => {
-    setContentToDelete(contentId);
+  const handleDelete = (contentId?: string) => {
+    setContentToDelete(contentId ?? null);
     setDeleteModalOpen(true);
   };
 
   const confirmDelete = async () => {
-    if (!contentToDelete) return;
+    const idsToDelete = contentToDelete ? [contentToDelete] : [...selectedIds];
+    if (idsToDelete.length === 0) return;
+
     setIsDeleting(true);
 
-    const result = await deleteContent(contentToDelete);
-    if (result.success) {
-      setContent((prev) => prev.filter((c) => c.id !== contentToDelete));
+    const results = await Promise.all(idsToDelete.map((id) => deleteContent(id)));
+    const failed = results.filter((r) => !r.success);
+
+    if (failed.length === 0) {
+      const deletedSet = new Set(idsToDelete);
+      setContent((prev) => prev.filter((c) => !deletedSet.has(c.id)));
       setSelectedIds((prev) => {
         const next = new Set(prev);
-        next.delete(contentToDelete);
+        idsToDelete.forEach((id) => next.delete(id));
         return next;
       });
-      showToast('success', 'Content deleted');
+      showToast('success', idsToDelete.length > 1 ? `${idsToDelete.length} items deleted` : 'Content deleted');
     } else {
-      showToast('error', result.error || 'Failed to delete content');
+      showToast('error', `Failed to delete ${failed.length} item${failed.length > 1 ? 's' : ''}`);
     }
 
     setIsDeleting(false);
@@ -190,21 +196,36 @@ export function ContentManagementPage() {
 
   const handleCardClick = useCallback((e: React.MouseEvent, contentId: string) => {
     if (isFiltered) return;
-    const isMulti = e.ctrlKey || e.metaKey;
-    if (isMulti) {
+
+    if (e.shiftKey && lastSelectedId) {
+      const anchorIdx = filteredContent.findIndex((c) => c.id === lastSelectedId);
+      const targetIdx = filteredContent.findIndex((c) => c.id === contentId);
+      if (anchorIdx !== -1 && targetIdx !== -1) {
+        const lo = Math.min(anchorIdx, targetIdx);
+        const hi = Math.max(anchorIdx, targetIdx);
+        setSelectedIds((prev) => {
+          const next = new Set(prev);
+          for (let i = lo; i <= hi; i++) next.add(filteredContent[i].id);
+          return next;
+        });
+      }
+      setLastSelectedId(contentId);
+      return;
+    }
+
+    if (e.ctrlKey || e.metaKey) {
       setSelectedIds((prev) => {
         const next = new Set(prev);
-        if (next.has(contentId)) {
-          next.delete(contentId);
-        } else {
-          next.add(contentId);
-        }
+        if (next.has(contentId)) next.delete(contentId);
+        else next.add(contentId);
         return next;
       });
     } else {
       setSelectedIds(new Set([contentId]));
     }
-  }, [isFiltered]);
+
+    setLastSelectedId(contentId);
+  }, [isFiltered, lastSelectedId, filteredContent]);
 
   const handleDragStart = (e: React.DragEvent, contentId: string) => {
     if (isFiltered) return;
@@ -641,6 +662,13 @@ export function ContentManagementPage() {
             <EyeOff size={15} />
             Unpublish All
           </button>
+          <button
+            onClick={() => handleDelete()}
+            className="flex items-center gap-1.5 text-sm font-medium text-red-400 hover:text-red-300 transition-colors"
+          >
+            <Trash2 size={15} />
+            Delete Selected
+          </button>
           <div className="w-px h-5 bg-gray-600" />
           <button
             onClick={() => setSelectedIds(new Set())}
@@ -664,8 +692,10 @@ export function ContentManagementPage() {
           <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
             <h3 className="text-xl font-bold text-black mb-2">Delete Content</h3>
             <p className="text-gray-600 mb-6">
-              Are you sure you want to delete this content? This action cannot be undone and will
-              remove all associated files.
+              {!contentToDelete && selectedIds.size > 1
+                ? `Are you sure you want to delete ${selectedIds.size} items? This action cannot be undone and will remove all associated files.`
+                : 'Are you sure you want to delete this content? This action cannot be undone and will remove all associated files.'
+              }
             </p>
             <div className="flex gap-3">
               <button
