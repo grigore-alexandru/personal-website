@@ -1,15 +1,21 @@
 import type { Config, Context } from "@netlify/edge-functions";
-import { extractTextFromTipTap } from '../utils/dataLoader';
 
 const SITE_NAME = "Alexandru Grigore";
 const SITE_URL = "https://sweet-vacherin-65bc21.netlify.app";
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.jpg`;
+
+interface TipTapNode {
+  type?: string;
+  text?: string;
+  content?: TipTapNode[];
+}
 
 interface Post {
   title: string;
   excerpt: string | null;
   hero_image_large: string | null;
   published_at: string;
+  content: TipTapNode | null;
 }
 
 function escapeAttr(str: string): string {
@@ -18,6 +24,12 @@ function escapeAttr(str: string): string {
     .replace(/"/g, "&quot;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
+}
+
+function extractText(node: TipTapNode): string {
+  if (node.text) return node.text;
+  if (!node.content) return "";
+  return node.content.map(extractText).join(" ");
 }
 
 export default async function handler(request: Request, context: Context) {
@@ -46,7 +58,7 @@ export default async function handler(request: Request, context: Context) {
   }
 
   try {
-    const fetchUrl = `${supabaseUrl}/rest/v1/posts?slug=eq.${encodeURIComponent(slug)}&is_draft=eq.false&select=title,excerpt,hero_image_large,published_at&limit=1`;
+    const fetchUrl = `${supabaseUrl}/rest/v1/posts?slug=eq.${encodeURIComponent(slug)}&is_draft=eq.false&select=title,excerpt,hero_image_large,published_at,content&limit=1`;
 
     const dbResponse = await fetch(fetchUrl, {
       headers: {
@@ -70,7 +82,12 @@ export default async function handler(request: Request, context: Context) {
 
     const rawTitle = post.title || "Blog Post";
     const resolvedTitle = escapeAttr(`${rawTitle} | ${SITE_NAME}`);
-    const resolvedDescription = escapeAttr(post.excerpt || "");
+
+    const fallbackDescription = post.content
+      ? extractText(post.content).slice(0, 160).trim()
+      : "";
+    const resolvedDescription = escapeAttr(post.excerpt || fallbackDescription);
+
     const resolvedImage = post.hero_image_large
       ? escapeAttr(post.hero_image_large)
       : DEFAULT_OG_IMAGE;
@@ -80,12 +97,11 @@ export default async function handler(request: Request, context: Context) {
       "@context": "https://schema.org",
       "@type": "BlogPosting",
       headline: rawTitle,
-      description: post.excerpt || extractTextFromTipTap(post.content).slice(0,160).trim() || undefined,
-          image: post.heroImageLarge ?? undefined,,
+      description: post.excerpt || fallbackDescription || undefined,
       image: post.hero_image_large || undefined,
       url: `${SITE_URL}/blog/${slug}`,
       datePublished: post.published_at,
-      author: { "@type": "Organization", name: "Cinematic Studio" },
+      author: { "@type": "Organization", name: SITE_NAME },
     });
 
     const metaTags = `
