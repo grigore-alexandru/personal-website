@@ -1,4 +1,5 @@
 import type { Config, Context } from "@netlify/edge-functions";
+import { extractTextFromTipTap } from '../utils/dataLoader';
 
 const SITE_NAME = "Alexandru Grigore";
 const SITE_URL = "https://sweet-vacherin-65bc21.netlify.app";
@@ -79,7 +80,8 @@ export default async function handler(request: Request, context: Context) {
       "@context": "https://schema.org",
       "@type": "BlogPosting",
       headline: rawTitle,
-      description: post.excerpt || undefined,
+      description: post.excerpt || extractTextFromTipTap(post.content).slice(0,160).trim() || undefined,
+          image: post.heroImageLarge ?? undefined,,
       image: post.hero_image_large || undefined,
       url: `${SITE_URL}/blog/${slug}`,
       datePublished: post.published_at,
