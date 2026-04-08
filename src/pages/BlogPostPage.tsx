@@ -11,6 +11,7 @@ import Image from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
 import { BlogPostPageSkeleton } from '../components/ui/SkeletonLoader';
 import { ProgressiveImage } from '../components/ui/ProgressiveImage';
+import { extractTextFromTipTap } from '../utils/dataLoader';
 
 const BlogPostPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -118,7 +119,7 @@ const BlogPostPage: React.FC = () => {
           '@context': 'https://schema.org',
           '@type': 'BlogPosting',
           headline: post.title,
-          description: post.excerpt || undefined,
+          undefined;
           image: post.heroImageLarge ?? undefined,
           url: `${SITE_URL}/blog/${post.slug}`,
           datePublished: post.publishedAt,
