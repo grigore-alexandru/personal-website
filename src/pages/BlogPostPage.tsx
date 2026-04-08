@@ -119,7 +119,7 @@ const BlogPostPage: React.FC = () => {
           '@context': 'https://schema.org',
           '@type': 'BlogPosting',
           headline: post.title,
-          undefined;
+          description: post.excerpt || extractTextFromTipTap(post.content).slice(0,160).trim() || undefined,
           image: post.heroImageLarge ?? undefined,
           url: `${SITE_URL}/blog/${post.slug}`,
           datePublished: post.publishedAt,
