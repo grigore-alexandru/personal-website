@@ -3,12 +3,13 @@ import type { Config, Context } from "@netlify/edge-functions";
 const SITE_NAME = "Alexandru Grigore";
 const SITE_URL = "https://sweet-vacherin-65bc21.netlify.app";
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.jpg`;
+const BASE_DESCRIPTION = "Articles, insights, and behind-the-scenes stories from the studio.";
 
 interface Post {
   title: string;
   excerpt: string | null;
   hero_image_large: string | null;
-  published_at: string;
+  tags: string[] | null;
 }
 
 function escapeAttr(str: string): string {
@@ -19,13 +20,14 @@ function escapeAttr(str: string): string {
     .replace(/>/g, "&gt;");
 }
 
+function capitalize(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 export default async function handler(request: Request, context: Context) {
   const url = new URL(request.url);
 
-  const pathSegments = url.pathname.replace(/\/$/, "").split("/");
-  const slug = pathSegments[pathSegments.length - 1];
-
-  if (!slug || slug === "blog") {
+  if (url.pathname.replace(/\/$/, "") !== "/blog") {
     return context.next();
   }
 
@@ -40,50 +42,69 @@ export default async function handler(request: Request, context: Context) {
   const supabaseKey = Netlify.env.get("VITE_SUPABASE_ANON_KEY");
 
   if (!supabaseUrl || !supabaseKey) {
-    console.error("[inject-blog-meta] Missing Supabase env vars");
+    console.error("[inject-blog-list-meta] Missing Supabase env vars");
     return response;
   }
 
+  const tagParam = url.searchParams.get("tag") || url.searchParams.get("q") || null;
+
   try {
-    const fetchUrl = `${supabaseUrl}/rest/v1/posts?slug=eq.${encodeURIComponent(slug)}&is_draft=eq.false&select=title,excerpt,hero_image_large,published_at&limit=1`;
+    let resolvedTitle: string;
+    let resolvedDescription: string;
+    let resolvedImage = DEFAULT_OG_IMAGE;
+    const resolvedCanonical = tagParam
+      ? escapeAttr(`${SITE_URL}/blog?tag=${encodeURIComponent(tagParam)}`)
+      : escapeAttr(`${SITE_URL}/blog`);
 
-    const dbResponse = await fetch(fetchUrl, {
-      headers: {
-        apikey: supabaseKey,
-        Authorization: `Bearer ${supabaseKey}`,
-      },
-    });
+    if (tagParam) {
+      const tagLabel = capitalize(tagParam);
 
-    if (!dbResponse.ok) {
-      console.error("[inject-blog-meta] DB fetch failed:", dbResponse.status);
-      return response;
+      const fetchUrl = `${supabaseUrl}/rest/v1/posts?is_draft=eq.false&select=title,excerpt,hero_image_large,tags&order=published_at.desc&limit=20`;
+
+      const dbResponse = await fetch(fetchUrl, {
+        headers: {
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
+        },
+      });
+
+      let matchingPosts: Post[] = [];
+
+      if (dbResponse.ok) {
+        const allPosts: Post[] = await dbResponse.json();
+        const query = tagParam.toLowerCase();
+        matchingPosts = allPosts.filter(
+          (p) =>
+            p.tags && p.tags.some((t) => t.toLowerCase().includes(query))
+        );
+      }
+
+      resolvedTitle = escapeAttr(`${tagLabel} | Blog | ${SITE_NAME}`);
+      resolvedDescription = escapeAttr(
+        matchingPosts.length > 0
+          ? `${matchingPosts.length} post${matchingPosts.length !== 1 ? "s" : ""} tagged with "${tagLabel}". ${BASE_DESCRIPTION}`
+          : `Posts tagged with "${tagLabel}". ${BASE_DESCRIPTION}`
+      );
+
+      const firstWithImage = matchingPosts.find((p) => p.hero_image_large);
+      if (firstWithImage?.hero_image_large) {
+        resolvedImage = escapeAttr(firstWithImage.hero_image_large);
+      }
+    } else {
+      resolvedTitle = escapeAttr(`Blog | ${SITE_NAME}`);
+      resolvedDescription = escapeAttr(BASE_DESCRIPTION);
     }
-
-    const posts: Post[] = await dbResponse.json();
-
-    if (!posts || posts.length === 0) {
-      return response;
-    }
-
-    const post = posts[0];
-
-    const rawTitle = post.title || "Blog Post";
-    const resolvedTitle = escapeAttr(`${rawTitle} | ${SITE_NAME}`);
-    const resolvedDescription = escapeAttr(post.excerpt || "");
-    const resolvedImage = post.hero_image_large
-      ? escapeAttr(post.hero_image_large)
-      : DEFAULT_OG_IMAGE;
-    const resolvedCanonical = escapeAttr(`${SITE_URL}/blog/${slug}`);
 
     const structuredData = JSON.stringify({
       "@context": "https://schema.org",
-      "@type": "BlogPosting",
-      headline: rawTitle,
-      description: post.excerpt || undefined,
-      image: post.hero_image_large || undefined,
-      url: `${SITE_URL}/blog/${slug}`,
-      datePublished: post.published_at,
-      author: { "@type": "Organization", name: "Cinematic Studio" },
+      "@type": "Blog",
+      name: `Blog | ${SITE_NAME}`,
+      description: BASE_DESCRIPTION,
+      url: `${SITE_URL}/blog`,
+      publisher: {
+        "@type": "Organization",
+        name: SITE_NAME,
+      },
     });
 
     const metaTags = `
@@ -92,7 +113,7 @@ export default async function handler(request: Request, context: Context) {
     <link rel="canonical" href="${resolvedCanonical}" />
     <meta property="og:title" content="${resolvedTitle}" />
     <meta property="og:description" content="${resolvedDescription}" />
-    <meta property="og:type" content="article" />
+    <meta property="og:type" content="website" />
     <meta property="og:url" content="${resolvedCanonical}" />
     <meta property="og:image" content="${resolvedImage}" />
     <meta property="og:image:width" content="1200" />
@@ -122,11 +143,11 @@ export default async function handler(request: Request, context: Context) {
       headers: response.headers,
     });
   } catch (err) {
-    console.error("[inject-blog-meta] Error:", err);
+    console.error("[inject-blog-list-meta] Error:", err);
     return response;
   }
 }
 
 export const config: Config = {
-  path: "/blog/*",
+  path: "/blog",
 };

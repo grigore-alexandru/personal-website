@@ -5,6 +5,14 @@
 [build.environment]
   NODE_VERSION = "20"
 
+[[edge_functions]]
+  path = "/blog"
+  function = "inject-blog-list-meta"
+
+[[edge_functions]]
+  path = "/blog/*"
+  function = "inject-blog-meta"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
