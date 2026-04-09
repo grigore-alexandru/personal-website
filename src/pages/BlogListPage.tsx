@@ -131,7 +131,7 @@ const BlogListPage: React.FC = () => {
         description="Articles, insights, and behind-the-scenes stories from the studio."
         canonicalUrl={`${SITE_URL}/blog`}
       />
-      <section className="max-w-4xl mx-auto px-0 pt-12 pb-0">
+      <section className="max-w-4xl mx-auto px-6 pt-12 pb-0">
         <div className="flex flex-col sm:flex-row gap-3 mb-8">
           <SearchBar
             value={searchQuery}
