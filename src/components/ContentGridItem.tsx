@@ -53,8 +53,8 @@ export function ContentGridItem({ content, onClick, onLoad, fetchPriority }: Con
       ref={touchRef}
       className={`group relative bg-gray-100 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg w-full h-full ${
         isPortrait
-          ? 'aspect-[9/16] sm:aspect-auto'
-          : 'aspect-[16/10] sm:aspect-auto'
+          ? 'aspect-[9/16]'
+          : 'aspect-[16/10]'
       }`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
