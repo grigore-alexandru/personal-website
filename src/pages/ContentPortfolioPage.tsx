@@ -475,7 +475,7 @@ export function ContentPortfolioPage() {
           display: grid;
           gap: 2rem;
           grid-template-columns: 1fr;
-          /* Calculated height for mobile instead of auto to prevent 0px collapse */
+          /* 3rem accounts for the px-6 padding on the <main> container */
           grid-auto-rows: calc((min(100vw, 1280px) - 3rem) / 1.6);
           grid-auto-flow: row dense;
           width: 100%;
@@ -485,21 +485,25 @@ export function ContentPortfolioPage() {
         @media (min-width: 640px) {
           .fluid-grid {
             grid-template-columns: repeat(2, 1fr);
-            grid-auto-rows: calc(((100vw - 2rem) / 2) / 1.6);
+            /* min(100vw, 1280px) - 3rem padding - 2rem gap */
+            grid-auto-rows: calc(((min(100vw, 1280px) - 5rem) / 2) / 1.6);
           }
         }
 
         @media (min-width: 1024px) {
           .fluid-grid {
             grid-template-columns: repeat(3, 1fr);
-            grid-auto-rows: calc(((100vw - 4rem) / 3) / 1.6);
+            /* min(100vw, 1280px) - 3rem padding - 4rem gaps */
+            grid-auto-rows: calc(((min(100vw, 1280px) - 7rem) / 3) / 1.6);
           }
         }
 
         @media (min-width: 1536px) {
           .fluid-grid {
             grid-template-columns: repeat(4, 1fr);
-            grid-auto-rows: calc(((100vw - 6rem) / 4) / 1.6);
+            /* At this breakpoint, the screen is always > 1280px, so we just hardcode 1280px 
+               1280px - 3rem padding - 6rem gaps */
+            grid-auto-rows: calc(((1280px - 9rem) / 4) / 1.6);
           }
         }
 
