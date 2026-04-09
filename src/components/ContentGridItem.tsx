@@ -51,7 +51,7 @@ export function ContentGridItem({ content, onClick, onLoad, fetchPriority }: Con
   return (
     <div
       ref={touchRef}
-      className={`group relative bg-gray-100 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg ${
+      className={`group relative bg-gray-100 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg w-full h-full w-full h-full ${
         isPortrait
           ? 'aspect-[9/16]'
           : 'aspect-[16/10]'
