@@ -476,7 +476,7 @@ export function ContentPortfolioPage() {
           gap: 2rem;
           grid-template-columns: 1fr;
           /* Calculated height for mobile instead of auto to prevent 0px collapse */
-          grid-auto-rows: calc(100vw / 1.6);
+          grid-auto-rows: calc((min(100vw, 1280px) - 3rem) / 1.6);
           grid-auto-flow: row dense;
           width: 100%;
         }
