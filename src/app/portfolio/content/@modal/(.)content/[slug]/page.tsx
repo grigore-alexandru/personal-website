@@ -10,6 +10,7 @@ export default function ContentModalPage({ params }: { params: { slug: string } 
   const router = useRouter();
   const [content, setContent] = useState<ContentWithProject | null>(null);
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -18,13 +19,15 @@ export default function ContentModalPage({ params }: { params: { slug: string } 
       if (data) {
         setContent(data);
       } else {
-        router.replace('/portfolio/content');
+        setNotFound(true);
       }
     }).finally(() => {
       if (!cancelled) setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [params.slug, router]);
+  }, [params.slug]);
+
+  const handleClose = () => router.back();
 
   if (loading) {
     return (
@@ -34,12 +37,7 @@ export default function ContentModalPage({ params }: { params: { slug: string } 
     );
   }
 
-  if (!content) return null;
+  if (notFound || !content) return null;
 
-  return (
-    <ContentDetailModal
-      content={content}
-      onClose={() => router.back()}
-    />
-  );
+  return <ContentDetailModal content={content} onClose={handleClose} />;
 }

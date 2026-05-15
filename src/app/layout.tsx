@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Poppins } from 'next/font/google';
 import { Providers } from './providers';
+import Header from '../components/Header';
 import './globals.css';
 
 const poppins = Poppins({
@@ -41,7 +42,12 @@ export default function RootLayout({
         <link rel="preconnect" href="https://s3.eu-central-1.s4.mega.io" />
       </head>
       <body className="font-[family-name:var(--font-poppins)]">
-        <Providers>{children}</Providers>
+        <Providers>
+          <Header />
+          <div className="pt-[80px]">
+            {children}
+          </div>
+        </Providers>
       </body>
     </html>
   );

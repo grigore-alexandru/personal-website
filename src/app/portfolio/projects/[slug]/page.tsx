@@ -81,7 +81,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const currentIndex = allProjects.findIndex((p) => p.id === project.id);
+  const currentIndex = allProjects.findIndex((p) => p.id === project!.id);
   const prevProject = currentIndex > 0 ? allProjects[currentIndex - 1] : null;
   const nextProject = currentIndex < allProjects.length - 1 ? allProjects[currentIndex + 1] : null;
 
