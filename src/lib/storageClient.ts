@@ -1,7 +1,7 @@
 import { getMegaS4PublicUrl } from './s4';
 import { supabase } from './supabase';
 
-const STORAGE_PROXY_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/storage-proxy`;
+const STORAGE_PROXY_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/storage-proxy`;
 
 export interface StorageUploadResult {
   publicUrl: string;
@@ -22,7 +22,7 @@ interface ParsedStorageUrl {
 
 async function getAuthHeader(): Promise<string> {
   const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const token = session?.access_token ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   return `Bearer ${token}`;
 }
 
@@ -120,8 +120,8 @@ export function parseStorageUrl(url: string): ParsedStorageUrl | null {
     return { type: 'supabase', bucket: supabaseMatch[1], path: supabaseMatch[2] };
   }
 
-  const megaEndpoint = import.meta.env.VITE_MEGA_S4_ENDPOINT ?? 'https://s3.eu-central-1.s4.mega.io';
-  const accountId = import.meta.env.VITE_MEGA_S4_ACCOUNT_ID ?? '';
+  const megaEndpoint = process.env.NEXT_PUBLIC_MEGA_S4_ENDPOINT ?? 'https://s3.eu-central-1.s4.mega.io';
+  const accountId = process.env.NEXT_PUBLIC_MEGA_S4_ACCOUNT_ID ?? '';
 
   if (url.startsWith(megaEndpoint)) {
     const rest = url.slice(megaEndpoint.length + 1);

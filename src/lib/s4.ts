@@ -1,5 +1,5 @@
-const MEGA_S4_ENDPOINT = import.meta.env.VITE_MEGA_S4_ENDPOINT ?? 'https://s3.eu-central-1.s4.mega.io';
-const MEGA_S4_ACCOUNT_ID = import.meta.env.VITE_MEGA_S4_ACCOUNT_ID ?? '';
+const MEGA_S4_ENDPOINT = process.env.NEXT_PUBLIC_MEGA_S4_ENDPOINT ?? 'https://s3.eu-central-1.s4.mega.io';
+const MEGA_S4_ACCOUNT_ID = process.env.NEXT_PUBLIC_MEGA_S4_ACCOUNT_ID ?? '';
 
 export function getMegaS4PublicUrl(bucket: string, key: string): string {
   const base = MEGA_S4_ENDPOINT.replace(/\/$/, '');
