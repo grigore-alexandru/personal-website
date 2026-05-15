@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useRef, DragEvent } from 'react';
 import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { processAndUploadHeroImage, validateHeroImage } from '../../utils/heroImageProcessing';

@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import { X, Check, Film, Image as ImageIcon, Loader2, Folder } from 'lucide-react';
 import { SearchBar } from '../ui/SearchBar';

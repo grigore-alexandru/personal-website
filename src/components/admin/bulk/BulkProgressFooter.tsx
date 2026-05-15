@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useRef, useState } from 'react';
 import { Loader2, CheckCircle2, AlertCircle, XCircle, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { StagingItem } from '../../../types/bulk';

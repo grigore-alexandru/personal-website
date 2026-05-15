@@ -1,6 +1,6 @@
 import { TipTapContent } from '../types';
 import { validateSlug } from './validateSlug';
-import { supabase } from '../lib/supabase';
+import { createBrowserSupabaseClient } from '../lib/supabase/client';
 
 export interface ProjectFormValidationData {
   title: string;
@@ -34,6 +34,7 @@ function extractTextFromTipTap(content: TipTapContent): string {
 
 async function checkProjectSlugUniqueness(slug: string, excludeId?: string): Promise<boolean> {
   try {
+    const supabase = createBrowserSupabaseClient();
     let query = supabase.from('projects').select('id').eq('slug', slug);
     if (excludeId) query = query.neq('id', excludeId);
     const { data, error } = await query.maybeSingle();

@@ -1,5 +1,7 @@
+'use client';
+
 import React from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { Project } from '../types';
 import { generateProjectUrl } from '../utils/dataLoader';
 import { ProgressiveImage } from './ui/ProgressiveImage';
@@ -14,7 +16,7 @@ const Card: React.FC<CardProps> = ({ project, onImageLoad }) => {
 
   return (
     <Link
-      to={generateProjectUrl(project)}
+      href={generateProjectUrl(project)}
       className="group block bg-surface-raised card-raised overflow-hidden focus-visible:outline-none focus-visible:shadow-token-focus"
     >
       <div

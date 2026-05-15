@@ -1,5 +1,7 @@
+'use client';
+
 import React from 'react';
-import DOMPurify from 'dompurify';
+import DOMPurify, { type Config } from 'dompurify';
 import { generateHTML } from '@tiptap/html';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
@@ -7,7 +9,7 @@ import LinkExtension from '@tiptap/extension-link';
 import { TipTapContent } from '../../types';
 import { designTokens } from '../../styles/tokens';
 
-const TIPTAP_SANITIZE_CONFIG: DOMPurify.Config = {
+const TIPTAP_SANITIZE_CONFIG: Config = {
   ALLOWED_TAGS: [
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
     'p', 'strong', 'em', 'ul', 'ol', 'li',

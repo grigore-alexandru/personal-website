@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import imageCompression from 'browser-image-compression';
@@ -134,7 +136,8 @@ export const MediaCompressor: React.FC = () => {
       ]);
 
       const data = await ffmpeg.readFile('output.mp4');
-      const blob = new Blob([data.buffer], { type: 'video/mp4' });
+      const uint8 = typeof data === 'string' ? new TextEncoder().encode(data) : (data as Uint8Array);
+      const blob = new Blob([uint8.slice().buffer], { type: 'video/mp4' });
       const url = URL.createObjectURL(blob);
 
       setResult({

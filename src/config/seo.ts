@@ -21,4 +21,6 @@ export const defaultSEO: Required<Omit<SEOProps, 'structuredData'>> = {
   canonicalUrl: SITE_URL,
   ogType: 'website',
   ogImage: DEFAULT_OG_IMAGE,
+  ogVideo: '',
+  ogVideoType: 'video/mp4',
 };

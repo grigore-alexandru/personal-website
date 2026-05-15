@@ -1,5 +1,7 @@
+'use client';
+
 import { useState } from 'react';
-import { Plus, X, ChevronUp, ChevronDown, Film, ImageIcon, FolderOpen } from 'lucide-react';
+import { Plus, X, ChevronUp, ChevronDown, Film, Image as ImageIcon, FolderOpen } from 'lucide-react';
 import { Content, ContentType } from '../../types';
 import { ContentBrowser } from './ContentBrowser';
 import { ContentCreateModal } from './ContentCreateModal';

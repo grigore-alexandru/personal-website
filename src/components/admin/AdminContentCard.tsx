@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import { CreditCard as Edit, MoreVertical, Loader2, Video, Image as ImageIcon, GripVertical, Check, FolderOpen, Unlink } from 'lucide-react';
 import { designTokens } from '../../styles/tokens';

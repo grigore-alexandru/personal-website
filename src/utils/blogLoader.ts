@@ -39,11 +39,12 @@ export const countAllPosts = async (): Promise<number> => {
 };
 
 export const loadPost = async (slug: string): Promise<BlogPost | null> => {
-  const { data, error } = await supabase
+  const { data: rawData, error } = await supabase
     .from('posts')
     .select('*')
     .eq('slug', slug)
     .maybeSingle();
+  const data = rawData as any;
 
   if (error) {
     console.error('Error loading post:', error);
@@ -73,12 +74,13 @@ export const loadAllPosts = async (
   limit: number = 20,
   offset: number = 0
 ): Promise<BlogPost[]> => {
-  const { data, error } = await supabase
+  const { data: rawData, error } = await supabase
     .from('posts')
     .select('id, title, slug, excerpt, tags, hero_image_large, hero_image_thumbnail, has_sources, sources_data, has_notes, notes_content, published_at, content')
     .eq('is_draft', false)
     .order('published_at', { ascending: false })
     .range(offset, offset + limit - 1);
+  const data = rawData as any[];
 
   if (error) {
     console.error('Error loading posts:', error);
@@ -87,7 +89,7 @@ export const loadAllPosts = async (
 
   if (!data) return [];
 
-  return data.map((post) => ({
+  return data.map((post: any) => ({
     id: post.id,
     title: post.title,
     slug: post.slug,
@@ -105,10 +107,11 @@ export const loadAllPosts = async (
 };
 
 export const loadAllPostsForAdmin = async (): Promise<BlogPost[]> => {
-  const { data, error } = await supabase
+  const { data: rawAdminData, error } = await supabase
     .from('posts')
     .select('*')
     .order('updated_at', { ascending: false });
+  const data = rawAdminData as any[];
 
   if (error) {
     console.error('Error loading posts for admin:', error);
@@ -117,7 +120,7 @@ export const loadAllPostsForAdmin = async (): Promise<BlogPost[]> => {
 
   if (!data) return [];
 
-  return data.map((post) => ({
+  return data.map((post: any) => ({
     id: post.id,
     title: post.title,
     slug: post.slug,

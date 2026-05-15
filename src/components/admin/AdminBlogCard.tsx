@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { CreditCard as Edit, MoreVertical, Loader2 } from 'lucide-react';
 import { BlogPost } from '../../utils/blogLoader';

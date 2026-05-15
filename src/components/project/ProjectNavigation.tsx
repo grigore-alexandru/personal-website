@@ -1,5 +1,7 @@
+'use client';
+
 import React from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Project } from '../../types';
 import { generateProjectUrl } from '../../utils/dataLoader';
@@ -20,7 +22,7 @@ const ProjectNavigation: React.FC<ProjectNavigationProps> = ({
         <div className="min-w-0">
           {prevProject ? (
             <Link
-              to={generateProjectUrl(prevProject)}
+              href={generateProjectUrl(prevProject)}
               className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors group"
             >
               <ArrowLeft
@@ -53,7 +55,7 @@ const ProjectNavigation: React.FC<ProjectNavigationProps> = ({
         </div>
 
         <Link
-          to="/portfolio/projects"
+          href="/portfolio/projects"
           className="px-5 py-2 bg-black text-white rounded-full hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0"
           style={{
             fontFamily: designTokens.typography.fontFamily,
@@ -67,7 +69,7 @@ const ProjectNavigation: React.FC<ProjectNavigationProps> = ({
         <div className="min-w-0 flex justify-end">
           {nextProject ? (
             <Link
-              to={generateProjectUrl(nextProject)}
+              href={generateProjectUrl(nextProject)}
               className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors group min-w-0"
             >
               <span

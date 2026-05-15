@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect, useRef } from 'react';
 import { X, Sparkles, Save, Loader2, AlertCircle, Image as ImageIcon, Video } from 'lucide-react';
 import { FormInput } from '../forms/FormInput';
@@ -98,7 +100,7 @@ export function ContentCreateModal({ open, onClose, onSuccess, onError, contentS
     setContentTypes(types);
   };
 
-  const deducePlatformFromUrl = (url: string): string => {
+  const deducePlatformFromUrl = (url: string): '' | 'youtube' | 'vimeo' | 'mega' | 'instagram' => {
     const lower = url.toLowerCase();
     if (lower.includes('youtube.com') || lower.includes('youtu.be')) return 'youtube';
     if (lower.includes('vimeo.com')) return 'vimeo';
@@ -227,7 +229,7 @@ export function ContentCreateModal({ open, onClose, onSuccess, onError, contentS
     } else {
       const slugValidation = validateSlug(formData.slug);
       if (!slugValidation.isValid) {
-        errors.push({ field: 'slug', message: slugValidation.error });
+        errors.push({ field: 'slug', message: slugValidation.error ?? 'Invalid slug' });
       } else {
         const isUnique = await checkContentSlugUniqueness(formData.slug);
         if (!isUnique) {

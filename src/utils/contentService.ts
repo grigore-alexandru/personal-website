@@ -243,7 +243,7 @@ export async function loadContentWithProjects(): Promise<(Content & { projects?:
   for (const pc of projectContentData || []) {
     if (pc.project) {
       const existing = projectsByContent.get(pc.content_id) || [];
-      existing.push(pc.project as { id: string; title: string });
+      existing.push(pc.project as unknown as { id: string; title: string });
       projectsByContent.set(pc.content_id, existing);
     }
   }

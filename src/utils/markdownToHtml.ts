@@ -1,11 +1,10 @@
-import DOMPurify from 'dompurify';
+import DOMPurify, { type Config } from 'dompurify';
 
-const SANITIZE_CONFIG: DOMPurify.Config = {
+const SANITIZE_CONFIG: Config = {
   ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'strong', 'em', 'ul', 'ol', 'li', 'a', 'br'],
   ALLOWED_ATTR: ['href', 'rel', 'target'],
   ALLOW_DATA_ATTR: false,
   FORCE_BODY: false,
-  HOOKS_AFTER_SANITIZE_ATTRIBUTES: undefined,
 };
 
 DOMPurify.addHook('afterSanitizeAttributes', (node) => {

@@ -1,45 +1,41 @@
+'use client';
+
 import { useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 
 type FilterValue = string;
 
 export function useUrlFilter(key: string, defaultValue: FilterValue): [FilterValue, (value: FilterValue) => void] {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const value = searchParams.get(key) ?? defaultValue;
 
   const setValue = useCallback(
     (newValue: FilterValue) => {
-      setSearchParams(
-        (prev) => {
-          const next = new URLSearchParams(prev);
-          if (!newValue || newValue === defaultValue) {
-            next.delete(key);
-          } else {
-            next.set(key, newValue);
-          }
-          return next;
-        },
-        { replace: true }
-      );
+      const next = new URLSearchParams(searchParams.toString());
+      if (!newValue || newValue === defaultValue) {
+        next.delete(key);
+      } else {
+        next.set(key, newValue);
+      }
+      router.replace(`${pathname}?${next.toString()}`);
     },
-    [key, defaultValue, setSearchParams]
+    [key, defaultValue, searchParams, pathname, router]
   );
 
   return [value, setValue];
 }
 
 export function useClearUrlFilters(keys: string[]) {
-  const [, setSearchParams] = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   return useCallback(() => {
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        keys.forEach((k) => next.delete(k));
-        return next;
-      },
-      { replace: true }
-    );
-  }, [keys, setSearchParams]);
+    const next = new URLSearchParams(searchParams.toString());
+    keys.forEach((k) => next.delete(k));
+    router.replace(`${pathname}?${next.toString()}`);
+  }, [keys, searchParams, pathname, router]);
 }

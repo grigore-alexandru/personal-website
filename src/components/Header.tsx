@@ -1,6 +1,9 @@
+'use client';
+
 import React, { useState } from 'react';
 
-import { Link, useLocation } from 'react-router-dom';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 import { Menu, X } from 'lucide-react';
 
@@ -12,7 +15,7 @@ const Header: React.FC = () => {
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const location = useLocation();
+  const pathname = usePathname();
 
 
 
@@ -34,11 +37,11 @@ const Header: React.FC = () => {
 
     if (path === '/') {
 
-      return location.pathname === '/';
+      return pathname === '/';
 
     }
 
-    return location.pathname.startsWith(path);
+    return pathname?.startsWith(path) ?? false;
 
   };
 
@@ -66,7 +69,7 @@ const Header: React.FC = () => {
 
         <Link
 
-          to="/"
+          href="/"
 
           className="flex flex-col leading-tight hover:opacity-80 transition-opacity"
 
@@ -126,7 +129,7 @@ const Header: React.FC = () => {
 
               key={link.path}
 
-              to={link.path}
+              href={link.path}
 
               className={`relative px-4 py-2 rounded-md transition-all duration-200 ${
 
@@ -192,7 +195,7 @@ const Header: React.FC = () => {
 
                 key={link.path}
 
-                to={link.path}
+                href={link.path}
 
                 onClick={() => setIsMenuOpen(false)}
 

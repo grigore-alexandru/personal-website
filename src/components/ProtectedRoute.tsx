@@ -1,5 +1,7 @@
-import { ReactNode, useEffect, useState } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+'use client';
+
+import { ReactNode } from 'react';
+import { redirect } from 'next/navigation';
 import { useAuth } from '../hooks/useAuth';
 
 interface ProtectedRouteProps {
@@ -8,7 +10,6 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, loading } = useAuth();
-  const location = useLocation();
 
   if (loading) {
     return (
@@ -22,7 +23,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/admin/login" state={{ from: location.pathname }} replace />;
+    redirect('/admin/login');
   }
 
   return <>{children}</>;

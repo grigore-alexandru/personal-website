@@ -1,7 +1,9 @@
+'use client';
+
 import React, { FC } from 'react';
 import { Eye, Share2, TrendingUp } from 'lucide-react';
 import AnimatedNumber from './AnimatedNumber';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { designTokens } from '../styles/tokens';
 
 interface StatsPanelProps {
@@ -17,7 +19,7 @@ const formatNumber = (n: number) => {
   return Math.round(n).toString();
 };
 
-const cardVariants = {
+const cardVariants: Variants = {
   hidden: { opacity: 0, y: 16 },
   visible: (i: number) => ({
     opacity: 1,
@@ -25,7 +27,7 @@ const cardVariants = {
     transition: {
       delay: i * 0.2,
       duration: 0.6,
-      ease: 'easeOut',
+      ease: 'easeOut' as const,
     },
   }),
 };

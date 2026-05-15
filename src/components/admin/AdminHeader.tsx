@@ -1,5 +1,7 @@
+'use client';
+
 import { LogOut, User } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useRouter, usePathname } from 'next/navigation';
 import { signOut } from '../../utils/authService';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -14,8 +16,8 @@ interface NavItem {
 }
 
 export function AdminHeader({ currentSection = 'Dashboard' }: AdminHeaderProps) {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  const pathname = usePathname();
   const { user } = useAuth();
 
   const navItems: NavItem[] = [
@@ -42,12 +44,12 @@ export function AdminHeader({ currentSection = 'Dashboard' }: AdminHeaderProps) 
   ];
 
   const isNavItemActive = (item: NavItem) => {
-    return item.sections.includes(currentSection) || location.pathname.startsWith(item.path);
+    return item.sections.includes(currentSection) || (pathname?.startsWith(item.path) ?? false);
   };
 
   const handleLogout = async () => {
     await signOut();
-    navigate('/admin/login');
+    router.push('/admin/login');
   };
 
   return (
@@ -56,7 +58,7 @@ export function AdminHeader({ currentSection = 'Dashboard' }: AdminHeaderProps) 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-8">
             <button
-              onClick={() => navigate('/admin')}
+              onClick={() => router.push('/admin')}
               className="hover:opacity-80 transition-opacity cursor-pointer"
             >
               <h1 className="text-2xl font-bold text-black">Admin Panel</h1>
@@ -67,7 +69,7 @@ export function AdminHeader({ currentSection = 'Dashboard' }: AdminHeaderProps) 
               {navItems.map((item) => (
                 <button
                   key={item.path}
-                  onClick={() => navigate(item.path)}
+                  onClick={() => router.push(item.path)}
                   className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                     isNavItemActive(item)
                       ? 'bg-black text-white'

@@ -1,3 +1,5 @@
+'use client';
+
 import { useRef, useState, DragEvent, useCallback } from 'react';
 import { X, CheckCircle, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { StagingItem, BulkSelection } from '../../../types/bulk';

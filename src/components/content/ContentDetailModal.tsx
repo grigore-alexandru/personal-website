@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { X, Maximize, Link } from 'lucide-react';
 import YouTube from 'react-youtube';

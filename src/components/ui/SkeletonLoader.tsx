@@ -6,6 +6,7 @@ interface SkeletonProps {
   width?: string | number;
   height?: string | number;
   animate?: boolean;
+  style?: React.CSSProperties;
 }
 
 export const Skeleton: React.FC<SkeletonProps> = ({
@@ -14,6 +15,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   width,
   height,
   animate = true,
+  style: styleProp,
 }) => {
   const variantClass = {
     text:        'rounded',
@@ -24,6 +26,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   const style: React.CSSProperties = {
     width:  typeof width  === 'number' ? `${width}px`  : width,
     height: typeof height === 'number' ? `${height}px` : height,
+    ...styleProp,
   };
 
   return (

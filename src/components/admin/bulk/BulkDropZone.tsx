@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useRef, DragEvent } from 'react';
 import { UploadCloud, Loader2 } from 'lucide-react';
 

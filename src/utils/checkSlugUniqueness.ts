@@ -1,4 +1,6 @@
-import { supabase } from '../lib/supabase';
+import { createBrowserSupabaseClient } from '../lib/supabase/client';
+
+const supabase = createBrowserSupabaseClient();
 
 export async function checkSlugUniqueness(slug: string, excludeId?: string): Promise<boolean> {
   try {

@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { ContentWithProject, isVideoThumbnail } from '../types';
 import { useTouchScrollActivation } from '../hooks/useTouchScrollActivation';

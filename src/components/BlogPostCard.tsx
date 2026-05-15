@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { BlogPost } from '../utils/blogLoader';
 import { ProgressiveImage } from './ui/ProgressiveImage';
@@ -9,7 +11,7 @@ interface BlogPostCardProps {
 }
 
 const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -79,7 +81,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ post }) => {
 
             <div className="flex items-center justify-end">
               <Link
-                to={`/blog/${post.slug}`}
+                href={`/blog/${post.slug}`}
                 className="
                   inline-flex items-center gap-2 px-4 py-2 rounded-token-md text-sm font-medium
                   bg-accent-500 text-white
