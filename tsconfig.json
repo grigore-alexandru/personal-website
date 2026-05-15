@@ -32,7 +32,7 @@
     "src/utils/authService.ts",
     "src/hooks/useAuth.ts",
     "src/hooks/useToast.ts",
-    "middleware.ts"
+    "src/middleware.ts"
   ],
   "exclude": [
     "node_modules",

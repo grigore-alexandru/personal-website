@@ -1,5 +1,7 @@
+'use client';
+
 import { useState, useEffect } from 'react';
-import { getCurrentUser, onAuthStateChange } from '../utils/authService';
+import { createBrowserSupabaseClient } from '../lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
 export function useAuth() {
@@ -8,22 +10,34 @@ export function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const checkUser = async () => {
-      const currentUser = await getCurrentUser();
+    const supabase = createBrowserSupabaseClient();
+
+    // Initial session fetch — getUser() validates against the server
+    supabase.auth.getUser().then(({ data: { user: currentUser } }) => {
       setUser(currentUser);
       setIsAuthenticated(!!currentUser);
       setLoading(false);
-    };
+    });
 
-    checkUser();
-
-    const subscription = onAuthStateChange((authenticated) => {
-      if (!authenticated) {
-        setUser(null);
-        setIsAuthenticated(false);
-      } else {
-        checkUser();
-      }
+    // Subscribe to auth state changes.
+    // Use a synchronous callback that spawns an async block to avoid deadlock
+    // (calling supabase methods inside an async onAuthStateChange callback
+    // can deadlock the internal auth lock).
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      (async () => {
+        if (!session) {
+          setUser(null);
+          setIsAuthenticated(false);
+          setLoading(false);
+          return;
+        }
+        const { data: { user: refreshedUser } } = await supabase.auth.getUser();
+        setUser(refreshedUser);
+        setIsAuthenticated(!!refreshedUser);
+        setLoading(false);
+      })();
     });
 
     return () => {
