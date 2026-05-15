@@ -47,6 +47,7 @@
     "src/utils/markdownToHtml.ts",
     "src/utils/dataLoader.ts",
     "src/utils/portfolioService.ts",
+    "src/utils/contentService.ts",
     "src/utils/blogLoader.ts",
     "src/middleware.ts"
   ],

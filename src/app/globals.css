@@ -303,6 +303,72 @@ section {
 }
 
 /* =====================================================
+   FLUID CONTENT GRID
+   ===================================================== */
+.fluid-grid {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: 1fr;
+  grid-auto-rows: calc((min(100vw, 1280px) - 3rem) / 1.6);
+  grid-auto-flow: row dense;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .fluid-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: calc(((min(100vw, 1280px) - 5rem) / 2) / 1.6);
+  }
+}
+
+@media (min-width: 1024px) {
+  .fluid-grid {
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: calc(((min(100vw, 1280px) - 7rem) / 3) / 1.6);
+  }
+}
+
+@media (min-width: 1536px) {
+  .fluid-grid {
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: calc(((1280px - 9rem) / 4) / 1.6);
+  }
+}
+
+/* Content grid entry animations */
+@keyframes fadeInUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Modal animations */
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modalScaleIn {
+  0%   { opacity: 0; transform: scale(0.95) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes modalSlideIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes copiedFadeIn {
+  0%   { opacity: 0; transform: translateY(-6px) scale(0.96); }
+  15%  { opacity: 1; transform: translateY(0) scale(1); }
+  80%  { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-4px) scale(0.97); }
+}
+
+.animate-modal-fade-in  { animation: modalFadeIn  0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+.animate-modal-scale-in { animation: modalScaleIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.animate-modal-slide-in { animation: modalSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s forwards; opacity: 0; }
+.animate-copied-fade-in { animation: copiedFadeIn 2.2s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+
+/* =====================================================
    PRINT
    ===================================================== */
 @media print {

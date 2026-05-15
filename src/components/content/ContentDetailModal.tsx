@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { X, Maximize, Link } from 'lucide-react';
 import YouTube from 'react-youtube';
 import { ContentWithProject } from '../../types';
@@ -9,6 +9,7 @@ import { designTokens } from '../../styles/tokens';
 interface ContentDetailModalProps {
   content: ContentWithProject;
   onClose: () => void;
+  standalone?: boolean;
 }
 
 const getYoutubeDetails = (url: string): { videoId: string | null; start: number | undefined } => {
@@ -48,7 +49,7 @@ const getVimeoEmbedUrl = (url: string): string | null => {
   return url;
 };
 
-export function ContentDetailModal({ content, onClose }: ContentDetailModalProps) {
+export function ContentDetailModal({ content, onClose, standalone = false }: ContentDetailModalProps) {
   const [iframeLoading, setIframeLoading] = useState(true);
   const [iframeError, setIframeError] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -148,20 +149,15 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  return (
+  const inner = (
     <div
-      ref={overlayRef}
-      /* 1. Increased z-index to 100 to ensure it covers ANY site navigation */
-      /* 2. Added responsive padding so the modal doesn't touch screen edges on tablets */
-      className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 md:p-8 lg:p-12 animate-fadeIn"
-      onClick={handleBackdropClick}
+      ref={modalRef}
+      className={
+        standalone
+          ? 'bg-white w-full flex flex-col relative'
+          : 'bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[calc(100vh-2rem)] md:max-h-[calc(100vh-4rem)] overflow-hidden animate-modal-scale-in flex flex-col relative'
+      }
     >
-      <div
-        ref={modalRef}
-        /* 3. Changed max-w-6xl to max-w-5xl for better desktop proportions */
-        /* 4. Strictly enforced max-height using calc() to guarantee it never overflows the viewport */
-        className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[calc(100vh-2rem)] md:max-h-[calc(100vh-4rem)] overflow-hidden animate-scaleIn flex flex-col relative"
-      >
         {/* 5. Header is now explicitly flex-shrink-0 instead of sticky.
                This completely prevents the scrollable content from ever overlapping it. */}
         <div className="flex-shrink-0 z-10 flex items-center justify-between p-5 md:p-6 border-b border-gray-200 bg-white shadow-sm">
@@ -187,7 +183,7 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
               <X className="w-5 h-5 text-gray-600" />
             </button>
             {showCopied && (
-              <div className="absolute top-full right-0 mt-2 animate-copiedFadeIn z-50">
+              <div className="absolute top-full right-0 mt-2 animate-copied-fade-in z-50">
                 <div
                   className="flex items-center gap-2 px-4 py-2.5 bg-white rounded-lg text-sm font-medium text-gray-800 whitespace-nowrap"
                   style={{
@@ -214,7 +210,7 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
         <div className="flex-1 overflow-y-auto w-full">
           <div className="p-5 md:p-8 space-y-8">
             <div
-              className="relative bg-gray-100 rounded-lg overflow-hidden animate-slideIn mx-auto shadow-inner"
+              className="relative bg-gray-100 rounded-lg overflow-hidden animate-modal-slide-in mx-auto shadow-inner"
               style={
                 isDirectFile && naturalAspectRatio !== null
                   ? {
@@ -313,7 +309,7 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
             </div>
 
             {content.project_info && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pb-6 border-b border-gray-100 animate-slideIn">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pb-6 border-b border-gray-100 animate-modal-slide-in">
                 <div>
                   <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">
                     Client
@@ -344,7 +340,7 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
             )}
 
             {content.contributors && content.contributors.length > 0 && (
-              <div className="animate-slideIn">
+              <div className="animate-modal-slide-in">
                 <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">
                   Collaborators
                 </p>
@@ -367,7 +363,7 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
             )}
 
             {content.caption && (
-              <div className="animate-slideIn pt-2">
+              <div className="animate-modal-slide-in pt-2">
                 <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
                   Caption
                 </p>
@@ -379,76 +375,17 @@ export function ContentDetailModal({ content, onClose }: ContentDetailModalProps
           </div>
         </div>
       </div>
+  );
 
-      <style>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
+  if (standalone) return inner;
 
-        @keyframes scaleIn {
-          0% {
-            opacity: 0;
-            transform: scale(0.95) translateY(10px);
-          }
-          100% {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-          }
-        }
-
-        @keyframes slideInContent {
-          from {
-            opacity: 0;
-            transform: translateY(15px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes copiedFadeIn {
-          0% {
-            opacity: 0;
-            transform: translateY(-6px) scale(0.96);
-          }
-          15% {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-          80% {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-          100% {
-            opacity: 0;
-            transform: translateY(-4px) scale(0.97);
-          }
-        }
-
-        .animate-fadeIn {
-          animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .animate-scaleIn {
-          /* Swapped to a smoother bezier curve instead of the highly aggressive spring */
-          animation: scaleIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-
-        .animate-slideIn {
-          animation: slideInContent 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s forwards;
-          opacity: 0;
-        }
-
-        .animate-copiedFadeIn {
-          animation: copiedFadeIn 2.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
-      `}</style>
+  return (
+    <div
+      ref={overlayRef}
+      className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 md:p-8 lg:p-12 animate-modal-fade-in"
+      onClick={handleBackdropClick}
+    >
+      {inner}
     </div>
   );
 }
