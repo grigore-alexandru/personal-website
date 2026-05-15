@@ -20,22 +20,24 @@ const TIPTAP_SANITIZE_CONFIG: Config = {
   FORCE_BODY: false,
 };
 
-DOMPurify.addHook('afterSanitizeAttributes', (node) => {
-  if (node.tagName === 'A') {
-    const href = node.getAttribute('href') ?? '';
-    if (!/^https?:\/\//i.test(href)) {
-      node.removeAttribute('href');
+if (typeof window !== 'undefined') {
+  DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+    if (node.tagName === 'A') {
+      const href = node.getAttribute('href') ?? '';
+      if (!/^https?:\/\//i.test(href)) {
+        node.removeAttribute('href');
+      }
+      node.setAttribute('rel', 'noopener noreferrer');
+      node.setAttribute('target', '_blank');
     }
-    node.setAttribute('rel', 'noopener noreferrer');
-    node.setAttribute('target', '_blank');
-  }
-  if (node.tagName === 'IMG') {
-    const src = node.getAttribute('src') ?? '';
-    if (!/^https?:\/\//i.test(src) && !src.startsWith('/')) {
-      node.removeAttribute('src');
+    if (node.tagName === 'IMG') {
+      const src = node.getAttribute('src') ?? '';
+      if (!/^https?:\/\//i.test(src) && !src.startsWith('/')) {
+        node.removeAttribute('src');
+      }
     }
-  }
-});
+  });
+}
 
 interface TipTapRendererProps {
   content: TipTapContent;
@@ -62,7 +64,9 @@ const TipTapRenderer: React.FC<TipTapRendererProps> = ({ content, className = ''
         }),
       ]);
 
-      const safeHtml = DOMPurify.sanitize(html, TIPTAP_SANITIZE_CONFIG) as string;
+      const safeHtml = typeof window !== 'undefined'
+        ? (DOMPurify.sanitize(html, TIPTAP_SANITIZE_CONFIG) as string)
+        : html;
 
       return (
         <div

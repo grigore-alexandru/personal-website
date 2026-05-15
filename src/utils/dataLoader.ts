@@ -65,6 +65,7 @@ export const loadProject = async (slug: string): Promise<Project | null> => {
 
 function mapProjectRow(row: any): Project {
   const sortedContent = (row.project_content || [])
+    .filter((pc: any) => pc.content != null)
     .sort((a: any, b: any) => a.order_index - b.order_index)
     .map((pc: any) => ({
       id: pc.id,
@@ -107,7 +108,7 @@ function mapProjectRow(row: any): Project {
 }
 
 export const generateProjectUrl = (project: Project): string => {
-  return `/portfolio/project/${project.slug}`;
+  return `/portfolio/projects/${project.slug}`;
 };
 
 export function extractTextFromTipTap(doc: TipTapContent | null | undefined): string {

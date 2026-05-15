@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useRef } from 'react';
 import { Project } from '../../types';
 import Card from '../Card';
