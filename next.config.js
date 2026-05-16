@@ -20,6 +20,25 @@ const nextConfig = {
       },
     ],
   },
-  
+  async redirects() {
+    return [
+      {
+        source: '/what-i-do/video-production',
+        destination: '/portfolio/projects',
+        permanent: true,
+      },
+      {
+        source: '/what-i-do/video-production/:path*',
+        destination: '/portfolio/projects',
+        permanent: true,
+      },
+      {
+        source: '/portfolio/:clientSlug/:projectSlug',
+        destination: '/portfolio/projects',
+        permanent: true,
+      },
+    ];
+  },
+};
 
 module.exports = nextConfig;
