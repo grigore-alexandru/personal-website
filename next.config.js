@@ -20,5 +20,22 @@ const nextConfig = {
       },
     ],
   },
-  
+async redirects() {
+    return [
+      // ✅ KEEP THESE: They safely route traffic from old pages outside of /portfolio
+      {
+        source: '/what-i-do/video-production',
+        destination: '/portfolio/projects',
+        permanent: true,
+      },
+      {
+        source: '/what-i-do/video-production/:path*',
+        destination: '/portfolio/projects',
+        permanent: true,
+      },
+      // ❌ REMOVED: The old '/portfolio/:clientSlug/:projectSlug' line is deleted completely
+    ];
+  },
+};
+
 module.exports = nextConfig;
