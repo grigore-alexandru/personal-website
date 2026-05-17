@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef } from 'react';
+import Image from 'next/image';
 import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import { ArrowRight, Camera, Film, Star, Mail, Zap, Heart } from 'lucide-react';
 import { Button } from '../forms/Button';
@@ -134,11 +135,13 @@ const Hero = () => {
           <div className="w-full h-full relative">
             <div className="absolute inset-0 bg-surface-highlight rounded-[3rem] transform rotate-3" />
             <div className="absolute inset-0 bg-white rounded-[3rem] shadow-soft overflow-hidden transform transition-transform hover:-rotate-1">
-              <img
+              <Image
                 src={HERO_IMAGE_URL}
                 alt="Silviu-Alexandru Grigore — Filmmaker and Visual Storyteller"
-                fetchPriority="high"
-                className="w-full h-full object-cover object-top"
+                fill
+                priority
+                className="object-cover object-top"
+                unoptimized
               />
             </div>
 
@@ -366,7 +369,14 @@ const Testimonials = () => (
             </p>
             <div className="mt-10 flex items-center gap-5">
               <div className="w-14 h-14 bg-gray-200 rounded-full overflow-hidden">
-                <img src={`https://placehold.co/100x100/e2e8f0/1e293b/png?text=${i}`} alt="Client" />
+                <Image
+                  src={`https://placehold.co/100x100/e2e8f0/1e293b/png?text=${i}`}
+                  alt="Client"
+                  width={56}
+                  height={56}
+                  className="w-full h-full object-cover"
+                  unoptimized
+                />
               </div>
               <div>
                 <p className="text-display font-bold text-lg">Client Name</p>

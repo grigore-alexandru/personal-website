@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://lqbyvubbzexujviflunv.supabase.co/functions/v1/generate-sitemap

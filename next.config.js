@@ -18,11 +18,26 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'img.youtube.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+      },
     ],
   },
-async redirects() {
+  async headers() {
     return [
-      // ✅ KEEP THESE: They safely route traffic from old pages outside of /portfolio
+      {
+        // SharedArrayBuffer required by @ffmpeg/ffmpeg in the media compressor
+        source: '/admin/compressor',
+        headers: [
+          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+          { key: 'Cross-Origin-Embedder-Policy', value: 'require-corp' },
+        ],
+      },
+    ];
+  },
+  async redirects() {
+    return [
       {
         source: '/what-i-do/video-production',
         destination: '/portfolio/projects',
@@ -33,7 +48,6 @@ async redirects() {
         destination: '/portfolio/projects',
         permanent: true,
       },
-      // ❌ REMOVED: The old '/portfolio/:clientSlug/:projectSlug' line is deleted completely
     ];
   },
 };
