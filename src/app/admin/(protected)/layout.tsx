@@ -2,6 +2,9 @@ import { ReactNode } from 'react';
 import { createServerSupabaseClient } from '../../../lib/supabase/server';
 import { AdminHeader } from '../../../components/admin/AdminHeader';
 
+// THIS IS THE FIX: It prevents Next.js from evaluating cookies during static builds
+export const dynamic = 'force-dynamic';
+
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const supabase = createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
