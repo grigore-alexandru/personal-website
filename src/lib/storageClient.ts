@@ -1,7 +1,7 @@
 import { getMegaS4PublicUrl } from './s4';
 import { supabase } from './supabase';
 
-const STORAGE_PROXY_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/storage-proxy`;
+const STORAGE_PROXY_URL = '/api/storage/presign';
 
 export interface StorageUploadResult {
   publicUrl: string;
