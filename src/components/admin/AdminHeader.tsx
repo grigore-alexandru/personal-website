@@ -3,49 +3,28 @@
 import { LogOut, User } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { signOut } from '../../utils/authService';
-import { useAuth } from '../../hooks/useAuth';
 
 interface AdminHeaderProps {
-  currentSection?: string;
+  userEmail: string | null;
 }
 
 interface NavItem {
   label: string;
   path: string;
-  sections: string[];
 }
 
-export function AdminHeader({ currentSection = 'Dashboard' }: AdminHeaderProps) {
+export function AdminHeader({ userEmail }: AdminHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user } = useAuth();
 
   const navItems: NavItem[] = [
-    {
-      label: 'Blog',
-      path: '/admin/blog',
-      sections: ['Blog Management', 'Dashboard']
-    },
-    {
-      label: 'Portfolio',
-      path: '/admin/portfolio',
-      sections: ['Portfolio Management']
-    },
-    {
-      label: 'Content',
-      path: '/admin/content',
-      sections: ['Content Management']
-    },
-    {
-      label: 'Compressor',
-      path: '/admin/compressor',
-      sections: ['Media Compressor']
-    }
+    { label: 'Blog',       path: '/admin/blog' },
+    { label: 'Portfolio',  path: '/admin/portfolio' },
+    { label: 'Content',    path: '/admin/content' },
+    { label: 'Compressor', path: '/admin/compressor' },
   ];
 
-  const isNavItemActive = (item: NavItem) => {
-    return item.sections.includes(currentSection) || (pathname?.startsWith(item.path) ?? false);
-  };
+  const isActive = (path: string) => pathname?.startsWith(path) ?? false;
 
   const handleLogout = async () => {
     await signOut();
@@ -62,7 +41,6 @@ export function AdminHeader({ currentSection = 'Dashboard' }: AdminHeaderProps) 
               className="hover:opacity-80 transition-opacity cursor-pointer"
             >
               <h1 className="text-2xl font-bold text-black">Admin Panel</h1>
-              <p className="text-sm text-neutral-600 mt-1">{currentSection}</p>
             </button>
 
             <nav className="hidden md:flex items-center gap-1">
@@ -71,7 +49,7 @@ export function AdminHeader({ currentSection = 'Dashboard' }: AdminHeaderProps) 
                   key={item.path}
                   onClick={() => router.push(item.path)}
                   className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                    isNavItemActive(item)
+                    isActive(item.path)
                       ? 'bg-black text-white'
                       : 'text-neutral-700 hover:bg-neutral-100'
                   }`}
@@ -83,10 +61,10 @@ export function AdminHeader({ currentSection = 'Dashboard' }: AdminHeaderProps) 
           </div>
 
           <div className="flex items-center gap-4">
-            {user?.email && (
+            {userEmail && (
               <div className="hidden sm:flex items-center gap-2 text-sm text-neutral-600">
                 <User size={16} />
-                <span>{user.email}</span>
+                <span>{userEmail}</span>
               </div>
             )}
 

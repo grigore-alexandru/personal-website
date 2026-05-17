@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { Poppins } from 'next/font/google';
 import { Providers } from './providers';
-import Header from '../components/Header';
+import ConditionalHeader from '../components/ConditionalHeader';
+import ConditionalWrapper from '../components/ConditionalWrapper';
 import './globals.css';
 
 const poppins = Poppins({
@@ -43,10 +44,10 @@ export default function RootLayout({
       </head>
       <body className="font-[family-name:var(--font-poppins)]">
         <Providers>
-          <Header />
-          <div className="pt-[80px]">
+          <ConditionalHeader />
+          <ConditionalWrapper>
             {children}
-          </div>
+          </ConditionalWrapper>
         </Providers>
       </body>
     </html>
