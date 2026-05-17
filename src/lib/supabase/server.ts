@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import type { Database } from '../../types/database';
 
 export function createServerSupabaseClient() {
-  const cookieStore = cookies();
+  const cookieStore = cookies()
   
 
   return createServerClient<Database>(
