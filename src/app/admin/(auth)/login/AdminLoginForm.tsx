@@ -1,8 +1,7 @@
-// src/app/admin/(auth)/login/AdminLoginForm.tsx
 'use client';
 
 import { useState, useEffect, useRef, FormEvent } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 import { signIn } from '../../../../utils/authService';
 
@@ -16,10 +15,11 @@ export default function AdminLoginForm() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
+  
   const failureCount = useRef(0);
   const cooldownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   
-  // Note: We no longer need useRouter here!
+  const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirectTo') || '/admin';
 
@@ -52,27 +52,46 @@ export default function AdminLoginForm() {
     setError('');
     setLoading(true);
 
-    const { user, error: authError } = await signIn(email, password);
+    try {
+      const { user, error: authError } = await signIn(email, password);
 
-    if (authError) {
-      failureCount.current += 1;
-      if (failureCount.current >= COOLDOWN_THRESHOLD) {
-        failureCount.current = 0;
-        startCooldown();
-        setError(`Too many failed attempts. Please wait ${COOLDOWN_SECONDS} seconds.`);
-      } else {
-        setError(authError.message);
+      // 1. Handle explicit authentication errors
+      if (authError) {
+        failureCount.current += 1;
+        if (failureCount.current >= COOLDOWN_THRESHOLD) {
+          failureCount.current = 0;
+          startCooldown();
+          setError(`Too many failed attempts. Please wait ${COOLDOWN_SECONDS} seconds.`);
+        } else {
+          setError(authError.message);
+        }
+        setLoading(false);
+        return;
       }
-      setLoading(false); // Only turn off loading if there is an error
-      return;
-    }
 
-    if (user) {
-      failureCount.current = 0;
-      // THE FIX: Force a hard browser navigation. 
-      // We intentionally leave setLoading(true) running so the spinner
-      // stays active while the browser fetches the new document.
-      window.location.href = redirectTo;
+      // 2. Handle successful login
+      if (user) {
+        failureCount.current = 0;
+        
+        // Refresh the Next.js router cache to ensure the server sees the new auth state
+        router.refresh();
+
+        // Give the Supabase client 500ms to safely write the token to document.cookie 
+        // before we initiate the routing.
+        setTimeout(() => {
+          router.push(redirectTo);
+        }, 500);
+        
+      } else {
+        // 3. FIX: The Silent Fall-through edge case
+        // If there was no error but 'user' is null, it usually means email verification is required.
+        setError('Login successful, but session could not be established. Have you confirmed your email address?');
+        setLoading(false);
+      }
+    } catch (err) {
+      // Catch any unexpected network crashes so the spinner doesn't get stuck
+      setError('A critical error occurred while communicating with the server.');
+      setLoading(false);
     }
   };
 
