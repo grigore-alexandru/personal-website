@@ -1,7 +1,8 @@
+// src/app/admin/(auth)/login/AdminLoginForm.tsx
 'use client';
 
 import { useState, useEffect, useRef, FormEvent } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 import { signIn } from '../../../../utils/authService';
 
@@ -17,9 +18,9 @@ export default function AdminLoginForm() {
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
   const failureCount = useRef(0);
   const cooldownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
-  const router = useRouter();
+  
+  // Note: We no longer need useRouter here!
   const searchParams = useSearchParams();
-
   const redirectTo = searchParams.get('redirectTo') || '/admin';
 
   useEffect(() => {
@@ -62,21 +63,16 @@ export default function AdminLoginForm() {
       } else {
         setError(authError.message);
       }
-      setLoading(false);
+      setLoading(false); // Only turn off loading if there is an error
       return;
     }
 
     if (user) {
       failureCount.current = 0;
-      
-      // 1. Force Next.js to refresh server components and middleware with the new session cookies
-      router.refresh(); 
-      
-      setTimeout(() => {
-        // 2. Turn off the loading state just in case the redirect loops back
-        setLoading(false); 
-        router.replace(redirectTo);
-      }, 300);
+      // THE FIX: Force a hard browser navigation. 
+      // We intentionally leave setLoading(true) running so the spinner
+      // stays active while the browser fetches the new document.
+      window.location.href = redirectTo;
     }
   };
 
