@@ -6,7 +6,7 @@ import { AdminHeader } from '../../../components/admin/AdminHeader';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   return (
