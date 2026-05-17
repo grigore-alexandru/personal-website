@@ -68,7 +68,13 @@ export default function AdminLoginForm() {
 
     if (user) {
       failureCount.current = 0;
+      
+      // 1. Force Next.js to refresh server components and middleware with the new session cookies
+      router.refresh(); 
+      
       setTimeout(() => {
+        // 2. Turn off the loading state just in case the redirect loops back
+        setLoading(false); 
         router.replace(redirectTo);
       }, 300);
     }
