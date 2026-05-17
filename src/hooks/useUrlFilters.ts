@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 
 type FilterValue = string;
@@ -15,10 +15,23 @@ export function useUrlFilter(
   const searchParams = useSearchParams();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const value = searchParams.get(key) ?? defaultValue;
+  // 1. Preluăm valoarea inițială din URL
+  const urlValue = searchParams.get(key) ?? defaultValue;
+
+  // 2. Creăm o stare locală pentru a actualiza interfața INSTANTANEU
+  const [localValue, setLocalValue] = useState<FilterValue>(urlValue);
+
+  // 3. Sincronizăm starea locală dacă URL-ul se schimbă din altă parte 
+  // (ex: butonul "Back" din browser sau funcția de "Clear Filters")
+  useEffect(() => {
+    setLocalValue(searchParams.get(key) ?? defaultValue);
+  }, [searchParams, key, defaultValue]);
 
   const setValue = useCallback(
     (newValue: FilterValue) => {
+      // Actualizăm starea locală IMEDIAT pentru un scris fluid
+      setLocalValue(newValue);
+
       const apply = () => {
         const next = new URLSearchParams(searchParams.toString());
         if (!newValue || newValue === defaultValue) {
@@ -30,6 +43,7 @@ export function useUrlFilter(
         router.replace(`${pathname}${qs ? `?${qs}` : ''}`, { scroll: false });
       };
 
+      // Aplicăm debounce-ul DOAR pe funcția care modifică router-ul (URL-ul)
       if (debounce) {
         if (timerRef.current) clearTimeout(timerRef.current);
         timerRef.current = setTimeout(apply, 300);
@@ -40,7 +54,8 @@ export function useUrlFilter(
     [key, defaultValue, debounce, searchParams, pathname, router]
   );
 
-  return [value, setValue];
+  // 4. Returnăm localValue în loc de valoarea brută din URL
+  return [localValue, setValue];
 }
 
 export function useClearUrlFilters(keys: string[]) {
