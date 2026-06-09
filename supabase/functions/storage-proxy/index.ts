@@ -167,7 +167,7 @@ Deno.serve(async (req: Request) => {
       const now = new Date();
       const amzDate = now.toISOString().replace(/[:\-]|\.\d{3}/g, "").slice(0, 15) + "Z";
 
-      const canonicalPath = `/${accountId}/${bucket}/${key}`;
+      const canonicalPath = `/${bucket}/${key}`;
       const s3Url = `${endpointBase}/${accountId}/${bucket}/${key}`;
 
       const authHeader = await buildAuthHeader(accessKey, secretKey, region, host, canonicalPath, contentType, bodyHash, now);
