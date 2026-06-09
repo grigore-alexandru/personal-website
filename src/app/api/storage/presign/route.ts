@@ -27,7 +27,7 @@ async function buildPresignedUrl(bucket: string, key: string, expiresIn = 3600):
   const dateStamp = amzDate.slice(0, 8);
   const credentialScope = `${dateStamp}/${REGION}/s3/aws4_request`;
   const credential = `${ACCESS_KEY}/${credentialScope}`;
-  const canonicalPath = `/${ACCOUNT_ID}/${bucket}/${key}`;
+  const canonicalPath = `/${bucket}/${key}`;
 
   const queryParams = new URLSearchParams({
     'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
