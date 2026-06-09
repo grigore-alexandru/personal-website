@@ -208,7 +208,7 @@ Deno.serve(async (req: Request) => {
       const amzDate = now.toISOString().replace(/[:\-]|\.\d{3}/g, "").slice(0, 15) + "Z";
       const emptyHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
-      const canonicalPath = `/${accountId}/${bucket}/${key}`;
+      const canonicalPath = `/${bucket}/${key}`;
       const s3Url = `${endpointBase}/${accountId}/${bucket}/${key}`;
 
       const authHeader = await buildDeleteAuthHeader(accessKey, secretKey, region, host, canonicalPath, now);
