@@ -89,7 +89,7 @@ async function buildDeleteAuthHeader(bucket: string, key: string, date: Date): P
   const dateStamp = amzDate.slice(0, 8);
   const credentialScope = `${dateStamp}/${REGION}/s3/aws4_request`;
   const emptyHash = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
-  const canonicalPath = `/${ACCOUNT_ID}/${bucket}/${key}`;
+  const canonicalPath = `/${bucket}/${key}`;
 
   const canonicalHeaders = `host:${host}\nx-amz-content-sha256:${emptyHash}\nx-amz-date:${amzDate}\n`;
   const signedHeaders = 'host;x-amz-content-sha256;x-amz-date';
