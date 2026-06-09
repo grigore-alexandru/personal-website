@@ -79,7 +79,7 @@ async function buildPresignedUrl(bucket: string, key: string, expiresIn = 3600):
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
 
-  return `${endpointBase}/${ACCOUNT_ID}/${bucket}/${key}?${sortedQuery}&X-Amz-Signature=${signature}`;
+  return `${endpointBase}/${bucket}/${key}?${sortedQuery}&X-Amz-Signature=${signature}`;
 }
 
 async function buildDeleteAuthHeader(bucket: string, key: string, date: Date): Promise<{ authHeader: string; amzDate: string }> {
