@@ -116,9 +116,17 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ items }) => {
   const isImage = active.content_type?.slug === 'image' || (!active.platform && !active.format);
   const isYoutube = !isImage && (active.platform === 'youtube' || active.url.includes('youtube.com') || active.url.includes('youtu.be'));
   const isVimeo = !isImage && !isYoutube && (active.platform === 'vimeo' || active.url.includes('vimeo.com'));
+  const isInstagram = !isImage && !isYoutube && !isVimeo && active.platform === 'instagram';
+  // A raw uploaded file (e.g. Mega S4 .mp4) is not an embeddable platform —
+  // it was previously falling through to the iframe branch below, which
+  // pointed an <iframe src> straight at a video file. That's not a video
+  // player; depending on the browser it either fails to render or, worse,
+  // the navigation gets treated as a file and downloads it instead of
+  // playing it. Direct files need a real <video> element instead.
+  const isDirectFile = !isImage && !isYoutube && !isVimeo && !isInstagram;
 
   const youtubeDetails = isYoutube ? getYoutubeDetails(active.url) : { videoId: null, start: undefined };
-  const vimeoUrl = isVimeo ? getVimeoEmbedUrl(active.url) : active.url;
+  const vimeoUrl = isVimeo ? getVimeoEmbedUrl(active.url) : null;
 
   const slideVariants = {
     enter: (dir: number) => ({
@@ -187,11 +195,46 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ items }) => {
                     onLoad={() => setImageLoaded(true)}
                   />
                 </div>
-              ) : active.platform === 'instagram' ? (
+              ) : isInstagram ? (
                 <div
                   ref={instaRef}
                   className="w-full h-full flex items-center justify-center"
                 />
+              ) : isDirectFile ? (
+                <div className="w-full h-full relative">
+                  {iframeLoading && !iframeError && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-neutral-900 z-10">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
+                    </div>
+                  )}
+                  <video
+                    key={active.url}
+                    src={active.url}
+                    controls
+                    className="w-full h-full"
+                    style={{ objectFit: 'contain', background: '#000' }}
+                    onLoadedData={() => setIframeLoading(false)}
+                    onError={() => {
+                      setIframeError(true);
+                      setIframeLoading(false);
+                    }}
+                  />
+                  {iframeError && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-neutral-900 text-white px-4 z-10">
+                      <div className="text-center">
+                        <p className="mb-2">Unable to load video</p>
+                        <a
+                          href={active.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm underline hover:text-gray-300"
+                        >
+                          Open in new tab
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <div className="w-full h-full relative">
                   {iframeLoading && !iframeError && (

@@ -58,6 +58,12 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ items, initialIndex, onClos
     ? !isImage && !isYoutube && (active.platform === 'vimeo' || active.url.includes('vimeo.com'))
     : false;
   const isInstagram = active ? active.platform === 'instagram' : false;
+  // A raw uploaded file (e.g. Mega S4 .mp4) is not an embeddable platform —
+  // it was previously falling through to `<iframe src={active.url}>` below,
+  // which isn't a video player. Depending on the browser that either fails
+  // to render or gets treated as a file download instead of inline
+  // playback. Direct files need a real <video> element instead.
+  const isDirectFile = active ? !isImage && !isYoutube && !isVimeo && !isInstagram : false;
 
   const youtubeDetails = isYoutube && active ? getYoutubeDetails(active.url) : { videoId: null, start: undefined };
   const vimeoUrl = isVimeo && active ? getVimeoEmbedUrl(active.url) : null;
@@ -213,6 +219,30 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ items, initialIndex, onClos
                   ref={instaRef}
                   className="w-full max-w-lg flex items-center justify-center overflow-auto"
                 />
+              ) : isDirectFile ? (
+                <div className="relative w-full h-full flex items-center justify-center">
+                  {mediaLoading && !mediaError && (
+                    <div className="absolute inset-0 flex items-center justify-center z-10">
+                      <Spinner />
+                    </div>
+                  )}
+                  <video
+                    key={active.url}
+                    src={active.url}
+                    controls
+                    autoPlay
+                    className="max-w-full max-h-full"
+                    style={{
+                      maxHeight: 'calc(100vh - 160px)',
+                      objectFit: 'contain',
+                      opacity: mediaLoading ? 0 : 1,
+                      transition: 'opacity 0.3s ease',
+                    }}
+                    onLoadedData={() => setMediaLoading(false)}
+                    onError={() => { setMediaError(true); setMediaLoading(false); }}
+                  />
+                  {mediaError && <MediaErrorFallback url={active.url} />}
+                </div>
               ) : (
                 <div
                   className="relative w-full"
@@ -257,7 +287,7 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ items, initialIndex, onClos
                       />
                     ) : (
                       <iframe
-                        src={vimeoUrl || active.url}
+                        src={vimeoUrl || ''}
                         title={active.title}
                         className="absolute inset-0 w-full h-full rounded-lg"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
