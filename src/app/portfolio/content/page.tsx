@@ -1,38 +1,49 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from '../../../config/seo';
+import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from '../../../config/site';
 import { loadPublishedContentWithProjects, countPublishedContent } from '../../../utils/contentService';
 import { loadAllClients, loadProjectTypes } from '../../../utils/portfolioService';
 import ContentGridClient from './ContentGridClient';
 import { ContentGridItemSkeleton } from '../../../components/ui/SkeletonLoader';
 
 export const metadata: Metadata = {
-  title: 'Content Portfolio',
-  description: 'Browse the full content portfolio — videos, photos, and productions across clients and formats.',
+  title: 'Content',
+  description: 'Videos and photos from the work — reels, edits, and individual pieces across projects.',
   alternates: {
     canonical: `${SITE_URL}/portfolio/content`,
   },
   openGraph: {
-    title: `Content Portfolio | ${SITE_NAME}`,
-    description: 'Browse the full content portfolio — videos, photos, and productions across clients and formats.',
+    title: `Content | ${SITE_NAME}`,
+    description: 'Videos and photos from the work — reels, edits, and individual pieces across projects.',
     url: `${SITE_URL}/portfolio/content`,
     type: 'website',
     images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: `Content Portfolio | ${SITE_NAME}`,
-    description: 'Browse the full content portfolio — videos, photos, and productions across clients and formats.',
+    title: `Content | ${SITE_NAME}`,
+    description: 'Videos and photos from the work — reels, edits, and individual pieces across projects.',
     images: [DEFAULT_OG_IMAGE],
   },
 };
 
 const CONTENT_PER_PAGE = 12;
 
-export default async function ContentPortfolioPage() {
+export default async function ContentPortfolioPage({
+  searchParams,
+}: {
+  searchParams: { media?: string; type?: string; client?: string; q?: string };
+}) {
+  const filters = {
+    media: searchParams.media,
+    type: searchParams.type,
+    client: searchParams.client,
+    q: searchParams.q,
+  };
+
   const [initialContent, total, clients, types] = await Promise.all([
-    loadPublishedContentWithProjects(CONTENT_PER_PAGE, 0),
-    countPublishedContent(),
+    loadPublishedContentWithProjects(CONTENT_PER_PAGE, 0, filters),
+    countPublishedContent(filters),
     loadAllClients(),
     loadProjectTypes(),
   ]);

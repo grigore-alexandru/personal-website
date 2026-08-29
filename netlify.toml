@@ -1,23 +1,16 @@
 [build]
-  publish = "dist"
   command = "npm run build"
 
 [build.environment]
   NODE_VERSION = "20"
 
-[[edge_functions]]
-  path = "/blog"
-  function = "inject-blog-list-meta"
-
-[[edge_functions]]
-  path = "/blog/*"
-  function = "inject-blog-meta"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+# Netlify's official Next.js Runtime. It manages the publish directory,
+# serverless/edge functions for route handlers + middleware, ISR, and
+# next/image optimization itself — do NOT set `publish` manually above,
+# it would override the runtime's own output wiring.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
 
 [dev]
   command = "npm run dev"
-  port = 5173
+  port = 3000

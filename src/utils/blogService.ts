@@ -94,16 +94,28 @@ export async function updateBlogPost(
       updated_at: getCurrentDateTime(),
     };
 
-    const { error } = await supabase
+    const { data: updated, error } = await supabase
       .from('posts')
       .update(postData)
-      .eq('id', postId);
+      .eq('id', postId)
+      .select('id');
 
     if (error) {
       console.error('Error updating blog post:', error);
       return {
         success: false,
         error: error.message || 'Failed to update blog post',
+      };
+    }
+
+    // PostgREST returns an empty array (no error) when RLS silently blocks the
+    // UPDATE.  Treat 0 rows affected as an auth failure so the caller gets a
+    // meaningful error instead of a false success.
+    if (!updated || updated.length === 0) {
+      console.error('updateBlogPost: 0 rows affected — RLS may have blocked the write');
+      return {
+        success: false,
+        error: 'Update was blocked. Your session may have expired — please sign out and sign back in.',
       };
     }
 

@@ -109,13 +109,24 @@ export async function updateProject(
     if (data.recommendation !== undefined) updateData.recommendation = data.recommendation;
     if (data.is_draft !== undefined) updateData.is_draft = data.is_draft;
 
-    const { error } = await supabase
+    const { data: updated, error } = await supabase
       .from('projects')
       .update(updateData)
-      .eq('id', projectId);
+      .eq('id', projectId)
+      .select('id');
 
     if (error) {
       return { success: false, error: error.message };
+    }
+
+    // PostgREST returns an empty array (no error) when RLS silently blocks the
+    // UPDATE.  Surface this as an explicit failure so callers show an error toast.
+    if (!updated || updated.length === 0) {
+      console.error('updateProject: 0 rows affected — RLS may have blocked the write');
+      return {
+        success: false,
+        error: 'Update was blocked. Your session may have expired — please sign out and sign back in.',
+      };
     }
 
     return { success: true, projectId, slug: data.slug };

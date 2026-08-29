@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 import { createServerSupabaseClient } from '../lib/supabase/server';
-import { SITE_URL } from '../config/seo';
+import { SITE_URL } from '../config/site';
 
 export const revalidate = 3600;
 

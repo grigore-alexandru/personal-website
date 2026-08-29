@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { X, Film, Users } from 'lucide-react';
 import { SearchBar } from '../../../components/ui/SearchBar';
 import { ContentWithProject } from '../../../types';
-import { loadPublishedContentWithProjects } from '../../../utils/contentService';
+import { loadPublishedContentWithProjects, loadContentPage } from '../../../utils/contentService';
 import { ContentGridItem } from '../../../components/ContentGridItem';
 import { ContentGridItemSkeleton } from '../../../components/ui/SkeletonLoader';
 import CustomDropdown from '../../../components/forms/CustomDropdown';
@@ -34,8 +34,10 @@ export default function ContentGridClient({
   contentPerPage,
 }: ContentGridClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [content, setContent] = useState<ContentWithProject[]>(initialContent);
+  const [totalCount, setTotalCount] = useState(totalContent);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(initialContent.length < totalContent);
 
@@ -44,13 +46,15 @@ export default function ContentGridClient({
   const [clientFilter, setClientFilter] = useUrlFilter('client', 'all');
   const [searchQuery, setSearchQuery] = useUrlFilter('q', '', true);
 
-  // Batch loading gates — preserve exact Vite pattern
+  // Batch loading gates
   const [loadedSet, setLoadedSet] = useState<Set<number>>(new Set());
   const batchSizeRef = useRef(contentPerPage);
   const currentBatchLoadedRef = useRef(false);
   const batchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isMountedRef = useRef(true);
+  const isInitialMount = useRef(true);
+  const fetchVersionRef = useRef(0);
   const observerTarget = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -61,7 +65,6 @@ export default function ContentGridClient({
     };
   }, []);
 
-  // Start batch fallback timer after initial mount
   useEffect(() => {
     scheduleBatchFallback();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -85,21 +88,73 @@ export default function ContentGridClient({
     });
   }, []);
 
+  // Read URL params (post-debounce for search) to drive server refetches
+  const urlMedia  = searchParams.get('media')  ?? 'all';
+  const urlType   = searchParams.get('type')   ?? 'all';
+  const urlClient = searchParams.get('client') ?? 'all';
+  const urlSearch = searchParams.get('q')      ?? '';
+
+  // When URL params change, reset items and fetch the new filtered page
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    fetchVersionRef.current += 1;
+    const version = fetchVersionRef.current;
+
+    const filters = { media: urlMedia, type: urlType, client: urlClient, q: urlSearch };
+
+    setContent([]);
+    setHasMore(false);
+    setLoadedSet(new Set());
+    currentBatchLoadedRef.current = false;
+    batchSizeRef.current = contentPerPage;
+    setLoadingMore(true);
+
+    // loadContentPage resolves the two lookup helpers (media type id, project
+    // content ids) exactly once, then fires count + data in parallel — half the
+    // round-trips of calling countPublishedContent + loadPublishedContentWithProjects
+    // separately.
+    loadContentPage(contentPerPage, 0, filters)
+      .then(({ items: newContent, total: count }) => {
+        if (!isMountedRef.current || fetchVersionRef.current !== version) return;
+        setContent(newContent);
+        setTotalCount(count);
+        setHasMore(newContent.length < count);
+        batchSizeRef.current = newContent.length;
+        scheduleBatchFallback();
+      })
+      .catch((err) => {
+        console.error('Error fetching filtered content:', err);
+      })
+      .finally(() => {
+        if (isMountedRef.current && fetchVersionRef.current === version) {
+          setLoadingMore(false);
+        }
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlMedia, urlType, urlClient, urlSearch]);
+
   const loadMoreContent = useCallback(async () => {
     if (loadingMore || !hasMore || !currentBatchLoadedRef.current) return;
 
     currentBatchLoadedRef.current = false;
     setLoadingMore(true);
+
+    const filters = { media: urlMedia, type: urlType, client: urlClient, q: urlSearch };
+
     try {
       const offset = content.length;
-      const newContent = await loadPublishedContentWithProjects(contentPerPage, offset);
+      const newContent = await loadPublishedContentWithProjects(contentPerPage, offset, filters);
       if (!isMountedRef.current) return;
       setContent((prev) => {
         const merged = [...prev, ...newContent];
         batchSizeRef.current = merged.length;
         return merged;
       });
-      setHasMore(offset + newContent.length < totalContent);
+      setHasMore(offset + newContent.length < totalCount);
       scheduleBatchFallback();
     } catch (error) {
       console.error('Error loading more content:', error);
@@ -107,10 +162,7 @@ export default function ContentGridClient({
     } finally {
       if (isMountedRef.current) setLoadingMore(false);
     }
-  }, [content.length, hasMore, loadingMore, totalContent, contentPerPage]);
-
-  const hasActiveFilters =
-    mediaFilter !== 'all' || typeFilter !== 'all' || clientFilter !== 'all' || searchQuery !== '';
+  }, [content.length, hasMore, loadingMore, totalCount, contentPerPage, urlMedia, urlType, urlClient, urlSearch]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -119,7 +171,6 @@ export default function ContentGridClient({
           entries[0].isIntersecting &&
           hasMore &&
           !loadingMore &&
-          !hasActiveFilters &&
           currentBatchLoadedRef.current
         ) {
           loadMoreContent();
@@ -133,26 +184,16 @@ export default function ContentGridClient({
     return () => {
       if (currentTarget) observer.unobserve(currentTarget);
     };
-  }, [hasMore, loadingMore, loadMoreContent, hasActiveFilters]);
+  }, [hasMore, loadingMore, loadMoreContent]);
 
-  const filteredContent = useMemo(() => {
-    return content.filter((item) => {
-      if (mediaFilter === 'videos' && item.content_type.slug !== 'video') return false;
-      if (mediaFilter === 'photos' && item.content_type.slug !== 'image') return false;
-      if (typeFilter !== 'all' && item.project_info?.project_type_name !== typeFilter) return false;
-      if (clientFilter !== 'all' && item.project_info?.client_name !== clientFilter) return false;
-      if (searchQuery && !item.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-      return true;
-    });
-  }, [content, mediaFilter, typeFilter, clientFilter, searchQuery]);
+  const hasActiveFilters =
+    mediaFilter !== 'all' || typeFilter !== 'all' || clientFilter !== 'all' || searchQuery !== '';
 
   const clearFilters = useClearUrlFilters(['media', 'type', 'client', 'q']);
 
   const handleContentClick = (item: ContentWithProject) => {
     router.push(`/portfolio/content/${item.slug}`);
   };
-
-  const displayItems = hasActiveFilters ? filteredContent : content;
 
   return (
     <div className="min-h-screen bg-white">
@@ -192,13 +233,13 @@ export default function ContentGridClient({
           />
         </div>
 
-        {hasActiveFilters && (
+        {hasActiveFilters && content.length > 0 && (
           <div className="mb-6 flex items-center justify-between">
             <p
               className="text-neutral-500"
               style={{ fontFamily: designTokens.typography.fontFamily, fontSize: '14px' }}
             >
-              Showing {filteredContent.length} of {content.length} items
+              Showing {content.length} of {totalCount} items
             </p>
             <button
               onClick={clearFilters}
@@ -211,8 +252,21 @@ export default function ContentGridClient({
           </div>
         )}
 
+        {hasActiveFilters && !loadingMore && content.length === 0 && (
+          <div className="mb-6 flex justify-end">
+            <button
+              onClick={clearFilters}
+              className="flex items-center gap-1.5 text-neutral-500 hover:text-neutral-900 transition-colors duration-150"
+              style={{ fontFamily: designTokens.typography.fontFamily, fontSize: '14px' }}
+            >
+              <X size={14} />
+              Clear filters
+            </button>
+          </div>
+        )}
+
         <div className="w-full">
-          {!content.length && !hasActiveFilters ? (
+          {!loadingMore && content.length === 0 && !hasActiveFilters ? (
             <div className="text-center py-20">
               <p
                 className="text-neutral-400"
@@ -221,7 +275,7 @@ export default function ContentGridClient({
                 No content published yet
               </p>
             </div>
-          ) : hasActiveFilters && filteredContent.length === 0 ? (
+          ) : !loadingMore && content.length === 0 && hasActiveFilters ? (
             <div className="text-center py-20">
               <p
                 className="text-neutral-400"
@@ -233,7 +287,7 @@ export default function ContentGridClient({
           ) : (
             <>
               <div className="fluid-grid">
-                {displayItems.map((item, index) => {
+                {content.map((item, index) => {
                   const isPortrait = item.format === 'portrait';
                   const isLoaded = loadedSet.has(index);
                   return (
@@ -274,7 +328,7 @@ export default function ContentGridClient({
                   );
                 })}
 
-                {loadingMore && !hasActiveFilters &&
+                {loadingMore &&
                   Array.from({ length: contentPerPage }).map((_, i) => (
                     <div
                       key={`batch-skeleton-${i}`}
@@ -286,7 +340,7 @@ export default function ContentGridClient({
                   ))}
               </div>
 
-              {!hasActiveFilters && <div ref={observerTarget} className="h-4 mt-6" />}
+              <div ref={observerTarget} className="h-4 mt-6" />
             </>
           )}
         </div>

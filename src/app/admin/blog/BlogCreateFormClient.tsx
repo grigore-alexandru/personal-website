@@ -262,6 +262,17 @@ export function BlogCreateFormClient({ mode = 'create' }: BlogCreateFormClientPr
         result = await saveBlogPost(formData, false);
       }
       if (result.success) {
+        // Bust the Next.js static-page cache so the public blog page reflects
+        // the new content on the next visit (ISR revalidation).  Fire-and-forget
+        // — a failure here must never block the admin redirect.
+        if (result.slug) {
+          fetch('/api/revalidate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ table: 'posts', record: { slug: result.slug } }),
+          }).catch(() => {});
+        }
+
         const successMessage =
           mode === 'edit' ? 'Post updated successfully' :
           mode === 'republish' ? 'Post republished successfully' :
@@ -269,12 +280,10 @@ export function BlogCreateFormClient({ mode = 'create' }: BlogCreateFormClientPr
         showToast('success', successMessage);
         setHasUnsavedChanges(false);
         removeDraft(DRAFT_KEY);
+        // Always return to the admin list — the public page is statically cached
+        // and would show stale content until ISR revalidation completes.
         setTimeout(() => {
-          if (result.slug) {
-            router.push(`/blog/${result.slug}`);
-          } else {
-            router.push('/admin/blog');
-          }
+          router.push('/admin/blog');
         }, 1500);
       } else {
         showToast('error', result.error || 'Failed to publish post');

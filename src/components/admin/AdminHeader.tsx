@@ -50,8 +50,8 @@ export function AdminHeader({ userEmail }: AdminHeaderProps) {
                   onClick={() => router.push(item.path)}
                   className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                     isActive(item.path)
-                      ? 'bg-black text-white'
-                      : 'text-neutral-700 hover:bg-neutral-100'
+                      ? 'bg-black text-white font-bold'
+                      : 'text-neutral-700 hover:bg-neutral-100 font-medium'
                   }`}
                 >
                   {item.label}

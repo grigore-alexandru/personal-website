@@ -1,17 +1,16 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Calendar, X } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import { SearchBar } from '../../components/ui/SearchBar';
-import { BlogPost, loadAllPosts } from '../../utils/blogLoader';
+import { BlogPost, loadAllPosts, countAllPosts } from '../../utils/blogLoader';
 import BlogPostCard from '../../components/BlogPostCard';
 import CustomDropdown from '../../components/forms/CustomDropdown';
 import { designTokens } from '../../styles/tokens';
 import { BlogPostCardSkeleton } from '../../components/ui/SkeletonLoader';
 import { Button } from '../../components/forms/Button';
 import { useUrlFilter, useClearUrlFilters } from '../../hooks/useUrlFilters';
-
-type DateFilter = 'all' | 'week' | 'month' | 'year';
 
 const DATE_OPTIONS = [
   { value: 'all',   label: 'All Time'    },
@@ -31,58 +30,87 @@ export default function BlogListClient({
   totalPosts,
   postsPerPage,
 }: BlogListClientProps) {
+  const searchParams = useSearchParams();
+
   const [posts, setPosts] = useState<BlogPost[]>(initialPosts);
+  const [totalCount, setTotalCount] = useState(totalPosts);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(initialPosts.length < totalPosts);
+
   const [searchQuery, setSearchQuery] = useUrlFilter('q', '', true);
   const [dateFilter, setDateFilter] = useUrlFilter('date', 'all');
+
+  const isInitialMount = useRef(true);
+  const isMountedRef = useRef(true);
+  const fetchVersionRef = useRef(0);
   const observerTarget = useRef<HTMLDivElement>(null);
 
-  const hasActiveFilters = searchQuery.trim() !== '' || dateFilter !== 'all';
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => { isMountedRef.current = false; };
+  }, []);
 
-  const filteredPosts = useMemo(() => {
-    let filtered = posts;
+  // Read URL params (post-debounce for search) to drive server refetches
+  const urlSearch = searchParams.get('q')    ?? '';
+  const urlDate   = searchParams.get('date') ?? 'all';
 
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (post) =>
-          post.title.toLowerCase().includes(query) ||
-          post.excerpt.toLowerCase().includes(query) ||
-          post.tags.some((tag) => tag.toLowerCase().includes(query))
-      );
+  // When URL params change, reset and fetch filtered first page
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
     }
 
-    if (dateFilter !== 'all') {
-      const now = new Date();
-      const cutoff = new Date();
-      switch (dateFilter as DateFilter) {
-        case 'week':  cutoff.setDate(now.getDate() - 7); break;
-        case 'month': cutoff.setMonth(now.getMonth() - 1); break;
-        case 'year':  cutoff.setFullYear(now.getFullYear() - 1); break;
-      }
-      filtered = filtered.filter((post) => new Date(post.publishedAt) >= cutoff);
-    }
+    fetchVersionRef.current += 1;
+    const version = fetchVersionRef.current;
 
-    return filtered;
-  }, [posts, searchQuery, dateFilter]);
+    const filters = { q: urlSearch, date: urlDate };
+
+    setPosts([]);
+    setHasMore(false);
+    setLoadingMore(true);
+
+    Promise.all([
+      loadAllPosts(postsPerPage, 0, filters),
+      countAllPosts(filters),
+    ])
+      .then(([newPosts, count]) => {
+        if (!isMountedRef.current || fetchVersionRef.current !== version) return;
+        setPosts(newPosts);
+        setTotalCount(count);
+        setHasMore(newPosts.length < count);
+      })
+      .catch((err) => {
+        console.error('Error fetching filtered posts:', err);
+      })
+      .finally(() => {
+        if (isMountedRef.current && fetchVersionRef.current === version) {
+          setLoadingMore(false);
+        }
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlSearch, urlDate]);
 
   const loadMorePosts = useCallback(async () => {
-    if (loadingMore || !hasMore || searchQuery.trim() || dateFilter !== 'all') return;
+    if (loadingMore || !hasMore) return;
+
     setLoadingMore(true);
+    const filters = { q: urlSearch, date: urlDate };
+
     try {
-      const newPosts = await loadAllPosts(postsPerPage, posts.length);
+      const newPosts = await loadAllPosts(postsPerPage, posts.length, filters);
+      if (!isMountedRef.current) return;
       setPosts((prev) => {
         const updated = [...prev, ...newPosts];
-        setHasMore(updated.length < totalPosts);
+        setHasMore(updated.length < totalCount);
         return updated;
       });
     } catch (error) {
       console.error('Error loading more posts:', error);
     } finally {
-      setLoadingMore(false);
+      if (isMountedRef.current) setLoadingMore(false);
     }
-  }, [posts.length, hasMore, loadingMore, totalPosts, searchQuery, dateFilter, postsPerPage]);
+  }, [posts.length, hasMore, loadingMore, totalCount, postsPerPage, urlSearch, urlDate]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -101,8 +129,15 @@ export default function BlogListClient({
     };
   }, [hasMore, loadingMore, loadMorePosts]);
 
+  // Badge tracks the *committed* URL values so it only appears once the fetch
+  // is actually in flight — not during the 300 ms debounce window.
+  const hasActiveFilters = urlSearch.trim() !== '' || urlDate !== 'all';
   const clearFilters = useClearUrlFilters(['q', 'date']);
-  const displayPosts = hasActiveFilters ? filteredPosts : posts;
+
+  // True while a filter-change fetch is in progress (posts list was cleared).
+  // Distinct from loadingMore (pagination append) so we can show a full
+  // skeleton grid instead of an empty card list with appended skeletons.
+  const isFetchingFiltered = loadingMore && posts.length === 0;
 
   return (
     <div className="min-h-screen bg-white">
@@ -140,7 +175,20 @@ export default function BlogListClient({
       </section>
 
       <section className="max-w-4xl mx-auto px-6 pb-16">
-        {displayPosts.length === 0 ? (
+        {isFetchingFiltered ? (
+          // Filter-change fetch: show a full skeleton grid where cards will
+          // appear, so there is never a flash of empty space or "No posts".
+          <div className="space-y-6">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                style={{ animation: `fadeIn 0.3s ease-in-out ${i * 50}ms both` }}
+              >
+                <BlogPostCardSkeleton />
+              </div>
+            ))}
+          </div>
+        ) : !loadingMore && posts.length === 0 ? (
           <div className="text-center py-16">
             <p
               className="text-gray-500"
@@ -156,7 +204,7 @@ export default function BlogListClient({
         ) : (
           <>
             <div className="space-y-6">
-              {displayPosts.map((post, index) => (
+              {posts.map((post, index) => (
                 <div
                   key={post.id}
                   style={{
@@ -168,23 +216,20 @@ export default function BlogListClient({
               ))}
             </div>
 
-            {!hasActiveFilters && (
-              <>
-                {loadingMore && (
-                  <div className="space-y-6 mt-6">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                      <div
-                        key={i}
-                        style={{ animation: `fadeIn 0.3s ease-in-out ${i * 50}ms both` }}
-                      >
-                        <BlogPostCardSkeleton />
-                      </div>
-                    ))}
+            {loadingMore && (
+              <div className="space-y-6 mt-6">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div
+                    key={i}
+                    style={{ animation: `fadeIn 0.3s ease-in-out ${i * 50}ms both` }}
+                  >
+                    <BlogPostCardSkeleton />
                   </div>
-                )}
-                <div ref={observerTarget} className="h-4" />
-              </>
+                ))}
+              </div>
             )}
+
+            <div ref={observerTarget} className="h-4" />
           </>
         )}
       </section>

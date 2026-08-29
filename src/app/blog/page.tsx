@@ -1,19 +1,19 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from '../../config/seo';
+import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from '../../config/site';
 import { loadAllPosts, countAllPosts } from '../../utils/blogLoader';
 import BlogListClient from './BlogListClient';
 import { BlogPostCardSkeleton } from '../../components/ui/SkeletonLoader';
 
 export const metadata: Metadata = {
   title: 'Blog',
-  description: 'Articles, insights, and behind-the-scenes stories from the studio.',
+  description: 'Notes on filmmaking, creative process, and the projects I\'m working on.',
   alternates: {
     canonical: `${SITE_URL}/blog`,
   },
   openGraph: {
     title: `Blog | ${SITE_NAME}`,
-    description: 'Articles, insights, and behind-the-scenes stories from the studio.',
+    description: 'Notes on filmmaking, creative process, and the projects I\'m working on.',
     url: `${SITE_URL}/blog`,
     type: 'website',
     images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630 }],
@@ -21,17 +21,26 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: `Blog | ${SITE_NAME}`,
-    description: 'Articles, insights, and behind-the-scenes stories from the studio.',
+    description: 'Notes on filmmaking, creative process, and the projects I\'m working on.',
     images: [DEFAULT_OG_IMAGE],
   },
 };
 
 const POSTS_PER_PAGE = 20;
 
-export default async function BlogListPage() {
+export default async function BlogListPage({
+  searchParams,
+}: {
+  searchParams: { q?: string; date?: string };
+}) {
+  const filters = {
+    q: searchParams.q,
+    date: searchParams.date,
+  };
+
   const [initialPosts, total] = await Promise.all([
-    loadAllPosts(POSTS_PER_PAGE, 0),
-    countAllPosts(),
+    loadAllPosts(POSTS_PER_PAGE, 0, filters),
+    countAllPosts(filters),
   ]);
 
   return (

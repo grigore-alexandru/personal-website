@@ -124,6 +124,10 @@ html {
 body {
   margin: 0;
   padding: 0;
+  background-color: #ffffff; /* Explicit white base so nothing shows through the
+                                translucent (bg-white/95) fixed header while loading */
+  overflow-x: hidden; /* Prevents horizontal scroll from negative-margin full-bleed
+                         sections (StoryContent, bulk-upload) and 100vw fluid-grid rows */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -367,6 +371,18 @@ section {
 .animate-modal-scale-in { animation: modalScaleIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .animate-modal-slide-in { animation: modalSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s forwards; opacity: 0; }
 .animate-copied-fade-in { animation: copiedFadeIn 2.2s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+
+/* Content detail page — media enter (plays on every navigation) */
+@keyframes mediaEnter {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes metaEnter {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-media-enter { animation: mediaEnter 0.45s cubic-bezier(0.4, 0, 0.2, 1) both; }
+.animate-meta-enter  { animation: metaEnter  0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.08s both; }
 
 /* =====================================================
    BLOG PROSE — TipTap rendered blog post content

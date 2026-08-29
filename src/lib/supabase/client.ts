@@ -1,5 +1,6 @@
-'use client';
-
+// No 'use client' directive — this is a shared utility module, not a React component.
+// createBrowserClient accesses document.cookie only when auth operations are performed
+// (not at import time), so importing this module on the server is safe.
 import { createBrowserClient } from '@supabase/ssr';
 import type { Database } from '../../types/database';
 

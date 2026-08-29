@@ -24,11 +24,37 @@ export interface BlogPost {
   updatedAt?: string;
 }
 
-export const countAllPosts = async (): Promise<number> => {
-  const { count, error } = await supabase
+export interface BlogFilters {
+  q?: string;
+  date?: string;
+}
+
+function getDateCutoff(date: string): string | null {
+  if (!date || date === 'all') return null;
+  const now = new Date();
+  const cutoff = new Date(now);
+  if (date === 'week') cutoff.setDate(now.getDate() - 7);
+  else if (date === 'month') cutoff.setMonth(now.getMonth() - 1);
+  else if (date === 'year') cutoff.setFullYear(now.getFullYear() - 1);
+  else return null;
+  return cutoff.toISOString();
+}
+
+export const countAllPosts = async (filters: BlogFilters = {}): Promise<number> => {
+  let query = supabase
     .from('posts')
     .select('*', { count: 'exact', head: true })
     .eq('is_draft', false);
+
+  if (filters.q?.trim()) {
+    const q = filters.q.trim();
+    query = query.or(`title.ilike.%${q}%,excerpt.ilike.%${q}%`);
+  }
+
+  const cutoff = getDateCutoff(filters.date ?? '');
+  if (cutoff) query = query.gte('published_at', cutoff);
+
+  const { count, error } = await query;
 
   if (error) {
     console.error('Error counting posts:', error);
@@ -72,14 +98,26 @@ export const loadPost = async (slug: string): Promise<BlogPost | null> => {
 
 export const loadAllPosts = async (
   limit: number = 20,
-  offset: number = 0
+  offset: number = 0,
+  filters: BlogFilters = {}
 ): Promise<BlogPost[]> => {
-  const { data: rawData, error } = await supabase
+  let query = supabase
     .from('posts')
     .select('id, title, slug, excerpt, tags, hero_image_large, hero_image_thumbnail, has_sources, sources_data, has_notes, notes_content, published_at, content')
     .eq('is_draft', false)
-    .order('published_at', { ascending: false })
-    .range(offset, offset + limit - 1);
+    .order('published_at', { ascending: false });
+
+  if (filters.q?.trim()) {
+    const q = filters.q.trim();
+    query = query.or(`title.ilike.%${q}%,excerpt.ilike.%${q}%`);
+  }
+
+  const cutoff = getDateCutoff(filters.date ?? '');
+  if (cutoff) query = query.gte('published_at', cutoff);
+
+  query = query.range(offset, offset + limit - 1);
+
+  const { data: rawData, error } = await query;
   const data = rawData as any[];
 
   if (error) {

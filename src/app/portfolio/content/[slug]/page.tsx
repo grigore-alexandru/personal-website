@@ -1,9 +1,12 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { SITE_URL, SITE_NAME } from '../../../../config/seo';
-import { loadContentBySlug, loadPublishedContentWithProjects } from '../../../../utils/contentService';
-import { ContentDetailStandalone } from '../../../../components/content/ContentDetailStandalone';
+import { SITE_URL, SITE_NAME } from '../../../../config/site';
+import {
+  loadContentBySlug,
+  loadAdjacentContent,
+  loadPublishedContentWithProjects,
+} from '../../../../utils/contentService';
+import { ContentDetailView } from '../../../../components/content/ContentDetailView';
 
 interface PageProps {
   params: { slug: string };
@@ -72,5 +75,13 @@ export default async function ContentDetailPage({ params }: PageProps) {
   const content = await loadContentBySlug(params.slug);
   if (!content) notFound();
 
-  return <ContentDetailStandalone content={content!} />;
+  const adjacent = await loadAdjacentContent(content.order_index);
+
+  return (
+    <ContentDetailView
+      content={content}
+      prevSlug={adjacent.prevSlug}
+      nextSlug={adjacent.nextSlug}
+    />
+  );
 }

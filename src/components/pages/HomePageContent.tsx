@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import { ArrowRight, Camera, Film, Star, Mail, Zap, Heart } from 'lucide-react';
 import { Button } from '../forms/Button';
-import { SITE_URL } from '../../config/seo';
+import { SITE_URL } from '../../config/site';
 
 const HERO_IMAGE_URL =
   'https://lqbyvubbzexujviflunv.supabase.co/storage/v1/object/sign/website-media/HOMEPAGE_PERSON.webp?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iNTIzNTU4Yi1iZjk0LTRiMTItYmQ1Yy1kOGM4MzExZDQ5ZWYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ3ZWJzaXRlLW1lZGlhL0hPTUVQQUdFX1BFUlNPTi53ZWJwIiwiaWF0IjoxNzcxNDU0NDE3LCJleHAiOjE4MDI5OTA0MTd9.1oZku9dB0uQgki25AM_MPMrd5fYZ48aqPdevTsi50Jw';

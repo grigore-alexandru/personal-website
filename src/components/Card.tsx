@@ -23,12 +23,18 @@ const Card: React.FC<CardProps> = ({ project, onImageLoad }) => {
         className="relative overflow-hidden"
         style={{ aspectRatio: '16 / 10' }}
       >
-        <ProgressiveImage
-          src={project.hero_image_thumbnail}
-          alt={project.title}
-          className="object-cover saturate-[0.2] scale-100 group-hover:saturate-100 group-hover:scale-[1.02] transition-[transform,filter] duration-[350ms] ease-in-out"
-          onLoad={onImageLoad}
-        />
+        {/* Wrapper carries the zoom — matches ContentGridItem's cubic-bezier and scale */}
+        <div
+          className="absolute inset-0 will-change-transform group-hover:scale-[1.06]"
+          style={{ transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)' }}
+        >
+          <ProgressiveImage
+            src={project.hero_image_thumbnail}
+            alt={project.title}
+            className="object-cover saturate-[0.2] group-hover:saturate-100 transition-[filter] duration-[350ms] ease-in-out"
+            onLoad={onImageLoad}
+          />
+        </div>
       </div>
 
       <div className="px-4 pt-4 pb-5">

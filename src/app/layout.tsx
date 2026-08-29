@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { Poppins } from 'next/font/google';
-import { Providers } from './providers';
 import ConditionalHeader from '../components/ConditionalHeader';
 import ConditionalWrapper from '../components/ConditionalWrapper';
 import './globals.css';
@@ -17,7 +16,7 @@ export const metadata: Metadata = {
     default: 'Alexandru Grigore',
     template: '%s | Alexandru Grigore',
   },
-  description: '',
+  description: 'Video director and creative producer. Commercials, documentaries, and branded content.',
   metadataBase: new URL('https://sweet-vacherin-65bc21.netlify.app'),
   openGraph: {
     type: 'website',
@@ -43,12 +42,10 @@ export default function RootLayout({
         <link rel="preconnect" href="https://s3.eu-central-1.s4.mega.io" />
       </head>
       <body className="font-[family-name:var(--font-poppins)]">
-        <Providers>
-          <ConditionalHeader />
-          <ConditionalWrapper>
-            {children}
-          </ConditionalWrapper>
-        </Providers>
+        <ConditionalHeader />
+        <ConditionalWrapper>
+          {children}
+        </ConditionalWrapper>
       </body>
     </html>
   );

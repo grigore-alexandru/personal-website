@@ -9,7 +9,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
  * (laptop-with-touch) devices report both "coarse" and "fine" pointers.
  */
 function isTouchDevice(): boolean {
-  if (typeof navigator === 'undefined') return false;
+  if (typeof navigator === 'undefined' || typeof window === 'undefined') return false;
   return (
     navigator.maxTouchPoints > 0 ||
     // Legacy fallback for very old Android browsers

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from '../../../config/seo';
+import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from '../../../config/site';
 import { loadProjects, countProjects } from '../../../utils/dataLoader';
 import { loadProjectTypes, loadAllClients } from '../../../utils/portfolioService';
 import ProjectsListClient from './ProjectsListClient';
@@ -8,13 +8,13 @@ import { ProjectCardSkeleton } from '../../../components/ui/SkeletonLoader';
 
 export const metadata: Metadata = {
   title: 'Projects',
-  description: 'Browse all projects — commercial campaigns, documentary films, and brand storytelling.',
+  description: 'Commercials, documentaries, and branded content — the projects I\'ve directed and produced.',
   alternates: {
     canonical: `${SITE_URL}/portfolio/projects`,
   },
   openGraph: {
     title: `Projects | ${SITE_NAME}`,
-    description: 'Browse all projects — commercial campaigns, documentary films, and brand storytelling.',
+    description: 'Commercials, documentaries, and branded content — the projects I\'ve directed and produced.',
     url: `${SITE_URL}/portfolio/projects`,
     type: 'website',
     images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630 }],
@@ -22,18 +22,28 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: `Projects | ${SITE_NAME}`,
-    description: 'Browse all projects — commercial campaigns, documentary films, and brand storytelling.',
+    description: 'Commercials, documentaries, and branded content — the projects I\'ve directed and produced.',
     images: [DEFAULT_OG_IMAGE],
   },
 };
 
 const BATCH_SIZE = 12;
 
-export default async function ProjectsPage() {
+export default async function ProjectsPage({
+  searchParams,
+}: {
+  searchParams: { q?: string; type?: string; client?: string };
+}) {
+  const filters = {
+    q: searchParams.q,
+    type: searchParams.type,
+    client: searchParams.client,
+  };
+
   const [initialProjects, typesData, total, clients] = await Promise.all([
-    loadProjects(BATCH_SIZE, 0),
+    loadProjects(BATCH_SIZE, 0, filters),
     loadProjectTypes(),
-    countProjects(),
+    countProjects(filters),
     loadAllClients(),
   ]);
 

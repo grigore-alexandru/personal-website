@@ -1,16 +1,17 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
+import BlogHeroImage from '../../../components/blog/BlogHeroImage';
 import { notFound } from 'next/navigation';
 import { generateHTML } from '@tiptap/html';
 import StarterKit from '@tiptap/starter-kit';
 import TipTapImage from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
-import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from '../../../config/seo';
+import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from '../../../config/site';
 import { loadPost, loadAllPosts } from '../../../utils/blogLoader';
 import { extractTextFromTipTap } from '../../../utils/dataLoader';
 import { designTokens } from '../../../styles/tokens';
 import BlogPostScrollButton from '../../../components/BlogPostScrollButton';
+import ScrollToTop from '../../../components/ScrollToTop';
 
 interface PageProps {
   params: { slug: string };
@@ -99,6 +100,7 @@ export default async function BlogPostPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-white">
+      <ScrollToTop />
       <BlogPostScrollButton />
 
       <div className="max-w-3xl mx-auto px-3 sm:px-4 lg:px-6 pt-12 pb-12 md:pt-16 md:pb-16">
@@ -128,19 +130,11 @@ export default async function BlogPostPage({ params }: PageProps) {
           })}
         </p>
 
-        {/* Hero Image */}
+        {/* Hero Image — client component so it can show its own skeleton
+            independently while the text above is already visible */}
         {post!.heroImageLarge && (
           <div className="mb-12 md:mb-16">
-            <div className="relative w-full pt-[62%] overflow-hidden rounded-lg shadow-sm">
-              <Image
-                src={post!.heroImageLarge}
-                alt={post!.title}
-                fill
-                sizes="(max-width: 768px) 100vw, 768px"
-                className="object-cover"
-                priority
-              />
-            </div>
+            <BlogHeroImage src={post!.heroImageLarge} alt={post!.title} />
           </div>
         )}
 

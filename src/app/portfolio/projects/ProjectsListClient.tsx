@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Film, Users } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import { SearchBar } from '../../../components/ui/SearchBar';
 import { Project } from '../../../types';
-import { loadProjects } from '../../../utils/dataLoader';
+import { loadProjects, countProjects } from '../../../utils/dataLoader';
 import CustomDropdown from '../../../components/forms/CustomDropdown';
 import ProjectGrid from '../../../components/project/ProjectGrid';
 import { designTokens } from '../../../styles/tokens';
@@ -25,46 +26,115 @@ const ProjectsListClient: React.FC<ProjectsListClientProps> = ({
   clientOptions,
   batchSize,
 }) => {
+  const searchParams = useSearchParams();
+
   const [projects, setProjects] = useState<Project[]>(initialProjects);
-  const [filteredProjects, setFilteredProjects] = useState<Project[]>(initialProjects);
-  const [searchQuery, setSearchQuery] = useUrlFilter('q', '', true);
-  const [typeFilter, setTypeFilter] = useUrlFilter('type', 'all');
-  const [clientFilter, setClientFilter] = useUrlFilter('client', 'all');
+  const [totalCount, setTotalCount] = useState(totalProjects);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(initialProjects.length < totalProjects);
   const [viewportImagesLoaded, setViewportImagesLoaded] = useState(false);
+
+  const [searchQuery, setSearchQuery] = useUrlFilter('q', '', true);
+  const [typeFilter, setTypeFilter] = useUrlFilter('type', 'all');
+  const [clientFilter, setClientFilter] = useUrlFilter('client', 'all');
+
   const loadedCountRef = useRef(0);
+  // Tracks exactly how many new images will mount in the current batch.
+  // Set before each setProjects call so handleImageLoad always checks against
+  // the right count — not the accumulated total, not the batchSize ceiling.
+  const expectedImageCountRef = useRef(initialProjects.length);
+  const isInitialMount = useRef(true);
+  const isMountedRef = useRef(true);
+  const fetchVersionRef = useRef(0);
   const observerTarget = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => { isMountedRef.current = false; };
+  }, []);
+
+  // Read URL params (post-debounce for search) to drive server refetches
+  const urlSearch = searchParams.get('q')      ?? '';
+  const urlType   = searchParams.get('type')   ?? 'all';
+  const urlClient = searchParams.get('client') ?? 'all';
+
+  // When URL params change, reset and fetch filtered first page
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    fetchVersionRef.current += 1;
+    const version = fetchVersionRef.current;
+
+    const filters = { q: urlSearch, type: urlType, client: urlClient };
+
+    setProjects([]);
+    setHasMore(false);
+    setViewportImagesLoaded(false);
+    loadedCountRef.current = 0;
+    setLoadingMore(true);
+
+    Promise.all([
+      loadProjects(batchSize, 0, filters),
+      countProjects(filters),
+    ])
+      .then(([newProjects, count]) => {
+        if (!isMountedRef.current || fetchVersionRef.current !== version) return;
+        expectedImageCountRef.current = newProjects.length;
+        setProjects(newProjects);
+        setTotalCount(count);
+        setHasMore(newProjects.length < count);
+        // No images will mount → arm the observer immediately.
+        if (newProjects.length === 0) setViewportImagesLoaded(true);
+      })
+      .catch((err) => {
+        console.error('Error fetching filtered projects:', err);
+      })
+      .finally(() => {
+        if (isMountedRef.current && fetchVersionRef.current === version) {
+          setLoadingMore(false);
+        }
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlSearch, urlType, urlClient]);
 
   const handleImageLoad = useCallback(() => {
     if (viewportImagesLoaded) return;
     loadedCountRef.current += 1;
-    const target = filteredProjects.length > 0 ? filteredProjects.length : batchSize;
-    if (loadedCountRef.current >= target) {
+    const expected = expectedImageCountRef.current;
+    if (expected > 0 && loadedCountRef.current >= expected) {
       setViewportImagesLoaded(true);
     }
-  }, [filteredProjects.length, viewportImagesLoaded, batchSize]);
+  }, [viewportImagesLoaded]);
 
   const loadMoreProjects = useCallback(async () => {
-    if (loadingMore || !hasMore || searchQuery.trim() || typeFilter !== 'all' || clientFilter !== 'all') return;
+    if (loadingMore || !hasMore) return;
 
     setLoadingMore(true);
     setViewportImagesLoaded(false);
     loadedCountRef.current = 0;
 
+    const filters = { q: urlSearch, type: urlType, client: urlClient };
+
     try {
-      const newProjects = await loadProjects(batchSize, projects.length);
+      const newProjects = await loadProjects(batchSize, projects.length, filters);
+      if (!isMountedRef.current) return;
+      // Only the newly-mounted cards will fire handleImageLoad — set the
+      // threshold to the batch size, not the accumulated total.
+      expectedImageCountRef.current = newProjects.length;
       setProjects((prev) => {
         const updated = [...prev, ...newProjects];
-        setHasMore(updated.length < totalProjects);
+        setHasMore(updated.length < totalCount);
         return updated;
       });
     } catch (error) {
       console.error('Error loading more projects:', error);
     } finally {
-      setLoadingMore(false);
+      if (isMountedRef.current) setLoadingMore(false);
     }
-  }, [projects.length, hasMore, loadingMore, totalProjects, searchQuery, typeFilter, clientFilter, batchSize]);
+  }, [projects.length, hasMore, loadingMore, totalCount, batchSize, urlSearch, urlType, urlClient]);
 
   useEffect(() => {
     if (!viewportImagesLoaded) return;
@@ -85,38 +155,9 @@ const ProjectsListClient: React.FC<ProjectsListClientProps> = ({
     };
   }, [hasMore, loadingMore, loadMoreProjects, viewportImagesLoaded]);
 
-  useEffect(() => {
-    let filtered = projects;
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (project) =>
-          project.title.toLowerCase().includes(q) ||
-          project.client_name.toLowerCase().includes(q) ||
-          project.project_type.name.toLowerCase().includes(q)
-      );
-    }
-
-    if (typeFilter !== 'all') {
-      filtered = filtered.filter((project) => project.project_type.slug === typeFilter);
-    }
-
-    if (clientFilter !== 'all') {
-      filtered = filtered.filter((project) => project.client_name === clientFilter);
-    }
-
-    setFilteredProjects(filtered);
-  }, [projects, searchQuery, typeFilter, clientFilter]);
-
-  useEffect(() => {
-    loadedCountRef.current = 0;
-    setViewportImagesLoaded(false);
-  }, [searchQuery, typeFilter, clientFilter]);
-
   const clearFilters = useClearUrlFilters(['q', 'type', 'client']);
   const hasActiveFilters = searchQuery.trim() !== '' || typeFilter !== 'all' || clientFilter !== 'all';
-  const skeletonCount = Math.min(totalProjects, batchSize);
+  const skeletonCount = Math.min(totalCount, batchSize);
 
   return (
     <div className="min-h-screen bg-white">
@@ -148,13 +189,13 @@ const ProjectsListClient: React.FC<ProjectsListClientProps> = ({
           />
         </div>
 
-        {hasActiveFilters && (
+        {hasActiveFilters && projects.length > 0 && (
           <div className="mb-6 flex items-center justify-between">
             <p
               className="text-neutral-500"
               style={{ fontFamily: designTokens.typography.fontFamily, fontSize: '14px' }}
             >
-              Showing {filteredProjects.length} of {projects.length} items
+              Showing {projects.length} of {totalCount} items
             </p>
             <button
               onClick={clearFilters}
@@ -168,17 +209,13 @@ const ProjectsListClient: React.FC<ProjectsListClientProps> = ({
         )}
 
         <ProjectGrid
-          projects={filteredProjects}
+          projects={projects}
           initialLoading={false}
-          loadingMore={loadingMore && !searchQuery.trim() && typeFilter === 'all' && clientFilter === 'all'}
+          loadingMore={loadingMore}
           skeletonCount={skeletonCount}
           batchSize={batchSize}
           onImageLoad={handleImageLoad}
-          observerTarget={
-            !searchQuery.trim() && typeFilter === 'all' && clientFilter === 'all'
-              ? observerTarget
-              : undefined
-          }
+          observerTarget={observerTarget}
         />
       </main>
     </div>

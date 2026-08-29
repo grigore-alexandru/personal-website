@@ -10,16 +10,63 @@ const PROJECT_SELECT = `
   )
 `;
 
+// Minimal select for count queries that need project_type.name resolvable
+// by PostgREST when a search filter spans the joined table.
+const PROJECT_COUNT_SELECT = '*, project_type:project_types(name)';
+
+export interface ProjectFilters {
+  q?: string;
+  type?: string;
+  client?: string;
+}
+
+function applyProjectFilters(
+  query: any,
+  filters: ProjectFilters,
+  typeId: string | null
+): any {
+  if (typeId) query = query.eq('type_id', typeId);
+  if (filters.client && filters.client !== 'all') query = query.eq('client_name', filters.client);
+  if (filters.q?.trim()) {
+    const q = filters.q.trim();
+    // project_type.name uses the join alias declared in PROJECT_SELECT /
+    // PROJECT_COUNT_SELECT — PostgREST resolves it via the embedded join.
+    query = query.or(`title.ilike.%${q}%,client_name.ilike.%${q}%,project_type.name.ilike.%${q}%`);
+  }
+  return query;
+}
+
+async function resolveProjectTypeId(slug: string): Promise<string | null> {
+  const { data } = await supabase
+    .from('project_types')
+    .select('id')
+    .eq('slug', slug)
+    .maybeSingle();
+  return data?.id ?? null;
+}
+
 export const loadProjects = async (
   limit: number = 24,
-  offset: number = 0
+  offset: number = 0,
+  filters: ProjectFilters = {}
 ): Promise<Project[]> => {
-  const { data, error } = await supabase
+  const typeId =
+    filters.type && filters.type !== 'all'
+      ? await resolveProjectTypeId(filters.type)
+      : null;
+
+  if (filters.type && filters.type !== 'all' && !typeId) return [];
+
+  let query = supabase
     .from('projects')
     .select(PROJECT_SELECT)
     .eq('is_draft', false)
-    .order('order_index', { ascending: false })
-    .range(offset, offset + limit - 1);
+    .order('order_index', { ascending: false });
+
+  query = applyProjectFilters(query, filters, typeId);
+  query = query.range(offset, offset + limit - 1);
+
+  const { data, error } = await query;
 
   if (error) {
     console.error('Error loading projects:', error);
@@ -31,11 +78,25 @@ export const loadProjects = async (
   return data.map(mapProjectRow);
 };
 
-export const countProjects = async (): Promise<number> => {
-  const { count, error } = await supabase
+export const countProjects = async (filters: ProjectFilters = {}): Promise<number> => {
+  const typeId =
+    filters.type && filters.type !== 'all'
+      ? await resolveProjectTypeId(filters.type)
+      : null;
+
+  if (filters.type && filters.type !== 'all' && !typeId) return 0;
+
+  let query = supabase
     .from('projects')
-    .select('*', { count: 'exact', head: true })
+    // PROJECT_COUNT_SELECT embeds project_type:project_types(name) so
+    // PostgREST can resolve project_type.name in the search .or() filter.
+    // head:true means no rows are returned — only the count.
+    .select(PROJECT_COUNT_SELECT, { count: 'exact', head: true })
     .eq('is_draft', false);
+
+  query = applyProjectFilters(query, filters, typeId);
+
+  const { count, error } = await query;
 
   if (error) {
     console.error('Error counting projects:', error);

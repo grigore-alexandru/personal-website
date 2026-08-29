@@ -79,12 +79,24 @@ export async function updateContent(
     if (data.contributors !== undefined) updateData.contributors = data.contributors;
     if (data.published_at !== undefined) updateData.published_at = data.published_at;
 
-    const { error } = await supabase
+    const { data: updated, error } = await supabase
       .from('content')
       .update(updateData)
-      .eq('id', contentId);
+      .eq('id', contentId)
+      .select('id');
 
     if (error) return { success: false, error: error.message };
+
+    // PostgREST returns an empty array (no error) when RLS silently blocks the
+    // UPDATE.  Surface this as an explicit failure so callers show an error toast.
+    if (!updated || updated.length === 0) {
+      console.error('updateContent: 0 rows affected — RLS may have blocked the write');
+      return {
+        success: false,
+        error: 'Update was blocked. Your session may have expired — please sign out and sign back in.',
+      };
+    }
+
     return { success: true };
   } catch (error) {
     return {
@@ -411,39 +423,83 @@ export async function checkContentSlugUniqueness(
   }
 }
 
-export async function countPublishedContent(): Promise<number> {
-  const { count, error } = await supabase
-    .from('content')
-    .select('*', { count: 'exact', head: true })
-    .eq('is_draft', false);
-
-  if (error) {
-    console.error('Error counting published content:', error);
-    return 0;
-  }
-
-  return count || 0;
+export interface ContentFilters {
+  media?: string;
+  type?: string;
+  client?: string;
+  q?: string;
 }
 
-export async function loadPublishedContentWithProjects(
-  limit: number = 30,
-  offset: number = 0
-): Promise<ContentWithProject[]> {
-  const { data: contentData, error: contentError } = await supabase
-    .from('content')
-    .select('*, content_type:content_types(*)')
-    .eq('is_draft', false)
-    .order('order_index', { ascending: false })
-    .range(offset, offset + limit - 1);
+async function resolveContentTypeId(mediaFilter: string): Promise<string | null> {
+  const slug = mediaFilter === 'videos' ? 'video' : mediaFilter === 'photos' ? 'image' : null;
+  if (!slug) return null;
+  const { data } = await supabase.from('content_types').select('id').eq('slug', slug).maybeSingle();
+  return data?.id ?? null;
+}
 
-  if (contentError) {
-    console.error('Error loading published content:', contentError);
-    return [];
+async function resolveContentIdsByProjectFilter(
+  type?: string,
+  client?: string
+): Promise<string[] | null> {
+  const hasType = type && type !== 'all';
+  const hasClient = client && client !== 'all';
+  if (!hasType && !hasClient) return null;
+
+  let typeId: string | null = null;
+  if (hasType) {
+    const { data } = await supabase
+      .from('project_types')
+      .select('id')
+      .eq('name', type!)
+      .maybeSingle();
+    if (!data?.id) return [];
+    typeId = data.id;
   }
 
-  const contentIds = (contentData || []).map((c) => c.id);
+  let query = supabase
+    .from('project_content')
+    .select('content_id, project:projects!inner(id, is_draft, client_name, type_id)')
+    .eq('project.is_draft', false);
 
-  const { data: projectContentData, error: projectContentError } = await supabase
+  if (hasClient) query = query.eq('project.client_name', client!);
+  if (typeId) query = query.eq('project.type_id', typeId);
+
+  const { data } = await query;
+  return (data || []).map((pc: any) => pc.content_id);
+}
+
+// Resolved filter values shared by count and data queries.
+interface ResolvedContentFilters {
+  typeId: string | null;
+  // null  → no project filter active (don't constrain by id)
+  // []    → project filter active but matched nothing (callers should short-circuit)
+  contentIds: string[] | null;
+}
+
+/** Resolve both lookup helpers in parallel. Call once, share results. */
+async function resolveContentFilters(filters: ContentFilters): Promise<ResolvedContentFilters> {
+  const { media, type, client } = filters;
+  const [typeId, contentIds] = await Promise.all([
+    media && media !== 'all' ? resolveContentTypeId(media) : Promise.resolve(null),
+    resolveContentIdsByProjectFilter(type, client),
+  ]);
+  return { typeId, contentIds };
+}
+
+/** Apply already-resolved filter values to any Supabase query builder. */
+function applyResolvedFilters(query: any, resolved: ResolvedContentFilters, q?: string): any {
+  if (resolved.typeId) query = query.eq('type_id', resolved.typeId);
+  if (q?.trim()) query = query.ilike('title', `%${q.trim()}%`);
+  if (resolved.contentIds !== null) query = query.in('id', resolved.contentIds);
+  return query;
+}
+
+/** Enrich a page of content rows with their project associations. */
+async function enrichWithProjectInfo(contentData: any[]): Promise<ContentWithProject[]> {
+  const contentIds = contentData.map((c) => c.id);
+  if (contentIds.length === 0) return [];
+
+  const { data: projectContentData, error } = await supabase
     .from('project_content')
     .select(`
       content_id,
@@ -458,13 +514,12 @@ export async function loadPublishedContentWithProjects(
     .in('content_id', contentIds)
     .eq('project.is_draft', false);
 
-  if (projectContentError) {
-    console.error('Error loading project associations:', projectContentError);
-    return (contentData || []) as unknown as ContentWithProject[];
+  if (error) {
+    console.error('Error loading project associations:', error);
+    return contentData as unknown as ContentWithProject[];
   }
 
   const projectInfoByContent = new Map<string, any>();
-
   for (const pc of projectContentData || []) {
     if (pc.project && !projectInfoByContent.has(pc.content_id)) {
       const project = pc.project as any;
@@ -477,10 +532,139 @@ export async function loadPublishedContentWithProjects(
     }
   }
 
-  return (contentData || []).map((content) => ({
+  return contentData.map((content) => ({
     ...(content as unknown as Content),
     project_info: projectInfoByContent.get(content.id) || null,
   }));
+}
+
+export async function countPublishedContent(filters: ContentFilters = {}): Promise<number> {
+  const resolved = await resolveContentFilters(filters);
+  if (resolved.contentIds !== null && resolved.contentIds.length === 0) return 0;
+
+  let query = applyResolvedFilters(
+    supabase.from('content').select('*', { count: 'exact', head: true }).eq('is_draft', false),
+    resolved,
+    filters.q
+  );
+
+  const { count, error } = await query;
+  if (error) {
+    console.error('Error counting published content:', error);
+    return 0;
+  }
+  return count || 0;
+}
+
+export async function loadPublishedContentWithProjects(
+  limit: number = 30,
+  offset: number = 0,
+  filters: ContentFilters = {}
+): Promise<ContentWithProject[]> {
+  const resolved = await resolveContentFilters(filters);
+  if (resolved.contentIds !== null && resolved.contentIds.length === 0) return [];
+
+  let query = applyResolvedFilters(
+    supabase
+      .from('content')
+      .select('*, content_type:content_types(*)')
+      .eq('is_draft', false)
+      .order('order_index', { ascending: false }),
+    resolved,
+    filters.q
+  );
+  query = query.range(offset, offset + limit - 1);
+
+  const { data: contentData, error: contentError } = await query;
+  if (contentError) {
+    console.error('Error loading published content:', contentError);
+    return [];
+  }
+
+  return enrichWithProjectInfo(contentData || []);
+}
+
+export interface ContentPage {
+  items: ContentWithProject[];
+  total: number;
+}
+
+/**
+ * Combined count + data fetch for filter interactions.
+ *
+ * Resolves `resolveContentTypeId` and `resolveContentIdsByProjectFilter` exactly
+ * once, then fires the count query and the data query in parallel — halving the
+ * number of Supabase round-trips compared to calling `countPublishedContent` and
+ * `loadPublishedContentWithProjects` separately.
+ */
+export async function loadContentPage(
+  limit: number = 30,
+  offset: number = 0,
+  filters: ContentFilters = {}
+): Promise<ContentPage> {
+  const resolved = await resolveContentFilters(filters);
+  if (resolved.contentIds !== null && resolved.contentIds.length === 0) {
+    return { items: [], total: 0 };
+  }
+
+  const countQuery = applyResolvedFilters(
+    supabase.from('content').select('*', { count: 'exact', head: true }).eq('is_draft', false),
+    resolved,
+    filters.q
+  );
+
+  const dataQuery = applyResolvedFilters(
+    supabase
+      .from('content')
+      .select('*, content_type:content_types(*)')
+      .eq('is_draft', false)
+      .order('order_index', { ascending: false }),
+    resolved,
+    filters.q
+  ).range(offset, offset + limit - 1);
+
+  const [countResult, dataResult] = await Promise.all([countQuery, dataQuery]);
+
+  if (dataResult.error) {
+    console.error('Error loading content page:', dataResult.error);
+    return { items: [], total: 0 };
+  }
+
+  const total = countResult.error ? 0 : (countResult.count || 0);
+  const items = await enrichWithProjectInfo(dataResult.data || []);
+
+  return { items, total };
+}
+
+export async function loadAdjacentContent(
+  currentOrderIndex: number
+): Promise<{ prevSlug: string | null; nextSlug: string | null }> {
+  // Items are displayed descending by order_index.
+  // "prev" in the UI = higher order_index (earlier in the feed).
+  // "next" in the UI = lower order_index (later in the feed).
+  const [prevResult, nextResult] = await Promise.all([
+    supabase
+      .from('content')
+      .select('slug')
+      .eq('is_draft', false)
+      .gt('order_index', currentOrderIndex)
+      .order('order_index', { ascending: true })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('content')
+      .select('slug')
+      .eq('is_draft', false)
+      .lt('order_index', currentOrderIndex)
+      .order('order_index', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  return {
+    prevSlug: prevResult.data?.slug ?? null,
+    nextSlug: nextResult.data?.slug ?? null,
+  };
 }
 
 export async function loadContentBySlug(slug: string): Promise<ContentWithProject | null> {

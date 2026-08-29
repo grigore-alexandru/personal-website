@@ -564,6 +564,16 @@ export function ContentCreateFormClient({ mode = 'create' }: ContentCreateFormCl
         }
       }
 
+      // Bust the Next.js static-page cache when publishing so the public content
+      // grid reflects the change on the next visit (ISR revalidation).
+      if (!isDraft) {
+        fetch('/api/revalidate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ table: 'content', record: { slug: formData.slug } }),
+        }).catch(() => {});
+      }
+
       showToast('success', isDraft ? 'Content saved as draft' : 'Content published successfully');
       setHasUnsavedChanges(false);
       router.push('/admin/content');

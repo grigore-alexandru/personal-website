@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from '../../../../config/seo';
+import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from '../../../../config/site';
 import { loadProject, loadProjects } from '../../../../utils/dataLoader';
 import { designTokens } from '../../../../styles/tokens';
 import ProjectHero from '../../../../components/ProjectHero';

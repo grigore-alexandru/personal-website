@@ -126,6 +126,7 @@ export function ProjectCreateFormClient({ mode = 'create' }: ProjectCreateFormCl
 
     const p = result.data;
     const sortedContent = (p.project_content || [])
+      .filter((pc: any) => pc.content != null)
       .sort((a: any, b: any) => a.order_index - b.order_index)
       .map((pc: any) => ({
         content_id: pc.content_id,
@@ -291,11 +292,22 @@ export function ProjectCreateFormClient({ mode = 'create' }: ProjectCreateFormCl
         }
       }
       if (result.success) {
+        // Bust the Next.js static-page cache so the public project page reflects
+        // the new content on the next visit (ISR revalidation).
+        if (result.slug) {
+          fetch('/api/revalidate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ table: 'projects', record: { slug: result.slug } }),
+          }).catch(() => {});
+        }
+
         showToast('success', mode === 'edit' ? 'Project updated' : 'Project published');
         setHasUnsavedChanges(false);
+        // Always return to the admin list — the public page is statically cached
+        // and would show stale content until ISR revalidation completes.
         setTimeout(() => {
-          if (result.slug) router.push(`/portfolio/projects/${result.slug}`);
-          else router.push('/admin/portfolio');
+          router.push('/admin/portfolio');
         }, 1500);
       } else {
         showToast('error', result.error || 'Failed to publish project');
