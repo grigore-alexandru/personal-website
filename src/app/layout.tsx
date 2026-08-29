@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Poppins } from 'next/font/google';
 import ConditionalHeader from '../components/ConditionalHeader';
 import ConditionalWrapper from '../components/ConditionalWrapper';
+import { SITE_URL } from '../config/site';
 import './globals.css';
 
 const poppins = Poppins({
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
     template: '%s | Alexandru Grigore',
   },
   description: 'Video director and creative producer. Commercials, documentaries, and branded content.',
-  metadataBase: new URL('https://sweet-vacherin-65bc21.netlify.app'),
+  metadataBase: new URL(SITE_URL),
   openGraph: {
     type: 'website',
     siteName: 'Alexandru Grigore',
