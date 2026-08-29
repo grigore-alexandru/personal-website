@@ -73,7 +73,9 @@ function renderTipTap(content: any): string {
   }
   try {
     return generateHTML(content, [
-      StarterKit.configure({ heading: { levels: [2, 3] } }),
+      // link: false — StarterKit bundles its own Link mark, which collides
+      // with the separately-configured LinkExtension below.
+      StarterKit.configure({ heading: { levels: [2, 3] }, link: false }),
       TipTapImage,
       LinkExtension.configure({
         openOnClick: false,

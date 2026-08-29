@@ -1,16 +1,24 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { notFound } from 'next/navigation';
 import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from '../../../../config/site';
 import { loadProject, loadProjects } from '../../../../utils/dataLoader';
 import { designTokens } from '../../../../styles/tokens';
 import ProjectHero from '../../../../components/ProjectHero';
 import ImpactMetrics from '../../../../components/project/ImpactMetrics';
-import TipTapRendererClient from '../../../../components/project/TipTapRendererClient';
-import MediaCarousel from '../../../../components/project/MediaCarousel';
-import TasksList from '../../../../components/project/TasksList';
-import Recommendation from '../../../../components/project/Recommendation';
+import TipTapRenderer from '../../../../components/project/TipTapRenderer';
 import ProjectNavigation from '../../../../components/project/ProjectNavigation';
+
+/*
+ * Below-the-fold sections, code-split into their own chunks (still
+ * server-rendered — no `ssr: false` — so there's no content flash and no
+ * SEO regression, just a smaller critical-path bundle for the above-the-fold
+ * hero + description that visitors see first).
+ */
+const MediaCarousel = dynamic(() => import('../../../../components/project/MediaCarousel'));
+const TasksList = dynamic(() => import('../../../../components/project/TasksList'));
+const Recommendation = dynamic(() => import('../../../../components/project/Recommendation'));
 
 interface PageProps {
   params: { slug: string };
@@ -92,10 +100,11 @@ export default async function ProjectDetailPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-white pb-20">
-      {project.hero_image_large && (
-        <link rel="preload" as="image" href={project.hero_image_large} />
-      )}
-
+      {/* No manual <link rel="preload"> here: ProjectHero renders the image
+          via next/image with `priority`, which emits the correct preload
+          link itself (pointing at the actual optimized URL that will be
+          requested) — a separate manual preload for the raw original URL
+          would just cause the browser to fetch two different resources. */}
       <ProjectHero
         bgUrl={project.hero_image_large}
         title={project.title}
@@ -111,7 +120,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
           <h2 className="mb-8" style={sectionHeadingStyle}>
             About the Project
           </h2>
-          <TipTapRendererClient content={project.description} />
+          <TipTapRenderer content={project.description} />
         </section>
 
         {hasContent && (

@@ -1,7 +1,4 @@
-'use client';
-
 import React from 'react';
-import DOMPurify, { type Config } from 'dompurify';
 import { generateHTML } from '@tiptap/html';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
@@ -9,79 +6,64 @@ import LinkExtension from '@tiptap/extension-link';
 import { TipTapContent } from '../../types';
 import { designTokens } from '../../styles/tokens';
 
-const TIPTAP_SANITIZE_CONFIG: Config = {
-  ALLOWED_TAGS: [
-    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-    'p', 'strong', 'em', 'ul', 'ol', 'li',
-    'a', 'br', 'img', 'blockquote', 'code', 'pre',
-  ],
-  ALLOWED_ATTR: ['href', 'rel', 'target', 'src', 'alt', 'width', 'height'],
-  ALLOW_DATA_ATTR: false,
-  FORCE_BODY: false,
-};
-
-if (typeof window !== 'undefined') {
-  DOMPurify.addHook('afterSanitizeAttributes', (node) => {
-    if (node.tagName === 'A') {
-      const href = node.getAttribute('href') ?? '';
-      if (!/^https?:\/\//i.test(href)) {
-        node.removeAttribute('href');
-      }
-      node.setAttribute('rel', 'noopener noreferrer');
-      node.setAttribute('target', '_blank');
-    }
-    if (node.tagName === 'IMG') {
-      const src = node.getAttribute('src') ?? '';
-      if (!/^https?:\/\//i.test(src) && !src.startsWith('/')) {
-        node.removeAttribute('src');
-      }
-    }
-  });
-}
+/*
+ * Server Component — no 'use client'. `generateHTML` is a pure function (it
+ * doesn't touch window/document), so it can run entirely on the server,
+ * matching the same pattern already used for blog posts
+ * (src/app/blog/[slug]/page.tsx). The previous version wrapped this in a
+ * client component with `dynamic(..., { ssr: false })`, which shipped the
+ * TipTap engine to the browser and left the whole "About the Project"
+ * section blank until that JS downloaded and ran. Rendering server-side
+ * means the browser receives finished HTML on the very first response —
+ * zero extra client JS, zero delay.
+ *
+ * No DOMPurify pass here, deliberately: this content is admin-authored
+ * TipTap JSON (there is no public write path into it), and generateHTML can
+ * only ever emit tags defined by the extension schema below — the same
+ * trust boundary the blog post renderer already relies on.
+ */
 
 interface TipTapRendererProps {
   content: TipTapContent;
   className?: string;
 }
 
+function renderTipTapToHtml(content: TipTapContent): string {
+  try {
+    const validContent =
+      content && typeof content === 'object' && content.type === 'doc'
+        ? content
+        : { type: 'doc', content: [] };
+
+    return generateHTML(validContent, [
+      // link: false — StarterKit bundles its own Link mark, which collides
+      // with the separately-configured LinkExtension below (that's the
+      // source of tiptap's "Duplicate extension names: ['link']" warning).
+      StarterKit.configure({ heading: { levels: [2, 3] }, link: false }),
+      Image,
+      LinkExtension.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          target: '_blank',
+          rel: 'noopener noreferrer',
+        },
+      }),
+    ]);
+  } catch {
+    return '';
+  }
+}
+
 const TipTapRenderer: React.FC<TipTapRendererProps> = ({ content, className = '' }) => {
-  const renderContent = () => {
-    try {
-      const validContent =
-        content && typeof content === 'object' && content.type === 'doc'
-          ? content
-          : { type: 'doc', content: [] };
-
-      const html = generateHTML(validContent, [
-        StarterKit.configure({ heading: { levels: [2, 3] } }),
-        Image,
-        LinkExtension.configure({
-          openOnClick: false,
-          HTMLAttributes: {
-            target: '_blank',
-            rel: 'noopener noreferrer',
-          },
-        }),
-      ]);
-
-      const safeHtml = typeof window !== 'undefined'
-        ? (DOMPurify.sanitize(html, TIPTAP_SANITIZE_CONFIG) as string)
-        : html;
-
-      return (
-        <div
-          className={`tiptap-rendered ${className}`}
-          dangerouslySetInnerHTML={{ __html: safeHtml }}
-        />
-      );
-    } catch {
-      return null;
-    }
-  };
+  const html = renderTipTapToHtml(content);
+  if (!html) return null;
 
   return (
     <>
-      {renderContent()}
+      <div
+        className={`tiptap-rendered ${className}`}
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
       <style>{`
         .tiptap-rendered p {
           font-size: ${designTokens.typography.sizes.sm};

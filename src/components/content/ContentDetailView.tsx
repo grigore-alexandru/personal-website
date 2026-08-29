@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   ChevronLeft,
@@ -454,15 +455,17 @@ export function ContentDetailView({ content, prevSlug, nextSlug }: ContentDetail
             {/* ── IMAGE ── */}
             {isImage && (
               <>
-                <img
+                <Image
                   ref={imgRef}
                   src={content.url}
                   alt={content.title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 768px"
                   /* object-cover in-page: fill the whole box on both axes (no
                      letterbox bars) — the box already matches the content's
                      format ratio, so cropping is minimal. In fullscreen we
                      relax to object-contain so the whole image is visible. */
-                  className={`w-full h-full ${isFullscreen ? 'object-contain' : 'object-cover'}`}
+                  className={isFullscreen ? 'object-contain' : 'object-cover'}
                   style={{ background: cl.neutral[50] }}
                   onLoad={() => setMediaLoaded(true)}
                   onError={() => setMediaLoaded(true)}

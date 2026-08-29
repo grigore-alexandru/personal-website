@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
+import Image from 'next/image';
 
 interface ProgressiveImageProps {
   src: string;
@@ -11,8 +12,26 @@ interface ProgressiveImageProps {
   fetchPriority?: 'high' | 'low' | 'auto';
   onLoad?: () => void;
   style?: React.CSSProperties;
+  /* Optional responsive-size hint for next/image's srcset generation. Every
+     call site renders this absolutely-positioned inside a sized, relatively
+     positioned parent (grid cards, etc.), so a generic default is a
+     reasonable fallback where a caller doesn't know its exact grid width. */
+  sizes?: string;
 }
 
+/*
+ * Was previously a raw <img> driven by a manually-created `new Image()` in a
+ * useEffect purely to detect load state. That meant every thumbnail across
+ * the site (portfolio grid, content grid, blog list, admin cards) shipped
+ * whatever full-resolution file was uploaded, with no resizing, no format
+ * conversion (WebP/AVIF), and no real responsive srcset — a major
+ * contributor to page weight on the listing pages, which render many of
+ * these at once.
+ *
+ * Now backed by next/image: automatic resizing/format conversion via
+ * Netlify's Image CDN, real srcset, and native lazy-loading — while keeping
+ * the exact same external API so none of the 6 call sites need to change.
+ */
 export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
   src,
   alt,
@@ -22,62 +41,12 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
   fetchPriority,
   onLoad,
   style,
+  sizes = '(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw',
 }) => {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
 
-  useEffect(() => {
-    let isMounted = true;
-    setLoaded(false);
-    setError(false);
-
-    if (!src) return () => { isMounted = false; };
-
-    const img = new window.Image();
-    img.src = src;
-
-    if (img.complete && img.naturalWidth > 0) {
-      setLoaded(true);
-      onLoad?.();
-      return () => { isMounted = false; };
-    }
-
-    const handleLoad = () => {
-      if (img.decode) {
-        img.decode().then(() => {
-          if (isMounted) {
-            setLoaded(true);
-            onLoad?.();
-          }
-        }).catch(() => {
-          if (isMounted) {
-            setLoaded(true);
-            onLoad?.();
-          }
-        });
-      } else if (isMounted) {
-        setLoaded(true);
-        onLoad?.();
-      }
-    };
-
-    const handleError = () => {
-      if (isMounted) {
-        setError(true);
-        onLoad?.();
-      }
-    };
-
-    img.addEventListener('load', handleLoad);
-    img.addEventListener('error', handleError);
-
-    return () => {
-      isMounted = false;
-      img.removeEventListener('load', handleLoad);
-      img.removeEventListener('error', handleError);
-    };
-  }, [src]);
+  const isPriority = eager || fetchPriority === 'high';
 
   return (
     <>
@@ -87,18 +56,26 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
         } ${skeletonClassName}`}
       />
 
-      {!error && (
-        <img
-          ref={imgRef}
+      {!error && src && (
+        <Image
           src={src}
           alt={alt}
-          loading={eager ? 'eager' : 'lazy'}
-          decoding="async"
-          fetchPriority={fetchPriority}
-          className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${
+          fill
+          sizes={sizes}
+          priority={isPriority}
+          loading={isPriority ? undefined : 'lazy'}
+          className={`transition-opacity duration-300 ${
             loaded ? 'opacity-100' : 'opacity-0'
           } ${className}`}
           style={style}
+          onLoad={() => {
+            setLoaded(true);
+            onLoad?.();
+          }}
+          onError={() => {
+            setError(true);
+            onLoad?.();
+          }}
         />
       )}
 
