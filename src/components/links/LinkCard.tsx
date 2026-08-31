@@ -112,6 +112,11 @@ export function LinkCard({
                 </span>
               )}
             </div>
+            {!expanded && link.description && (
+              <p className="text-sm font-normal text-neutral-600 mb-2 line-clamp-2">
+                {link.description}
+              </p>
+            )}
             <ShortLinkDisplay
               slug={link.slug}
               onCopied={() => onToast('success', 'Short link copied')}
@@ -161,9 +166,6 @@ export function LinkCard({
               } disabled:bg-neutral-100`}
             />
             {destination.error && <p className="mt-1.5 text-sm text-red-600">{destination.error}</p>}
-            {!destination.error && link.description && !expanded && (
-              <p className="mt-1.5 text-xs text-neutral-500 truncate">{link.description}</p>
-            )}
           </div>
 
           <div className="text-right sm:pt-6">
