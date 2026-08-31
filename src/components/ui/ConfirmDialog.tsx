@@ -16,6 +16,10 @@ interface ConfirmDialogProps {
   loading?: boolean;
   onCancel: () => void;
   onConfirm: () => void;
+  /** Adds a third, middle action — for "save / discard / keep editing" exits.
+   *  When present, Cancel (and Escape) mean "keep editing", never "discard". */
+  onDiscard?: () => void;
+  discardLabel?: string;
 }
 
 /**
@@ -39,6 +43,8 @@ export function ConfirmDialog({
   loading = false,
   onCancel,
   onConfirm,
+  onDiscard,
+  discardLabel = 'Discard',
 }: ConfirmDialogProps) {
   useModalBehavior(open, onCancel);
 
@@ -69,6 +75,15 @@ export function ConfirmDialog({
           >
             {cancelLabel}
           </button>
+          {onDiscard && (
+            <button
+              onClick={onDiscard}
+              disabled={loading}
+              className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium disabled:opacity-50"
+            >
+              {discardLabel}
+            </button>
+          )}
           <button onClick={onConfirm} disabled={loading} className={confirmClasses}>
             {loading && <Loader2 size={16} className="animate-spin" />}
             {loading && loadingLabel ? loadingLabel : confirmLabel}
