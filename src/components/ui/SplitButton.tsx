@@ -17,6 +17,9 @@ interface SplitButtonProps {
   icon?: ReactNode;
   loading?: boolean;
   disabled?: boolean;
+  /** 'up' opens the list above the button — for buttons near a container's
+   *  bottom edge, where a downward list would be clipped by a scroll area. */
+  direction?: 'down' | 'up';
 }
 
 /**
@@ -26,7 +29,15 @@ interface SplitButtonProps {
  * the rest are variations on it. The dropdown reuses KebabMenu's positioning
  * and backdrop pattern so the two read as the same family.
  */
-export function SplitButton({ label, onClick, items, icon, loading, disabled }: SplitButtonProps) {
+export function SplitButton({
+  label,
+  onClick,
+  items,
+  icon,
+  loading,
+  disabled,
+  direction = 'down',
+}: SplitButtonProps) {
   const [open, setOpen] = useState(false);
 
   const handleItemClick = (e: React.MouseEvent, item: SplitButtonItem) => {
@@ -63,7 +74,9 @@ export function SplitButton({ label, onClick, items, icon, loading, disabled }: 
         <>
           <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} />
           <div
-            className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-48 z-30"
+            className={`absolute right-0 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-48 z-30 ${
+              direction === 'up' ? 'bottom-full mb-1' : 'top-full mt-1'
+            }`}
             role="menu"
           >
             {items.map((item) => (

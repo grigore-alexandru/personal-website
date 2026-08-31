@@ -124,7 +124,29 @@ export function QrModal({ open, link, onClose, onToast }: QrModalProps) {
   if (!link) return null;
 
   return (
-    <Modal open={open} onClose={onClose} size="lg" title="QR code" subtitle={url}>
+    <Modal
+      open={open}
+      onClose={onClose}
+      size="lg"
+      title="QR code"
+      subtitle={url}
+      footer={
+        <div className="flex justify-end">
+          <SplitButton
+            label="Download PNG"
+            icon={<Download size={16} />}
+            onClick={downloadPng}
+            direction="up"
+            items={[
+              { label: 'Download PNG', icon: <Download size={15} />, onClick: downloadPng },
+              { label: 'Download SVG', icon: <Download size={15} />, onClick: downloadSvg },
+              { label: 'Copy as PNG', icon: <Copy size={15} />, onClick: copyPng },
+              { label: 'Copy as SVG', icon: <Copy size={15} />, onClick: copySvg },
+            ]}
+          />
+        </div>
+      }
+    >
       <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-6 items-start">
         <div
           className="rounded-lg border border-neutral-200 p-3 justify-self-center"
@@ -189,19 +211,6 @@ export function QrModal({ open, link, onClose, onToast }: QrModalProps) {
             ordering a batch — light modules on a dark background fail on some scanners.
           </p>
 
-          <div className="flex justify-end">
-            <SplitButton
-              label="Download PNG"
-              icon={<Download size={16} />}
-              onClick={downloadPng}
-              items={[
-                { label: 'Download PNG', icon: <Download size={15} />, onClick: downloadPng },
-                { label: 'Download SVG', icon: <Download size={15} />, onClick: downloadSvg },
-                { label: 'Copy as PNG', icon: <Copy size={15} />, onClick: copyPng },
-                { label: 'Copy as SVG', icon: <Copy size={15} />, onClick: copySvg },
-              ]}
-            />
-          </div>
         </div>
       </div>
     </Modal>
