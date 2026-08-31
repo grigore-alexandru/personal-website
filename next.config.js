@@ -8,6 +8,12 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        // Mega S4's generic/global edge host — some asset URLs resolve here
+        // instead of the region-specific host above.
+        hostname: 's3.g.s4.mega.io',
+      },
+      {
+        protocol: 'https',
         hostname: 'lqbyvubbzexujviflunv.supabase.co',
       },
       {
