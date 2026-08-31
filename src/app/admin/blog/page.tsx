@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Plus, Loader2 } from 'lucide-react';
 import { AdminBlogCard } from '../../../components/admin/AdminBlogCard';
 import { ToastContainer } from '../../../components/ui/Toast';
+import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { loadAllPostsForAdmin, BlogPost } from '../../../utils/blogLoader';
 import { supabase } from '../../../lib/supabase';
 import { useToast } from '../../../hooks/useToast';
@@ -194,61 +195,27 @@ export default function BlogManagementPage() {
         </div>
       )}
 
-      {publishModalOpen && postToPublish && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold text-black mb-2">Make Post Public</h3>
-            <p className="text-gray-600 mb-4">
-              Are you sure you want to make "{postToPublish.title}" visible to the public?
-            </p>
-            <p className="text-sm text-gray-500 mb-6">
-              This will keep the original publication date and make the post publicly visible.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => { setPublishModalOpen(false); setPostToPublish(null); }}
-                className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmPublish}
-                className="flex-1 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-medium"
-              >
-                Make Public
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={publishModalOpen && !!postToPublish}
+        variant="primary"
+        title="Make Post Public"
+        message={`Are you sure you want to make "${postToPublish?.title ?? ''}" visible to the public?`}
+        note="This will keep the original publication date and make the post publicly visible."
+        confirmLabel="Make Public"
+        onCancel={() => { setPublishModalOpen(false); setPostToPublish(null); }}
+        onConfirm={confirmPublish}
+      />
 
-      {deleteModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold text-black mb-2">Delete Post</h3>
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to delete this post? This action cannot be undone.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setDeleteModalOpen(false)}
-                disabled={isDeleting}
-                className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                disabled={isDeleting}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isDeleting && <Loader2 size={16} className="animate-spin" />}
-                {isDeleting ? 'Deleting...' : 'Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={deleteModalOpen}
+        title="Delete Post"
+        message="Are you sure you want to delete this post? This action cannot be undone."
+        confirmLabel="Delete"
+        loadingLabel="Deleting..."
+        loading={isDeleting}
+        onCancel={() => setDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+      />
     </>
   );
 }

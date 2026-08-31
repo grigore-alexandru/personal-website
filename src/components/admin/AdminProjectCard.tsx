@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { CreditCard as Edit, MoreVertical, Loader2, GripVertical, Check } from 'lucide-react';
+import { CreditCard as Edit, GripVertical, Check } from 'lucide-react';
 import { designTokens } from '../../styles/tokens';
 import { formatDistanceToNow } from '../../utils/dateUtils';
 import { ProgressiveImage } from '../ui/ProgressiveImage';
+import { ToggleSwitch } from '../ui/ToggleSwitch';
+import { KebabMenu } from '../ui/KebabMenu';
 
 interface AdminProjectCardProps {
   project: {
@@ -54,7 +56,6 @@ export function AdminProjectCard({
   dragDisabled,
   cardRef,
 }: AdminProjectCardProps) {
-  const [menuOpen, setMenuOpen] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
 
   const handleToggle = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -122,42 +123,17 @@ export function AdminProjectCard({
             </span>
 
             <div className="relative flex items-center gap-2 bg-white rounded-lg border border-gray-200 px-2 py-1">
-              {isToggling ? (
-                <Loader2 size={16} className="text-gray-400 animate-spin" />
-              ) : (
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={!project.is_draft}
-                    onChange={handleToggle}
-                    disabled={isToggling}
-                    className="sr-only peer"
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                  <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-black rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-600" />
-                </label>
-              )}
+              <ToggleSwitch
+                checked={!project.is_draft}
+                onChange={handleToggle}
+                disabled={isToggling}
+                loading={isToggling}
+                onInputClick={(e) => e.stopPropagation()}
+              />
 
-              <button
-                onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }}
-                className="p-1 rounded hover:bg-gray-50 transition-colors"
-              >
-                <MoreVertical size={16} className="text-gray-600" />
-              </button>
-
-              {menuOpen && (
-                <>
-                  <div className="fixed inset-0 z-20" onClick={() => setMenuOpen(false)} />
-                  <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40 z-30">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDelete(project.id); }}
-                      className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </>
-              )}
+              <KebabMenu
+                items={[{ label: 'Delete', variant: 'danger', onClick: () => onDelete(project.id) }]}
+              />
             </div>
           </div>
 

@@ -21,7 +21,7 @@ export function AdminHeader({ userEmail }: AdminHeaderProps) {
     { label: 'Blog',       path: '/admin/blog' },
     { label: 'Portfolio',  path: '/admin/portfolio' },
     { label: 'Content',    path: '/admin/content' },
-    { label: 'Compressor', path: '/admin/compressor' },
+    { label: 'Links',      path: '/admin/links' },
   ];
 
   const isActive = (path: string) => pathname?.startsWith(path) ?? false;

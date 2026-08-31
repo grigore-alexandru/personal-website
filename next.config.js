@@ -24,18 +24,6 @@ const nextConfig = {
       },
     ],
   },
-  async headers() {
-    return [
-      {
-        // SharedArrayBuffer required by @ffmpeg/ffmpeg in the media compressor
-        source: '/admin/compressor',
-        headers: [
-          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
-          { key: 'Cross-Origin-Embedder-Policy', value: 'require-corp' },
-        ],
-      },
-    ];
-  },
   async redirects() {
     return [
       {

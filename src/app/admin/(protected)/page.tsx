@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FileText, Video, Image, Minimize2 } from 'lucide-react';
+import { FileText, Video, Image, Link as LinkIcon } from 'lucide-react';
 
 const navigationCards = [
   {
@@ -29,12 +29,12 @@ const navigationCards = [
     hoverColor: 'hover:bg-orange-600',
   },
   {
-    title: 'Media Compressor',
-    description: 'Compress images and videos for optimal performance',
-    icon: Minimize2,
-    path: '/admin/compressor',
-    color: 'bg-orange-500',
-    hoverColor: 'hover:bg-orange-600',
+    title: 'Links',
+    description: 'Short links, QR codes, and redirect animations',
+    icon: LinkIcon,
+    path: '/admin/links',
+    color: 'bg-purple-500',
+    hoverColor: 'hover:bg-purple-600',
   },
 ];
 

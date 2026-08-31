@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { CreditCard as Edit, MoreVertical, Loader2, Video, Image as ImageIcon, GripVertical, Check, FolderOpen, Unlink } from 'lucide-react';
+import { CreditCard as Edit, Video, Image as ImageIcon, GripVertical, Check, FolderOpen, Unlink } from 'lucide-react';
 import { designTokens } from '../../styles/tokens';
 import { ProgressiveImage } from '../ui/ProgressiveImage';
+import { ToggleSwitch } from '../ui/ToggleSwitch';
+import { KebabMenu } from '../ui/KebabMenu';
 
 interface AdminContentCardProps {
   content: {
@@ -56,7 +58,6 @@ export function AdminContentCard({
   isPivot,
   cardRef,
 }: AdminContentCardProps) {
-  const [menuOpen, setMenuOpen] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
 
   const handleToggle = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -129,49 +130,19 @@ export function AdminContentCard({
         </span>
 
         <div className="bg-white rounded-lg border border-gray-200 px-2 py-1 flex items-center gap-1">
-          {isToggling ? (
-            <Loader2 size={14} className="text-gray-400 animate-spin" />
-          ) : (
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={!content.is_draft}
-                onChange={handleToggle}
-                disabled={isToggling}
-                className="sr-only peer"
-                onClick={(e) => e.stopPropagation()}
-              />
-              <div className="w-8 h-4 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-black rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-green-600" />
-            </label>
-          )}
+          <ToggleSwitch
+            size="sm"
+            checked={!content.is_draft}
+            onChange={handleToggle}
+            disabled={isToggling}
+            loading={isToggling}
+            onInputClick={(e) => e.stopPropagation()}
+          />
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setMenuOpen(!menuOpen);
-            }}
-            className="p-1 rounded hover:bg-gray-100 transition-colors"
-          >
-            <MoreVertical size={14} className="text-gray-600" />
-          </button>
-
-          {menuOpen && (
-            <>
-              <div className="fixed inset-0 z-20" onClick={() => setMenuOpen(false)} />
-              <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-32 z-30">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setMenuOpen(false);
-                    onDelete(content.id);
-                  }}
-                  className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-                >
-                  Delete
-                </button>
-              </div>
-            </>
-          )}
+          <KebabMenu
+            size="sm"
+            items={[{ label: 'Delete', variant: 'danger', onClick: () => onDelete(content.id) }]}
+          />
         </div>
       </div>
 
