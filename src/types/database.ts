@@ -214,6 +214,102 @@ export interface Database {
           updated_at?: string;
         };
       };
+      links: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string;
+          destination_url: string;
+          description: string | null;
+          status: 'active' | 'paused' | 'archived';
+          expires_at: string | null;
+          max_clicks: number | null;
+          click_count: number;
+          interstitial_enabled: boolean;
+          interstitial_code: string | null;
+          interstitial_fallback_seconds: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          slug: string;
+          destination_url: string;
+          description?: string | null;
+          status?: 'active' | 'paused' | 'archived';
+          expires_at?: string | null;
+          max_clicks?: number | null;
+          click_count?: number;
+          interstitial_enabled?: boolean;
+          interstitial_code?: string | null;
+          interstitial_fallback_seconds?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          slug?: string;
+          destination_url?: string;
+          description?: string | null;
+          status?: 'active' | 'paused' | 'archived';
+          expires_at?: string | null;
+          max_clicks?: number | null;
+          click_count?: number;
+          interstitial_enabled?: boolean;
+          interstitial_code?: string | null;
+          interstitial_fallback_seconds?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      link_destination_history: {
+        Row: {
+          id: string;
+          link_id: string;
+          old_destination_url: string;
+          changed_at: string;
+        };
+        Insert: {
+          id?: string;
+          link_id: string;
+          old_destination_url: string;
+          changed_at?: string;
+        };
+        Update: {
+          id?: string;
+          link_id?: string;
+          old_destination_url?: string;
+          changed_at?: string;
+        };
+      };
+      link_clicks: {
+        Row: {
+          id: string;
+          link_id: string;
+          clicked_at: string;
+          referrer_domain: string | null;
+          device_type: 'mobile' | 'desktop' | 'tablet' | null;
+          visitor_hash: string | null;
+        };
+        Insert: {
+          id?: string;
+          link_id: string;
+          clicked_at?: string;
+          referrer_domain?: string | null;
+          device_type?: 'mobile' | 'desktop' | 'tablet' | null;
+          visitor_hash?: string | null;
+        };
+        Update: {
+          id?: string;
+          link_id?: string;
+          clicked_at?: string;
+          referrer_domain?: string | null;
+          device_type?: 'mobile' | 'desktop' | 'tablet' | null;
+          visitor_hash?: string | null;
+        };
+      };
     };
   };
 }
