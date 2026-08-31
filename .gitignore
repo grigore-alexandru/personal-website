@@ -90,3 +90,8 @@ jspm_packages/
 # Temporary folders
 tmp/
 temp/
+
+# Regenerated on every `npm install` by scripts/copy-pdf-worker.js, pinned to
+# whatever pdfjs-dist version is actually installed — never commit it, or it
+# can silently drift out of sync with the installed package.
+/public/pdf.worker.min.mjs

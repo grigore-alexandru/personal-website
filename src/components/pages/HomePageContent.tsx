@@ -391,7 +391,10 @@ const Testimonials = () => (
 );
 
 const Contact = () => (
-  <section className="min-h-screen flex flex-col justify-center px-6 md:px-12 lg:px-24 py-24 relative overflow-hidden bg-surface-highlight rounded-t-[5rem] mt-20">
+  <section
+    id="contact"
+    className="min-h-screen flex flex-col justify-center px-6 md:px-12 lg:px-24 py-24 relative overflow-hidden bg-surface-highlight rounded-t-[5rem] mt-20"
+  >
     <div className="max-w-3xl mx-auto w-full text-center">
       <FadeIn>
         <div className="w-24 h-24 mx-auto bg-white rounded-full flex items-center justify-center mb-10 text-accent-pink shadow-soft">

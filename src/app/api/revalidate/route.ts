@@ -66,6 +66,18 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  if (table === 'documents') {
+    revalidatePath('/documents/[slug]', 'page');
+    revalidatePath('/sitemap.xml');
+    revalidated.push('/documents/[slug]', '/sitemap.xml');
+
+    const slug = (body.record as any)?.slug;
+    if (slug) {
+      revalidatePath(`/documents/${slug}`, 'page');
+      revalidated.push(`/documents/${slug}`);
+    }
+  }
+
   if (revalidated.length === 0) {
     return NextResponse.json(
       { message: `No revalidation rules for table: ${table}` },

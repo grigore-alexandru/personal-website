@@ -44,6 +44,25 @@ const nextConfig = {
       },
     ];
   },
+  webpack: (config) => {
+    // pdfjs-dist (via react-pdf) conditionally requires the `canvas` native
+    // Node addon for its server-side code path. Webpack still tries to
+    // resolve it for the client bundle, which throws a cryptic
+    // "Object.defineProperty called on non-object" at runtime — this is the
+    // standard fix documented by both projects for use under Next.js/webpack.
+    config.resolve.alias.canvas = false;
+    config.resolve.alias.encoding = false;
+    return config;
+  },
+  experimental: {
+    // Next.js 14's bundled webpack has an ESM/CJS interop bug that crashes
+    // pdfjs-dist v5's self-bundled pdf.mjs at import time with
+    // "Object.defineProperty called on non-object" (webpack/webpack#20095,
+    // fixed upstream in webpack 5.103.0 — newer than what Next 14 ships).
+    // `esmExternals: 'loose'` is the documented workaround until either Next
+    // upgrades its bundled webpack or this project moves to Next 15+.
+    esmExternals: 'loose',
+  },
 };
 
 module.exports = nextConfig;

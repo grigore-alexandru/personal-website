@@ -46,7 +46,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  const [postsResult, projectsResult, contentResult] = await Promise.all([
+  const [postsResult, projectsResult, contentResult, documentsResult] = await Promise.all([
     supabase
       .from('posts')
       .select('slug, published_at, updated_at')
@@ -63,11 +63,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .select('slug, updated_at, created_at')
       .eq('is_draft', false)
       .limit(500),
+    supabase
+      .from('documents')
+      .select('slug, updated_at, created_at')
+      .eq('access_level', 'public')
+      .limit(500),
   ] as const);
 
   const posts = (postsResult.data ?? []) as Array<{ slug: string; published_at: string; updated_at: string | null }>;
   const projects = (projectsResult.data ?? []) as Array<{ slug: string; updated_at: string | null; created_at: string }>;
   const contentItems = (contentResult.data ?? []) as Array<{ slug: string; updated_at: string | null; created_at: string }>;
+  const documents = (documentsResult.data ?? []) as Array<{ slug: string; updated_at: string | null; created_at: string }>;
 
   const postEntries: MetadataRoute.Sitemap = posts.map((post) => ({
     url: `${SITE_URL}/blog/${post.slug}`,
@@ -90,5 +96,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticPages, ...postEntries, ...projectEntries, ...contentEntries];
+  const documentEntries: MetadataRoute.Sitemap = documents.map((doc) => ({
+    url: `${SITE_URL}/documents/${doc.slug}`,
+    lastModified: new Date(doc.updated_at ?? doc.created_at),
+    changeFrequency: 'monthly' as const,
+    priority: 0.6,
+  }));
+
+  return [...staticPages, ...postEntries, ...projectEntries, ...contentEntries, ...documentEntries];
 }

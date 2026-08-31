@@ -112,6 +112,24 @@ export function generateStorageKey(
   return `${folder}/${timestamp}-${random}-${base}-${suffix}.${ext}`;
 }
 
+/** The single Mega S4 bucket backing the PDF documents feature, with two
+ *  subfolders: `docs/` for the PDFs and `thumb/` for their WebP thumbnails. */
+export const DOCUMENTS_BUCKET = 'documents';
+
+/**
+ * Deterministic key for a document's PDF or thumbnail, keyed only by slug.
+ * Unlike generateStorageKey() (which mints a unique timestamped key every
+ * call, for content that's versioned by creating new rows), documents are
+ * overwritten in place: re-uploading a PDF (or thumbnail) for the same slug
+ * must resolve to the exact same S4 object key so the public URL never
+ * changes. Cache-busting for a replaced file is handled by the caller
+ * appending `?v=<updated_at>` to the URL at render/consumption time — never
+ * stored in the DB.
+ */
+export function getDocumentStorageKey(slug: string, kind: 'pdf' | 'thumbnail'): string {
+  return kind === 'pdf' ? `docs/${slug}.pdf` : `thumb/${slug}.webp`;
+}
+
 export function parseStorageUrl(url: string): ParsedStorageUrl | null {
   if (!url) return null;
 
