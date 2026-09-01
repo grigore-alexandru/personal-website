@@ -29,6 +29,8 @@ const Header: React.FC = () => {
 
     { label: 'Story', path: '/story' },
 
+    { label: 'Contact', path: '/contact' },
+
   ];
 
 
