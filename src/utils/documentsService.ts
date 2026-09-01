@@ -173,6 +173,10 @@ export async function checkDocumentSlugUniqueness(slug: string, excludeId?: stri
  *  browser cache. Used for the PDF URL handed to the viewer and for the
  *  og:image/twitter:image URL in generateMetadata. */
 export function withCacheBust(url: string, updatedAt: string): string {
+  // data: URIs have no query-string concept — appending one corrupts the
+  // base64 payload outright. Only ever relevant for ad-hoc/test rows (real
+  // documents always store a Mega S4 URL), but cheap to guard against.
+  if (url.startsWith('data:')) return url;
   const v = new Date(updatedAt).getTime();
   return `${url}${url.includes('?') ? '&' : '?'}v=${v}`;
 }

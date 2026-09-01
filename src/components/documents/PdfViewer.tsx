@@ -4,8 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Document, Page, pdfjs } from 'react-pdf';
 import type { DocumentProps } from 'react-pdf';
-import 'react-pdf/dist/Page/AnnotationLayer.css';
-import 'react-pdf/dist/Page/TextLayer.css';
+// AnnotationLayer.css / TextLayer.css are imported from PdfViewerLoader.tsx,
+// not here — see that file's comment for why.
 import {
   ChevronLeft,
   ChevronRight,
@@ -49,6 +49,14 @@ const RENDER_WINDOW = 2; // pages beyond the current one to keep mounted, each d
 const MAX_CONTENT_WIDTH = 860; // caps page width on very wide screens for readability
 
 export function PdfViewer({ fileUrl, slug, title, thumbnailUrl }: PdfViewerProps) {
+  // The element that actually gets fullscreened. Deliberately its own ref
+  // (not derived from containerRef.parentElement) so it's an explicit,
+  // stable target for both requestFullscreen() and — while fullscreened —
+  // scroll tracking: a fullscreened element becomes its own scroll box,
+  // completely separate from the window, so every piece of scroll logic
+  // below (reading progress, the toolbar's hide-on-scroll, and which pages
+  // are "current") has to know to target it instead of window in that state.
+  const rootRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const pdfRef = useRef<PDFDocumentProxy | null>(null);
@@ -63,12 +71,34 @@ export function PdfViewer({ fileUrl, slug, title, thumbnailUrl }: PdfViewerProps
   // Still lazy: a page is only added when it first comes within
   // RENDER_WINDOW of the current page, not all at once on load.
   const [renderedPages, setRenderedPages] = useState<Set<number>>(() => new Set());
+  // A page enters `renderedPages` as soon as react-pdf mounts it, but
+  // react-pdf's own Canvas.js sets canvas.style.visibility = 'hidden' for
+  // the entire span it's actually painting, only clearing that once
+  // rendering finishes — the `loading` prop below only covers the earlier
+  // page-data-fetch phase, not this one. Without tracking it separately, the
+  // wrapper's own background shows through during that gap; sticky/additive
+  // like renderedPages, for the same reason (once painted, a page's canvas
+  // fully covers its wrapper again on any later re-render, so there's
+  // nothing to gain by ever removing it).
+  const [canvasReady, setCanvasReady] = useState<Set<number>>(() => new Set());
+  const markCanvasReady = useCallback((n: number) => {
+    setCanvasReady((prev) => (prev.has(n) ? prev : new Set(prev).add(n)));
+  }, []);
   const [pageInput, setPageInput] = useState('1');
   const [nativeSize, setNativeSize] = useState<{ width: number; height: number } | null>(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const [toolbarHeight, setToolbarHeight] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(0);
   const [zoomAdjust, setZoomAdjust] = useState(1);
+  // The scale actually passed to <Page> — deliberately lags zoomAdjust by a
+  // short debounce. Every page currently mounted re-rasterizes its canvas
+  // whenever this changes, which is real, visible work; committing it on
+  // every individual +/- click (or worse, every keydown from holding
+  // Cmd/Ctrl and tapping repeatedly) made zooming feel like the whole
+  // document was reloading. zoomAdjust itself still updates instantly for
+  // the % label and for the CSS-transform "live" preview below — only the
+  // expensive part waits.
+  const [committedZoom, setCommittedZoom] = useState(1);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loadProgress, setLoadProgress] = useState<number | null>(null); // 0-1, or null when unknown
   const [scrollProgress, setScrollProgress] = useState(0); // 0-1, whole-document read progress
@@ -82,7 +112,10 @@ export function PdfViewer({ fileUrl, slug, title, thumbnailUrl }: PdfViewerProps
   const [searching, setSearching] = useState(false);
   const [searchRan, setSearchRan] = useState(false);
 
-  const toolbarHidden = useScrollDirection();
+  // Passing rootRef only while actually fullscreen: that's the one case
+  // where the toolbar needs to track a specific element's scroll instead of
+  // the window's.
+  const toolbarHidden = useScrollDirection(768, 80, isFullscreen ? rootRef.current : null);
 
   // Keeps the page-jump input in sync when currentPage changes from scrolling.
   useEffect(() => {
@@ -136,33 +169,48 @@ export function PdfViewer({ fileUrl, slug, title, thumbnailUrl }: PdfViewerProps
     return () => window.removeEventListener('resize', measure);
   }, []);
 
-  // Whole-document read progress, driven by actual scroll position rather
-  // than page count — smooth and continuous instead of jumping in
-  // per-page steps. Renders as a thin bar under the toolbar.
-  useEffect(() => {
-    const onScroll = () => {
-      const scrollable = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = scrollable > 0 ? window.scrollY / scrollable : 0;
-      setScrollProgress(Math.min(1, Math.max(0, progress)));
-    };
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
-    };
-  }, [numPages]);
-
   useEffect(() => {
     const onFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener('fullscreenchange', onFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
   }, []);
 
-  // One IntersectionObserver, watching the browser viewport (not a nested
-  // scroll box — the whole page scrolls, which is the more native feel on
-  // mobile and is what the toolbar's own scroll-hide behaviour assumes).
+  // Whole-document read progress, driven by actual scroll position rather
+  // than page count — smooth and continuous instead of jumping in
+  // per-page steps. Renders as a thin bar under the toolbar.
+  //
+  // Normally the whole page scrolls (window) — the more native feel on
+  // mobile, and what the toolbar's own scroll-hide behaviour assumes. But a
+  // fullscreened element becomes its own scroll box, entirely separate from
+  // window scroll, so while fullscreen this has to track rootRef itself
+  // instead — otherwise scrolling inside fullscreen does nothing at all,
+  // since window never receives those scroll events.
+  useEffect(() => {
+    const target: HTMLElement | Window = isFullscreen && rootRef.current ? rootRef.current : window;
+
+    const onScroll = () => {
+      const scrollTop = isFullscreen && rootRef.current ? rootRef.current.scrollTop : window.scrollY;
+      const scrollHeight = isFullscreen && rootRef.current ? rootRef.current.scrollHeight : document.documentElement.scrollHeight;
+      const viewport = isFullscreen && rootRef.current ? rootRef.current.clientHeight : window.innerHeight;
+      const scrollable = scrollHeight - viewport;
+      const progress = scrollable > 0 ? scrollTop / scrollable : 0;
+      setScrollProgress(Math.min(1, Math.max(0, progress)));
+    };
+
+    onScroll();
+    target.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => {
+      target.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, [numPages, isFullscreen]);
+
+  // One IntersectionObserver, watching the browser viewport by default, or
+  // the fullscreen container's own box while fullscreen (an
+  // IntersectionObserver's root has to be an actual scrolling ancestor —
+  // `null` means "the viewport", which stops being true once a descendant
+  // element, not the window, is what's actually scrolling).
   // Individual page wrappers register/unregister themselves as they mount
   // and unmount through the render window below.
   useEffect(() => {
@@ -183,14 +231,18 @@ export function PdfViewer({ fileUrl, slug, title, thumbnailUrl }: PdfViewerProps
           setCurrentPage(bestPage);
         }
       },
-      { threshold: [0, 0.1, 0.25, 0.5, 0.75, 1], rootMargin: '0px 0px -20% 0px' }
+      {
+        root: isFullscreen ? rootRef.current : null,
+        threshold: [0, 0.1, 0.25, 0.5, 0.75, 1],
+        rootMargin: '0px 0px -20% 0px',
+      }
     );
 
     observerRef.current = observer;
     pageElRefs.current.forEach((el) => observer.observe(el));
 
     return () => observer.disconnect();
-  }, [numPages]);
+  }, [numPages, isFullscreen]);
 
   const registerPageRef = useCallback(
     (pageNumber: number) => (el: HTMLDivElement | null) => {
@@ -251,7 +303,19 @@ export function PdfViewer({ fileUrl, slug, title, thumbnailUrl }: PdfViewerProps
     return Math.min(fitWidth, fitHeight > 0 ? fitHeight : fitWidth);
   }, [containerWidth, nativeSize, viewportHeight, toolbarHeight]);
 
-  const scale = baseScale * zoomAdjust;
+  // Commits zoomAdjust into committedZoom ~220ms after it stops changing —
+  // long enough to absorb a burst of clicks/keypresses into one real
+  // re-render instead of one per step.
+  useEffect(() => {
+    const t = setTimeout(() => setCommittedZoom(zoomAdjust), 220);
+    return () => clearTimeout(t);
+  }, [zoomAdjust]);
+
+  const scale = baseScale * committedZoom; // passed to <Page> — the real, rasterized scale
+  // baseScale cancels out of this ratio, so window resizes (which move
+  // baseScale) never produce a spurious transform — only an actual zoomAdjust
+  // change (a real +/- press) ever pushes this away from 1.
+  const liveZoomRatio = committedZoom > 0 ? zoomAdjust / committedZoom : 1;
 
   const goToPage = useCallback((n: number) => {
     const el = pageElRefs.current.get(n);
@@ -299,13 +363,30 @@ export function PdfViewer({ fileUrl, slug, title, thumbnailUrl }: PdfViewerProps
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
-      containerRef.current?.parentElement?.requestFullscreen?.().catch(() => {});
+      rootRef.current?.requestFullscreen?.().catch(() => {});
     } else {
       document.exitFullscreen?.().catch(() => {});
     }
   };
 
   const handleDownload = async () => {
+    // iOS Safari can't reliably trigger a real file-system save via a blob +
+    // <a download> — instead of saving, it typically just opens the blob in
+    // its own fullscreen Quick Look-style preview, which is exactly the
+    // symptom this works around. There's no JS-only way to force an actual
+    // save on iOS Safari (sandboxing, not a bug in this code); opening the
+    // real file in a new tab lets Safari's native PDF viewer take over,
+    // where the share/download icon in its own toolbar does the real save.
+    const iOS =
+      typeof navigator !== 'undefined' &&
+      (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+
+    if (iOS) {
+      window.open(fileUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
     setDownloading(true);
     try {
       const res = await fetch(fileUrl);
@@ -377,7 +458,14 @@ export function PdfViewer({ fileUrl, slug, title, thumbnailUrl }: PdfViewerProps
   const estimatedWidth = nativeSize ? nativeSize.width * scale : undefined;
 
   return (
-    <div className="relative">
+    <div
+      ref={rootRef}
+      className={
+        isFullscreen
+          ? 'relative h-full w-full overflow-y-auto bg-surface-sunken'
+          : 'relative'
+      }
+    >
       <div
         ref={toolbarRef}
         className={`sticky top-0 z-30 transition-transform duration-300 ease-out ${
@@ -491,6 +579,8 @@ export function PdfViewer({ fileUrl, slug, title, thumbnailUrl }: PdfViewerProps
             <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 ml-auto lg:ml-0">
               <a
                 href="/#contact"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 px-2 py-1.5 sm:px-3 lg:py-1.5 rounded-token-full bg-primary-500 text-white text-sm font-semibold hover:bg-primary-600 transition-colors"
               >
                 <Mail size={14} />
@@ -498,6 +588,8 @@ export function PdfViewer({ fileUrl, slug, title, thumbnailUrl }: PdfViewerProps
               </a>
               <a
                 href="/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 px-2 py-1.5 sm:px-3 lg:py-1.5 rounded-token-full bg-primary-500 text-white text-sm font-semibold hover:bg-primary-600 transition-colors"
               >
                 <Globe size={14} />
@@ -629,15 +721,25 @@ export function PdfViewer({ fileUrl, slug, title, thumbnailUrl }: PdfViewerProps
           >
             {pageNumbers.map((n) => {
               const shouldRender = renderedPages.has(n);
+              const painted = canvasReady.has(n);
               return (
                 <div
                   key={n}
                   ref={registerPageRef(n)}
                   data-page-number={n}
-                  className="shadow-token-raised rounded-token-md overflow-hidden bg-white"
+                  className={`shadow-token-raised rounded-token-md overflow-hidden transition-transform duration-150 ease-out ${
+                    painted ? 'bg-white' : 'bg-surface-sunken animate-pulse'
+                  }`}
                   style={{
                     width: estimatedWidth,
                     minHeight: shouldRender ? undefined : estimatedHeight,
+                    // Instant visual zoom via CSS transform while the real
+                    // re-render is still debouncing (see committedZoom
+                    // above) — the box's own reserved layout size only
+                    // catches up once that commits, which is what actually
+                    // redraws the canvas at the new resolution.
+                    transform: liveZoomRatio !== 1 ? `scale(${liveZoomRatio})` : undefined,
+                    transformOrigin: 'top center',
                   }}
                 >
                   {shouldRender ? (
@@ -646,6 +748,7 @@ export function PdfViewer({ fileUrl, slug, title, thumbnailUrl }: PdfViewerProps
                       scale={scale}
                       renderAnnotationLayer
                       renderTextLayer
+                      onRenderSuccess={() => markCanvasReady(n)}
                       customTextRenderer={
                         searchQuery && searchMatches.includes(n) ? (props) => highlightMatches(props.str) : undefined
                       }
