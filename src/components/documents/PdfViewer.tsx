@@ -667,7 +667,13 @@ export function PdfViewer({ fileUrl, slug, title, thumbnailUrl }: PdfViewerProps
         </div>
       </div>
 
-      <div ref={containerRef} className="mx-auto px-2 sm:px-4 py-4">
+      {/* pb-24 (not just py-4's 16px): the last page's own content — e.g. a
+          link near its bottom edge — needs real scroll room past it, or the
+          browser clamps scrollY before the last few pixels of content (and
+          anything interactive there) are ever reachable. Confirmed directly:
+          a link positioned right at a last page's bottom edge had ~15px of
+          its clickable area sitting beyond the max scrollable position. */}
+      <div ref={containerRef} className="mx-auto px-2 sm:px-4 pt-4 pb-48">
         {loadError ? (
           <div className="w-full max-w-md mx-auto text-center py-16">
             <AlertCircle size={32} className="mx-auto mb-3 text-token-text-muted" />
@@ -679,6 +685,10 @@ export function PdfViewer({ fileUrl, slug, title, thumbnailUrl }: PdfViewerProps
             onLoadSuccess={onDocumentLoadSuccess}
             onLoadError={onDocumentLoadError}
             onLoadProgress={onDocumentLoadProgress}
+            // Hyperlinks inside the PDF open in a new tab instead of
+            // navigating the viewer away.
+            externalLinkTarget="_blank"
+            externalLinkRel="noopener noreferrer"
             // The actual DOM parent of the page divs is this component's own
             // root element, not containerRef above it — react-pdf renders one
             // wrapping div around all pages, so the gap has to live here to
@@ -760,13 +770,33 @@ export function PdfViewer({ fileUrl, slug, title, thumbnailUrl }: PdfViewerProps
                       }
                     />
                   ) : (
-                    // Not yet within the render window — a skeleton instead
-                    // of blank white, sized to match the real page so there's
-                    // no layout jump once it actually mounts.
-                    <div
-                      style={{ width: estimatedWidth, height: estimatedHeight }}
-                      className="bg-surface-sunken animate-pulse"
-                    />
+                    // Not yet within the visual render window — the canvas
+                    // paint is deliberately windowed/lazy for performance,
+                    // but its links shouldn't have to wait on that: a second,
+                    // lightweight Page instance with renderMode="none" skips
+                    // the expensive canvas rasterization entirely and renders
+                    // only the (real, positioned) annotation layer — on a
+                    // slow/malformed file where canvas painting can take a
+                    // long time, this is what makes a page's links clickable
+                    // as soon as its annotation data resolves, independent of
+                    // when its visual content actually finishes painting. The
+                    // skeleton pulse sits on top, pointer-events-none so
+                    // clicks pass through to the real links beneath it —
+                    // visually identical to before, just with working links
+                    // underneath instead of nothing.
+                    <div className="relative" style={{ width: estimatedWidth, height: estimatedHeight }}>
+                      <Page
+                        pageNumber={n}
+                        scale={scale}
+                        renderMode="none"
+                        renderTextLayer={false}
+                        renderAnnotationLayer
+                      />
+                      <div
+                        style={{ width: estimatedWidth, height: estimatedHeight }}
+                        className="absolute inset-0 bg-surface-sunken animate-pulse pointer-events-none"
+                      />
+                    </div>
                   )}
                 </div>
               );

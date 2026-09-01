@@ -506,6 +506,37 @@ section {
 }
 
 /* =====================================================
+   PDF VIEWER — react-pdf / pdfjs-dist scale-factor fix
+   react-pdf@10.5.0 hardcodes --scale-factor: 1 on each page's root element,
+   assuming an older pdf.js internal convention. pdfjs-dist@4.10.38's own
+   AnnotationLayer rendering, though, sizes its container via a CSS
+   calc()/round() expression that multiplies the PDF's native unscaled width
+   by --scale-factor — so with it pinned to 1, that container renders at the
+   page's full native (unscaled) size instead of the real display size,
+   throwing every annotation (including link hit-areas) wildly out of
+   position relative to the actual (correctly-scaled) canvas beneath it.
+   react-pdf separately — correctly — exposes the real scale as --user-unit
+   on the same element, so pointing --scale-factor at that (with !important,
+   since react-pdf sets its own value via inline style, which only a more
+   specific/important external rule can override) is the precise fix.
+   ===================================================== */
+.react-pdf__Page {
+  --scale-factor: var(--user-unit) !important;
+}
+
+/* Tap/click highlight on hyperlink hit-areas: browsers default this to their
+   own platform color (often a yellow/orange flash on mobile), which clashes
+   with the site's palette. Pinned to the primary blue token instead — both
+   the mobile/touch tap-highlight flash and the keyboard-focus outline. */
+.annotationLayer .linkAnnotation > a {
+  -webkit-tap-highlight-color: rgba(59, 130, 246, 0.35);
+}
+.annotationLayer .linkAnnotation > a:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 1px;
+}
+
+/* =====================================================
    404 PAGE — BOUNCING BLOB CHARACTER
    Pure CSS, no JS: a small squash-and-stretch ball that hops side to side
    while its eyes wander and blink. Built from design tokens (primary/accent).
