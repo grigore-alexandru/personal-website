@@ -140,14 +140,36 @@ export function PdfViewer({ fileUrl, slug, title, thumbnailUrl }: PdfViewerProps
     });
   }, [currentPage, numPages]);
 
+  // These three feed directly into `baseScale`, which is passed straight
+  // through to every currently-mounted <Page scale={...}> — so any jitter
+  // here re-triggers a full canvas redraw of every one of them. That jitter
+  // is real: as pages mount (first as skeletons at an estimated height,
+  // then at their actual rendered height), the document's total height
+  // shifts, which can make a vertical scrollbar appear or disappear,
+  // which changes containerRef's own clientWidth purely from losing/gaining
+  // the scrollbar's width — with nothing to do with an actual zoom or
+  // window resize. On a normal fast-loading file that settles in a couple
+  // of redraws; on this project's slower/malformed-xref files (see
+  // documentsService/PdfViewer's other comments on "Indexing all PDF
+  // objects") repeated redraws compound badly and can leave every page
+  // stuck re-rendering indefinitely. Debouncing so a burst of measurements
+  // collapses into the one that actually sticks fixes it at the source,
+  // rather than trying to make redraws themselves cheaper.
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const measure = () => setContainerWidth(el.clientWidth);
-    measure();
-    const ro = new ResizeObserver(measure);
+    measure(); // first read is immediate — nothing to debounce against yet
+    const ro = new ResizeObserver(() => {
+      clearTimeout(timer);
+      timer = setTimeout(measure, 250);
+    });
     ro.observe(el);
-    return () => ro.disconnect();
+    return () => {
+      clearTimeout(timer);
+      ro.disconnect();
+    };
   }, []);
 
   // Toolbar's own height, so fit-to-height can subtract it from the
@@ -155,18 +177,33 @@ export function PdfViewer({ fileUrl, slug, title, thumbnailUrl }: PdfViewerProps
   useEffect(() => {
     const el = toolbarRef.current;
     if (!el) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const measure = () => setToolbarHeight(el.clientHeight);
     measure();
-    const ro = new ResizeObserver(measure);
+    const ro = new ResizeObserver(() => {
+      clearTimeout(timer);
+      timer = setTimeout(measure, 250);
+    });
     ro.observe(el);
-    return () => ro.disconnect();
+    return () => {
+      clearTimeout(timer);
+      ro.disconnect();
+    };
   }, []);
 
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const measure = () => setViewportHeight(window.innerHeight);
     measure();
-    window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
+    const onResize = () => {
+      clearTimeout(timer);
+      timer = setTimeout(measure, 250);
+    };
+    window.addEventListener('resize', onResize);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', onResize);
+    };
   }, []);
 
   useEffect(() => {
