@@ -6,7 +6,16 @@ import { generateHTML } from '@tiptap/html';
 import StarterKit from '@tiptap/starter-kit';
 import TipTapImage from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
-import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from '../../../config/site';
+import {
+  SITE_URL,
+  SITE_NAME,
+  SITE_IN_LANGUAGE,
+  PERSON_ID,
+  ogImage,
+  metaDescription,
+} from '../../../config/site';
+import { buildMetadata, noindexMetadata } from '../../../lib/seo';
+import { JsonLd } from '../../../components/seo/JsonLd';
 import { loadPost, loadAllPosts } from '../../../utils/blogLoader';
 import { extractTextFromTipTap } from '../../../utils/dataLoader';
 import { designTokens } from '../../../styles/tokens';
@@ -24,47 +33,21 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const post = await loadPost(params.slug);
-  if (!post) return { title: 'Post Not Found' };
+  if (!post) return noindexMetadata('Post Not Found');
 
-  const description =
-    post.excerpt ||
-    extractTextFromTipTap(post.content).slice(0, 160).trim() ||
-    `Blog post by ${SITE_NAME}`;
-  const ogImage = post.heroImageLarge || DEFAULT_OG_IMAGE;
-  const canonicalUrl = `${SITE_URL}/blog/${post.slug}`;
-
-  return {
+  return buildMetadata({
     title: post.title,
-    description,
-    alternates: { canonical: canonicalUrl },
-    openGraph: {
-      title: `${post.title} | ${SITE_NAME}`,
-      description,
-      url: canonicalUrl,
-      type: 'article',
-      publishedTime: post.publishedAt,
-      images: [{ url: ogImage, width: 1200, height: 630, alt: post.title }],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: `${post.title} | ${SITE_NAME}`,
-      description,
-      images: [ogImage],
-    },
-    other: {
-      'script:ld+json': JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'BlogPosting',
-        headline: post.title,
-        description,
-        image: ogImage,
-        url: canonicalUrl,
-        datePublished: post.publishedAt,
-        author: { '@type': 'Organization', name: SITE_NAME },
-        publisher: { '@type': 'Organization', name: SITE_NAME },
-      }),
-    },
-  };
+    // buildMetadata collapses whitespace and cuts on a word boundary, so the
+    // raw excerpt (or the flattened body) can be handed over untouched.
+    description:
+      post.excerpt || extractTextFromTipTap(post.content) || `Blog post by ${SITE_NAME}`,
+    path: `/blog/${post.slug}`,
+    image: post.heroImageLarge,
+    imageAlt: post.title,
+    type: 'article',
+    publishedTime: post.publishedAt,
+    modifiedTime: post.updatedAt ?? post.publishedAt,
+  });
 }
 
 function renderTipTap(content: any): string {
@@ -100,8 +83,42 @@ export default async function BlogPostPage({ params }: PageProps) {
 
   const contentHtml = renderTipTap(post!.content);
 
+  const description = metaDescription(
+    post!.excerpt || extractTextFromTipTap(post!.content)
+  );
+  const canonicalUrl = `${SITE_URL}/blog/${post!.slug}`;
+
   return (
     <div className="min-h-screen bg-white">
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'BlogPosting',
+          headline: post!.title,
+          description,
+          image: ogImage(post!.heroImageLarge),
+          url: canonicalUrl,
+          datePublished: post!.publishedAt,
+          dateModified: post!.updatedAt ?? post!.publishedAt,
+          inLanguage: SITE_IN_LANGUAGE,
+          // Personal site: the author is a Person, not an Organization. Both
+          // point at the single node declared once in the root layout.
+          author: { '@id': PERSON_ID },
+          publisher: { '@id': PERSON_ID },
+          mainEntityOfPage: { '@type': 'WebPage', '@id': canonicalUrl },
+          ...(post!.tags?.length ? { keywords: post!.tags.join(', ') } : {}),
+        }}
+      />
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Blog', item: `${SITE_URL}/blog` },
+            { '@type': 'ListItem', position: 2, name: post!.title, item: canonicalUrl },
+          ],
+        }}
+      />
       <ScrollToTop />
       <BlogPostScrollButton />
 

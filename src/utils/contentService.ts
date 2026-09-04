@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { supabase } from '../lib/supabase';
 import { Content, ContentType, ContentThumbnail, ContentContributor, ContentWithProject } from '../types';
 import { deleteVideoThumbnails } from './contentVideoProcessing';
@@ -667,7 +668,8 @@ export async function loadAdjacentContent(
   };
 }
 
-export async function loadContentBySlug(slug: string): Promise<ContentWithProject | null> {
+// cache(): generateMetadata and the page component both call this.
+export const loadContentBySlug = cache(async (slug: string): Promise<ContentWithProject | null> => {
   const { data: contentData, error: contentError } = await supabase
     .from('content')
     .select('*, content_type:content_types(*)')
@@ -711,4 +713,4 @@ export async function loadContentBySlug(slug: string): Promise<ContentWithProjec
     ...(contentData as unknown as Content),
     project_info: projectInfo,
   };
-}
+});

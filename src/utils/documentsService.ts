@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Document, DocumentPatch, NewDocumentInput } from '../types/documents';
 
@@ -68,10 +69,14 @@ export async function listDocuments(): Promise<Document[]> {
  *  isomorphic `supabase` client used by blogLoader.ts for the same purpose.
  *  Returns null (not an error) for an unknown or non-public slug, so callers
  *  can go straight to notFound(). */
-export async function getDocumentBySlug(slug: string): Promise<Document | null> {
+export const getDocumentBySlug = cache(async (slug: string): Promise<Document | null> => {
   const { data, error } = await supabase
     .from('documents')
     .select(DOCUMENT_COLUMNS)
+    // RLS already restricts anon reads to public rows, so this is defence in
+    // depth rather than the fix — but it keeps the query honest about what the
+    // public route is allowed to render, and it matches the sitemap's filter.
+    .eq('access_level', 'public')
     .eq('slug', slug)
     .maybeSingle();
 
@@ -82,12 +87,16 @@ export async function getDocumentBySlug(slug: string): Promise<Document | null> 
   if (!data) return null;
 
   return toDocument(data as unknown as DocumentRow);
-}
+});
 
 /** Thin wrapper for generateStaticParams — avoids pulling full rows (and
- *  therefore file URLs/descriptions) just to enumerate slugs. */
+ *  therefore file URLs/descriptions) just to enumerate slugs. Public only:
+ *  prerendering a restricted document would write its HTML to the CDN. */
 export async function listDocumentSlugs(): Promise<string[]> {
-  const { data, error } = await supabase.from('documents').select('slug');
+  const { data, error } = await supabase
+    .from('documents')
+    .select('slug')
+    .eq('access_level', 'public');
 
   if (error) {
     console.error('Error loading document slugs:', error);

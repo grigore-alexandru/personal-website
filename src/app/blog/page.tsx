@@ -1,30 +1,15 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from '../../config/site';
 import { loadAllPosts, countAllPosts } from '../../utils/blogLoader';
+import { buildMetadata } from '../../lib/seo';
 import BlogListClient from './BlogListClient';
 import { BlogPostCardSkeleton } from '../../components/ui/SkeletonLoader';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: 'Blog',
   description: 'Notes on filmmaking, creative process, and the projects I\'m working on.',
-  alternates: {
-    canonical: `${SITE_URL}/blog`,
-  },
-  openGraph: {
-    title: `Blog | ${SITE_NAME}`,
-    description: 'Notes on filmmaking, creative process, and the projects I\'m working on.',
-    url: `${SITE_URL}/blog`,
-    type: 'website',
-    images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630 }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: `Blog | ${SITE_NAME}`,
-    description: 'Notes on filmmaking, creative process, and the projects I\'m working on.',
-    images: [DEFAULT_OG_IMAGE],
-  },
-};
+  path: '/blog',
+});
 
 const POSTS_PER_PAGE = 20;
 

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Alexandru Grigore">
+  <!-- Inverts on dark browser chrome. Raster favicons cannot do this, which is
+       why favicon.svg is offered first and favicon.ico kept as the fallback
+       (Google Search does not read SVG favicons). -->
+  <style>
+    .bg { fill: #000000 }
+    .fg { fill: #ffffff }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #ffffff }
+      .fg { fill: #000000 }
+    }
+  </style>
+  <rect class="bg" width="64" height="64" rx="14" />
+  <text class="fg" x="32" y="33" text-anchor="middle" dominant-baseline="central"
+        font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="27" font-weight="700" letter-spacing="-1">AG</text>
+</svg>

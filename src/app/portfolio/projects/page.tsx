@@ -1,31 +1,16 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from '../../../config/site';
+import { buildMetadata } from '../../../lib/seo';
 import { loadProjects, countProjects } from '../../../utils/dataLoader';
 import { loadProjectTypes, loadAllClients } from '../../../utils/portfolioService';
 import ProjectsListClient from './ProjectsListClient';
 import { ProjectCardSkeleton } from '../../../components/ui/SkeletonLoader';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: 'Projects',
   description: 'Commercials, documentaries, and branded content — the projects I\'ve directed and produced.',
-  alternates: {
-    canonical: `${SITE_URL}/portfolio/projects`,
-  },
-  openGraph: {
-    title: `Projects | ${SITE_NAME}`,
-    description: 'Commercials, documentaries, and branded content — the projects I\'ve directed and produced.',
-    url: `${SITE_URL}/portfolio/projects`,
-    type: 'website',
-    images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630 }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: `Projects | ${SITE_NAME}`,
-    description: 'Commercials, documentaries, and branded content — the projects I\'ve directed and produced.',
-    images: [DEFAULT_OG_IMAGE],
-  },
-};
+  path: '/portfolio/projects',
+});
 
 const BATCH_SIZE = 12;
 

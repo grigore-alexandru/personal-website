@@ -11,6 +11,27 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
+# Netlify Image CDN. Every og:image on the site is rewritten through
+# /.netlify/images (see `ogImage()` in src/config/site.ts) so social crawlers
+# always receive a real 1200x630 JPEG, whatever size or format sits in the
+# bucket. Remote sources must be allowlisted here or the transform 400s.
+#
+# These are regexes: escape the dots, but not the slashes.
+#
+# Keep this list in sync with `images.remotePatterns` in next.config.js — any
+# host that can end up as a hero image or thumbnail can also end up as an
+# og:image, and a host missing here makes the transform 400 rather than fail
+# over to the original.
+[images]
+  remote_images = [
+    "https://s3\\.eu-central-1\\.s4\\.mega\\.io/.*",
+    "https://s3\\.g\\.s4\\.mega\\.io/.*",
+    "https://lqbyvubbzexujviflunv\\.supabase\\.co/.*",
+    "https://img\\.youtube\\.com/.*",
+    "https://images\\.pexels\\.com/.*",
+    "https://placehold\\.co/.*"
+  ]
+
 [dev]
   command = "npm run dev"
   port = 3000

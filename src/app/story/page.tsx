@@ -1,28 +1,17 @@
 import type { Metadata } from 'next';
-import UnderConstructionPage from '../under-construction/page';
-import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from '../../config/site';
+import UnderConstruction from '../../components/pages/UnderConstruction';
+import { buildMetadata } from '../../lib/seo';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: 'About',
   description: 'A bit about me — who I am, how I got here, and what drives the work.',
-  alternates: {
-    canonical: `${SITE_URL}/story`,
-  },
-  openGraph: {
-    title: `About | ${SITE_NAME}`,
-    description: 'A bit about me — who I am, how I got here, and what drives the work.',
-    url: `${SITE_URL}/story`,
-    type: 'website',
-    images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630 }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: `About | ${SITE_NAME}`,
-    description: 'A bit about me — who I am, how I got here, and what drives the work.',
-    images: [DEFAULT_OG_IMAGE],
-  },
-};
+  path: '/story',
+  // Still renders the placeholder, and is a byte-for-byte duplicate of / and
+  // /under-construction while it does. Keep it out of the index until
+  // StoryContent.tsx is actually wired up; it is also dropped from sitemap.ts.
+  noindex: true,
+});
 
 export default function StoryPage() {
-  return <UnderConstructionPage />;
+  return <UnderConstruction />;
 }

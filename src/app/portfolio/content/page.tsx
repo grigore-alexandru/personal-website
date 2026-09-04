@@ -1,31 +1,16 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from '../../../config/site';
+import { buildMetadata } from '../../../lib/seo';
 import { loadPublishedContentWithProjects, countPublishedContent } from '../../../utils/contentService';
 import { loadAllClients, loadProjectTypes } from '../../../utils/portfolioService';
 import ContentGridClient from './ContentGridClient';
 import { ContentGridItemSkeleton } from '../../../components/ui/SkeletonLoader';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: 'Content',
   description: 'Videos and photos from the work — reels, edits, and individual pieces across projects.',
-  alternates: {
-    canonical: `${SITE_URL}/portfolio/content`,
-  },
-  openGraph: {
-    title: `Content | ${SITE_NAME}`,
-    description: 'Videos and photos from the work — reels, edits, and individual pieces across projects.',
-    url: `${SITE_URL}/portfolio/content`,
-    type: 'website',
-    images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630 }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: `Content | ${SITE_NAME}`,
-    description: 'Videos and photos from the work — reels, edits, and individual pieces across projects.',
-    images: [DEFAULT_OG_IMAGE],
-  },
-};
+  path: '/portfolio/content',
+});
 
 const CONTENT_PER_PAGE = 12;
 

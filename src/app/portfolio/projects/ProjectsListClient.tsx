@@ -161,6 +161,8 @@ const ProjectsListClient: React.FC<ProjectsListClientProps> = ({
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Visually hidden: see the note in BlogListClient. */}
+      <h1 className="sr-only">Projects</h1>
       <main className="max-w-screen-xl mx-auto px-6 pt-12 pb-16">
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <SearchBar

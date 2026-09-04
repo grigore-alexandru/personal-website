@@ -2,28 +2,15 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import { Facebook, Instagram, Linkedin, Mail, MapPin, Phone, type LucideIcon } from 'lucide-react';
 import { designTokens } from '../../styles/tokens';
-import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from '../../config/site';
+import { buildMetadata } from '../../lib/seo';
 
 const DESCRIPTION = "Get in touch — email, call, or find me on social. Based in Bucharest, Romania.";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: 'Contact',
   description: DESCRIPTION,
-  alternates: { canonical: `${SITE_URL}/contact` },
-  openGraph: {
-    title: `Contact | ${SITE_NAME}`,
-    description: DESCRIPTION,
-    url: `${SITE_URL}/contact`,
-    type: 'website',
-    images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630 }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: `Contact | ${SITE_NAME}`,
-    description: DESCRIPTION,
-    images: [DEFAULT_OG_IMAGE],
-  },
-};
+  path: '/contact',
+});
 
 // TODO placeholders — swap in the real values.
 const EMAIL = 'hello@alexandrugrigore.com';

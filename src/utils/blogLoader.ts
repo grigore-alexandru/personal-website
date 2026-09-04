@@ -1,4 +1,11 @@
+import { cache } from 'react';
 import { supabase } from '../lib/supabase';
+
+/** Everything a rendered post needs. Replaces `select('*')`, which also pulled
+ *  columns the public page never reads. */
+const POST_COLUMNS =
+  'id, title, slug, content, excerpt, tags, hero_image_large, hero_image_thumbnail, ' +
+  'has_sources, sources_data, has_notes, notes_content, published_at, updated_at, is_draft';
 
 export interface Source {
   title: string;
@@ -64,10 +71,19 @@ export const countAllPosts = async (filters: BlogFilters = {}): Promise<number> 
   return count || 0;
 };
 
-export const loadPost = async (slug: string): Promise<BlogPost | null> => {
+/**
+ * cache() so generateMetadata and the page component share one query per render
+ * pass instead of hitting PostgREST twice for the same row.
+ */
+export const loadPost = cache(async (slug: string): Promise<BlogPost | null> => {
   const { data: rawData, error } = await supabase
     .from('posts')
-    .select('*')
+    .select(POST_COLUMNS)
+    // Drafts must never be publicly readable. loadAllPosts already filtered;
+    // this one did not, so any guessed draft slug rendered the full post.
+    // The matching RLS policy is tightened in the accompanying migration —
+    // this filter is the second layer, not the only one.
+    .eq('is_draft', false)
     .eq('slug', slug)
     .maybeSingle();
   const data = rawData as any;
@@ -93,8 +109,9 @@ export const loadPost = async (slug: string): Promise<BlogPost | null> => {
     hasNotes: data.has_notes,
     notesContent: data.notes_content,
     publishedAt: data.published_at,
+    updatedAt: data.updated_at ?? undefined,
   };
-};
+});
 
 export const loadAllPosts = async (
   limit: number = 20,

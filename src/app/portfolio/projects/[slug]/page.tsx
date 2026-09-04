@@ -2,8 +2,15 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { notFound } from 'next/navigation';
-import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from '../../../../config/site';
-import { loadProject, loadProjects } from '../../../../utils/dataLoader';
+import {
+  SITE_URL,
+  SITE_IN_LANGUAGE,
+  PERSON_ID,
+  ogImage,
+} from '../../../../config/site';
+import { buildMetadata, noindexMetadata } from '../../../../lib/seo';
+import { JsonLd } from '../../../../components/seo/JsonLd';
+import { loadProject, loadProjects, loadAdjacentProjects } from '../../../../utils/dataLoader';
 import { designTokens } from '../../../../styles/tokens';
 import ProjectHero from '../../../../components/ProjectHero';
 import ImpactMetrics from '../../../../components/project/ImpactMetrics';
@@ -29,46 +36,27 @@ export async function generateStaticParams() {
   return projects.map((p) => ({ slug: p.slug }));
 }
 
+function projectDescription(project: {
+  project_type: { name: string };
+  client_name: string;
+}): string {
+  return `${project.project_type.name} project for ${project.client_name}.`;
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const project = await loadProject(params.slug);
-  if (!project) {
-    return { title: 'Project Not Found' };
-  }
+  if (!project) return noindexMetadata('Project Not Found');
 
-  const description = `${project.project_type.name} project for ${project.client_name}.`;
-  const ogImage = project.hero_image_large || DEFAULT_OG_IMAGE;
-
-  return {
+  return buildMetadata({
     title: project.title,
-    description,
-    alternates: {
-      canonical: `${SITE_URL}/portfolio/projects/${project.slug}`,
-    },
-    openGraph: {
-      title: `${project.title} | ${SITE_NAME}`,
-      description,
-      url: `${SITE_URL}/portfolio/projects/${project.slug}`,
-      type: 'article',
-      images: [{ url: ogImage, width: 1200, height: 630 }],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: `${project.title} | ${SITE_NAME}`,
-      description,
-      images: [ogImage],
-    },
-    other: {
-      'script:ld+json': JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'CreativeWork',
-        name: project.title,
-        description,
-        image: ogImage,
-        url: `${SITE_URL}/portfolio/projects/${project.slug}`,
-        creator: { '@type': 'Organization', name: SITE_NAME },
-      }),
-    },
-  };
+    description: projectDescription(project),
+    path: `/portfolio/projects/${project.slug}`,
+    image: project.hero_image_large,
+    imageAlt: project.title,
+    type: 'article',
+    publishedTime: project.created_at,
+    modifiedTime: project.updated_at ?? project.created_at,
+  });
 }
 
 const sectionHeadingStyle = {
@@ -80,18 +68,16 @@ const sectionHeadingStyle = {
 };
 
 export default async function ProjectDetailPage({ params }: PageProps) {
-  const [project, allProjects] = await Promise.all([
-    loadProject(params.slug),
-    loadProjects(200, 0),
-  ]);
+  const project = await loadProject(params.slug);
 
   if (!project) {
     notFound();
   }
 
-  const currentIndex = allProjects.findIndex((p) => p.id === project!.id);
-  const prevProject = currentIndex > 0 ? allProjects[currentIndex - 1] : null;
-  const nextProject = currentIndex < allProjects.length - 1 ? allProjects[currentIndex + 1] : null;
+  // Two indexed lookups rather than loading the whole portfolio to index into it.
+  const { prevProject, nextProject } = await loadAdjacentProjects(project.order_index);
+
+  const canonicalUrl = `${SITE_URL}/portfolio/projects/${project.slug}`;
 
   const hasMetrics = project.impact_metrics && project.impact_metrics.length > 0;
   const hasContent = project.project_content.length > 0;
@@ -100,6 +86,38 @@ export default async function ProjectDetailPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-white pb-20">
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'CreativeWork',
+          name: project.title,
+          description: projectDescription(project),
+          image: ogImage(project.hero_image_large),
+          url: canonicalUrl,
+          dateCreated: project.created_at,
+          dateModified: project.updated_at ?? project.created_at,
+          inLanguage: SITE_IN_LANGUAGE,
+          genre: project.project_type.name,
+          creator: { '@id': PERSON_ID },
+          about: { '@type': 'Organization', name: project.client_name },
+        }}
+      />
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Portfolio', item: `${SITE_URL}/portfolio` },
+            {
+              '@type': 'ListItem',
+              position: 2,
+              name: 'Projects',
+              item: `${SITE_URL}/portfolio/projects`,
+            },
+            { '@type': 'ListItem', position: 3, name: project.title, item: canonicalUrl },
+          ],
+        }}
+      />
       {/* No manual <link rel="preload"> here: ProjectHero renders the image
           via next/image with `priority`, which emits the correct preload
           link itself (pointing at the actual optimized URL that will be

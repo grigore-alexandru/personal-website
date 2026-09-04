@@ -2,7 +2,16 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { PdfViewerLoader as PdfViewer } from '../../../components/documents/PdfViewerLoader';
 import { getDocumentBySlug, listDocumentSlugs, withCacheBust } from '../../../utils/documentsService';
-import { SITE_NAME, SITE_URL, DEFAULT_OG_IMAGE } from '../../../config/site';
+import { buildMetadata, noindexMetadata } from '../../../lib/seo';
+import { JsonLd } from '../../../components/seo/JsonLd';
+import {
+  SITE_NAME,
+  SITE_URL,
+  SITE_IN_LANGUAGE,
+  PERSON_ID,
+  ogImage,
+  metaDescription,
+} from '../../../config/site';
 
 interface PageProps {
   params: { slug: string };
@@ -15,56 +24,55 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const doc = await getDocumentBySlug(params.slug);
-  if (!doc) {
-    return { title: 'Document Not Found', robots: { index: false, follow: false } };
-  }
+  if (!doc) return noindexMetadata('Document Not Found');
 
-  const description = doc.description || `${doc.title} — a document from ${SITE_NAME}`;
-  const canonicalUrl = `${SITE_URL}/documents/${doc.slug}`;
-  const ogImage = doc.thumbnailUrl ? withCacheBust(doc.thumbnailUrl, doc.updatedAt) : DEFAULT_OG_IMAGE;
-
-  return {
+  return buildMetadata({
     title: doc.title,
-    description,
-    alternates: { canonical: canonicalUrl },
-    openGraph: {
-      title: `${doc.title} | ${SITE_NAME}`,
-      description,
-      url: canonicalUrl,
-      type: 'website',
-      images: [{ url: ogImage, alt: doc.title }],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: `${doc.title} | ${SITE_NAME}`,
-      description,
-      images: [ogImage],
-    },
-    other: {
-      'script:ld+json': JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'DigitalDocument',
-        name: doc.title,
-        description,
-        url: canonicalUrl,
-        image: ogImage,
-        dateModified: doc.updatedAt,
-        publisher: { '@type': 'Organization', name: SITE_NAME },
-      }),
-    },
-  };
+    description: doc.description || `${doc.title} — a document from ${SITE_NAME}`,
+    path: `/documents/${doc.slug}`,
+    image: doc.thumbnailUrl ? withCacheBust(doc.thumbnailUrl, doc.updatedAt) : null,
+    imageAlt: doc.title,
+    type: 'article',
+    publishedTime: doc.createdAt,
+    modifiedTime: doc.updatedAt,
+  });
 }
 
 export default async function DocumentPage({ params }: PageProps) {
   const doc = await getDocumentBySlug(params.slug);
   if (!doc) notFound();
 
+  const canonicalUrl = `${SITE_URL}/documents/${doc.slug}`;
+  const description = metaDescription(
+    doc.description || `${doc.title} — a document from ${SITE_NAME}`
+  );
+
   return (
     <main className="min-h-screen bg-surface-sunken">
-      {/* Intentionally no title/description header here — the toolbar and
-          the PDF itself are the entire page. The title/description still
-          drive the page's <title>, OG card, and JSON-LD via generateMetadata
-          above; they're just never rendered as on-page text. */}
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'DigitalDocument',
+          name: doc.title,
+          description,
+          url: canonicalUrl,
+          image: ogImage(doc.thumbnailUrl ? withCacheBust(doc.thumbnailUrl, doc.updatedAt) : null),
+          dateCreated: doc.createdAt,
+          dateModified: doc.updatedAt,
+          inLanguage: SITE_IN_LANGUAGE,
+          author: { '@id': PERSON_ID },
+          publisher: { '@id': PERSON_ID },
+          ...(doc.pageCount ? { numberOfPages: doc.pageCount } : {}),
+        }}
+      />
+
+      {/* The toolbar and the PDF are the entire visible page — that is
+          deliberate. But a document with no text at all is unrankable and
+          fails every heading check, so the title and description are rendered
+          for assistive tech and crawlers without changing the layout. */}
+      <h1 className="sr-only">{doc.title}</h1>
+      {doc.description && <p className="sr-only">{doc.description}</p>}
+
       <PdfViewer
         fileUrl={withCacheBust(doc.fileUrl, doc.updatedAt)}
         slug={doc.slug}

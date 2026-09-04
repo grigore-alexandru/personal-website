@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { Project, TipTapContent } from '../types';
 import { supabase } from '../lib/supabase';
 
@@ -106,7 +107,8 @@ export const countProjects = async (filters: ProjectFilters = {}): Promise<numbe
   return count || 0;
 };
 
-export const loadProject = async (slug: string): Promise<Project | null> => {
+// cache(): generateMetadata and the page component both call this.
+export const loadProject = cache(async (slug: string): Promise<Project | null> => {
   const { data, error } = await supabase
     .from('projects')
     .select(PROJECT_SELECT)
@@ -122,6 +124,45 @@ export const loadProject = async (slug: string): Promise<Project | null> => {
   if (!data) return null;
 
   return mapProjectRow(data);
+});
+
+/**
+ * The two projects either side of `orderIndex` in the portfolio ordering.
+ *
+ * Replaces `loadProjects(200, 0)` on the detail page, which pulled every
+ * project — each with its project_content and nested content joins — purely to
+ * find two neighbours by array index. These are two indexed lookups returning
+ * one row each, and they return full Project objects so ProjectNavigation is
+ * unchanged.
+ *
+ * `loadProjects` orders by order_index DESC, so "previous" is the higher index.
+ */
+export const loadAdjacentProjects = async (
+  orderIndex: number
+): Promise<{ prevProject: Project | null; nextProject: Project | null }> => {
+  const [prevResult, nextResult] = await Promise.all([
+    supabase
+      .from('projects')
+      .select(PROJECT_SELECT)
+      .eq('is_draft', false)
+      .gt('order_index', orderIndex)
+      .order('order_index', { ascending: true })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('projects')
+      .select(PROJECT_SELECT)
+      .eq('is_draft', false)
+      .lt('order_index', orderIndex)
+      .order('order_index', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  return {
+    prevProject: prevResult.data ? mapProjectRow(prevResult.data) : null,
+    nextProject: nextResult.data ? mapProjectRow(nextResult.data) : null,
+  };
 };
 
 function mapProjectRow(row: any): Project {
@@ -172,11 +213,26 @@ export const generateProjectUrl = (project: Project): string => {
   return `/portfolio/projects/${project.slug}`;
 };
 
+/** Nodes that end a run of text. Without them every paragraph in a post ran
+ *  straight into the next one in the meta description ("...ideeaÎn ziua..."). */
+const TIPTAP_BLOCK_TYPES = new Set([
+  'paragraph',
+  'heading',
+  'listItem',
+  'blockquote',
+  'codeBlock',
+  'tableRow',
+]);
+
 export function extractTextFromTipTap(doc: TipTapContent | null | undefined): string {
   if (!doc) return '';
   if (doc.text) return doc.text;
   if (!doc.content) return '';
-  return doc.content.map(node => extractTextFromTipTap(node)).join('');
+
+  // Inline nodes (marks, text spans) join with nothing so words stay intact;
+  // block nodes get a trailing space so sentences do not fuse together.
+  const inner = doc.content.map((node) => extractTextFromTipTap(node)).join('');
+  return TIPTAP_BLOCK_TYPES.has((doc as { type?: string }).type ?? '') ? `${inner} ` : inner;
 }
 
 export function parseMetricValue(value?: string): number {

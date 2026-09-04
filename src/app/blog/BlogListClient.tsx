@@ -141,6 +141,10 @@ export default function BlogListClient({
 
   return (
     <div className="min-h-screen bg-white">
+      {/* The page is search-first by design, so the heading is
+          visually hidden rather than rendered — the route still needs
+          exactly one h1 for crawlers and screen readers. */}
+      <h1 className="sr-only">Blog</h1>
       <section className="max-w-4xl mx-auto px-6 pt-12 pb-0">
         <div className="flex flex-col sm:flex-row gap-3 mb-8">
           <SearchBar

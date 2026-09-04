@@ -1,12 +1,15 @@
 import { MetadataRoute } from 'next';
-import { createServerSupabaseClient } from '../lib/supabase/server';
+// The plain anon client, not the cookie-aware one. createServerSupabaseClient()
+// calls cookies(), which opted this route out of static generation entirely —
+// the build marked it `ƒ` and the `revalidate` below was dead code, so four
+// unbounded queries ran on every single request for the sitemap. Nothing here
+// reads a session, so there is no reason to be request-scoped.
+import { supabase } from '../lib/supabase';
 import { SITE_URL } from '../config/site';
 
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const supabase = await createServerSupabaseClient();
-
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: SITE_URL,
@@ -38,12 +41,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'daily',
       priority: 0.8,
     },
-    {
-      url: `${SITE_URL}/story`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    },
+    // /story is deliberately absent: it still renders the "Under Construction"
+    // placeholder, identical to / and /under-construction, and is marked
+    // noindex. Add it back the moment StoryContent.tsx is wired up.
     {
       url: `${SITE_URL}/contact`,
       lastModified: new Date(),

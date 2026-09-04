@@ -123,6 +123,10 @@ const PortfolioLandingContent: React.FC = () => {
 
   return (
     <div className="relative w-full overflow-hidden" style={{ height: 'calc(100vh - 80px)' }}>
+      {/* The landing is a full-bleed two-panel splash whose only text is inside
+          the panels (h2s). Visually hidden so the route has an h1 without
+          altering the composition. */}
+      <h1 className="sr-only">Portfolio</h1>
       <div
         className="grid gap-4 p-4 h-full md:gap-6 md:p-6 animate-fade-in"
         style={{
