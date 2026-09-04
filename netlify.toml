@@ -1,3 +1,19 @@
+# ---------------------------------------------------------------------------
+# DO NOT install the "Netlify Prerender" extension on this project.
+#
+# It was installed on 2026-09-01 and served HTTP 404 to every crawler user
+# agent — facebookexternalhit, WhatsApp, Twitterbot and Googlebot all got a
+# 404 while browsers got 200 on the same URL. That, not the metadata, is why
+# WhatsApp link previews were blank.
+#
+# The extension exists for client-rendered SPAs that ship an empty root div.
+# This is Next.js App Router: every page is already server-rendered with its
+# full <head>, so prerendering adds nothing and only introduces a UA-dependent
+# failure mode that is invisible in a browser.
+#
+# `npm run check:crawlers` guards against a regression here.
+# ---------------------------------------------------------------------------
+
 [build]
   command = "npm run build"
 

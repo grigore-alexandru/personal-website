@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "node scripts/copy-pdf-worker.js",
-    "check:metadata": "node scripts/check-metadata.mjs"
+    "check:metadata": "node scripts/check-metadata.mjs",
+    "check:crawlers": "node scripts/check-crawler-access.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.990.0",
