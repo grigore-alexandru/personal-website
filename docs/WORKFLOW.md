@@ -26,15 +26,23 @@ directly on `main` meant:
 We hit the limit on 2026-09-04, which left an urgent fix undeployable. The
 workflow below exists to make that not happen again.
 
-## The important part: a branch alone saves nothing
+## The important part: check what Netlify is set to build
 
-This is the thing that is easy to get wrong. **By default Netlify also builds
-every other branch you push, and every pull request.** Creating a `dev` branch
-and pushing to it would have cost exactly as much as pushing to `main` — or
-more, because a PR produces a Deploy Preview *and* a branch deploy.
+What Netlify builds is a per-project setting, and it is worth knowing exactly
+where you stand before assuming a branch is free:
 
-So the workflow has two halves, and the Netlify half is the one that actually
-saves the credits:
+- **Branch deploys are opt-in.** Out of the box Netlify builds the production
+  branch and does *not* build other branches under their own subdomain unless
+  they have been added to the list. So pushing `dev` is normally free — but
+  only if nobody has switched this to "Deploy all branches", which is one click
+  away in the UI and would make every `dev` push cost a full build.
+- **Deploy Previews are opt-out.** They are on by default for pull requests
+  against the production branch, and they *do* consume build minutes. This is
+  the setting most likely to be spending credits without anyone noticing, and
+  it is the reason this workflow merges directly rather than going through PRs.
+
+So set both explicitly rather than relying on defaults, and treat the settings
+as the real control:
 
 | Layer | What it does | Where it lives |
 |---|---|---|
@@ -54,9 +62,13 @@ and deploy contexts → Configure**:
 - **Branch deploys:** `None`
 - **Deploy Previews:** off
 
-Do this **before** pushing `dev` for the first time. `netlify.toml` only takes
-effect once it has been deployed, so layer 2 cannot protect the very first push
-of a new branch — only the UI setting can.
+Setting these explicitly matters more than the defaults happening to be
+favourable: it means a stray click cannot start costing money silently.
+
+Note the ordering limitation — `netlify.toml` only takes effect once it has
+been deployed, so layer 2 cannot protect a branch that has never been built.
+Only the UI setting can. If branch deploys were ever switched on, turn them off
+*before* pushing a new branch.
 
 ---
 
