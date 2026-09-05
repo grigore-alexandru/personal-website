@@ -205,6 +205,28 @@ export function PdfViewer({ fileUrl, slug, title, thumbnailUrl }: PdfViewerProps
     return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
   }, []);
 
+  // Kills the browser's own elastic rubber-band bounce for the whole page —
+  // this route (see isChromelessRoute.ts) is always full-viewport, window-
+  // scrolled content, so window/body is the element that actually bounces at
+  // the top/bottom, dragging the sticky toolbar along with it even though
+  // the toolbar itself never moves relative to that bounce. overscroll-
+  // behavior can't be set via a class on this component's own JSX — it has
+  // to land on the real scrolling element (documentElement/body) — so this
+  // sets it directly for as long as the viewer is mounted and restores
+  // whatever was there before on unmount, rather than touching the rest of
+  // the site's global CSS.
+  useEffect(() => {
+    const { documentElement, body } = document;
+    const prevHtml = documentElement.style.overscrollBehaviorY;
+    const prevBody = body.style.overscrollBehaviorY;
+    documentElement.style.overscrollBehaviorY = 'none';
+    body.style.overscrollBehaviorY = 'none';
+    return () => {
+      documentElement.style.overscrollBehaviorY = prevHtml;
+      body.style.overscrollBehaviorY = prevBody;
+    };
+  }, []);
+
   // Whole-document read progress, driven by actual scroll position rather
   // than page count — smooth and continuous instead of jumping in
   // per-page steps. Renders as a thin bar under the toolbar.
@@ -492,7 +514,15 @@ export function PdfViewer({ fileUrl, slug, title, thumbnailUrl }: PdfViewerProps
       ref={rootRef}
       className={
         isFullscreen
-          ? 'relative h-full w-full overflow-y-auto bg-surface-sunken'
+          // overscroll-contain: this becomes the real scrolling element while
+          // fullscreen (a fullscreened element is its own scroll box,
+          // disconnected from window — see the scroll-tracking comments
+          // below), so it's the one that needs its own bounce contained here
+          // instead of the window-level fix above. [-webkit-overflow-
+          // scrolling] gives it native momentum/inertial scrolling on iOS —
+          // without it, a div scrolled via JS/touch instead of the page
+          // itself can feel stiff rather than fluid.
+          ? 'relative h-full w-full overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] bg-surface-sunken'
           : 'relative'
       }
     >
@@ -721,8 +751,18 @@ export function PdfViewer({ fileUrl, slug, title, thumbnailUrl }: PdfViewerProps
           time — never runs out. (Its height stays auto/unconstrained here,
           so this doesn't create a second, competing vertical scroll box —
           window scroll, or rootRef's while fullscreen, is still the one
-          that actually moves vertically.) */}
-      <div ref={containerRef} className="mx-auto px-2 sm:px-4 pt-4 pb-48 overflow-x-auto">
+          that actually moves vertically.)
+
+          overscroll-contain keeps this box's own horizontal rubber-band
+          bounce (panning past a zoomed page's left/right edge) from
+          escaping into the page-level bounce the effect above already
+          handles — two elastic bounces stacking felt worse than either
+          alone. [-webkit-overflow-scrolling] gives the same horizontal pan
+          native iOS momentum instead of a stiffer 1:1 drag. */}
+      <div
+        ref={containerRef}
+        className="mx-auto px-2 sm:px-4 pt-4 pb-48 overflow-x-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
+      >
         {loadError ? (
           <div className="w-full max-w-md mx-auto text-center py-16">
             <AlertCircle size={32} className="mx-auto mb-3 text-token-text-muted" />
