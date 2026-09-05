@@ -2,13 +2,16 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { ExternalLink, FileText, Pencil, RefreshCw, Trash2 } from 'lucide-react';
+import { Eye, ExternalLink, FileText, Pencil, RefreshCw, Trash2 } from 'lucide-react';
 import { KebabMenu } from '../ui/KebabMenu';
 import { Modal } from '../ui/Modal';
+import { ToggleSwitch } from '../ui/ToggleSwitch';
 import { FormInput } from '../forms/FormInput';
 import { FormTextarea } from '../forms/FormTextarea';
 import { Button } from '../forms/Button';
 import { DocumentFileUpload, type UploadedDocumentFile } from './DocumentFileUpload';
+import { PdfViewerLoader } from './PdfViewerLoader';
+import { withCacheBust } from '../../utils/documentsService';
 import type { Document, DocumentPatch } from '../../types/documents';
 
 interface DocumentCardProps {
@@ -27,7 +30,9 @@ function formatSize(bytes: number | null): string {
 export function DocumentCard({ document, onPatch, onDelete, onToast }: DocumentCardProps) {
   const [editing, setEditing] = useState(false);
   const [replacing, setReplacing] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [togglingActive, setTogglingActive] = useState(false);
 
   const [title, setTitle] = useState(document.title);
   const [description, setDescription] = useState(document.description ?? '');
@@ -73,10 +78,32 @@ export function DocumentCard({ document, onPatch, onDelete, onToast }: DocumentC
     }
   };
 
+  const handleToggleActive = async () => {
+    setTogglingActive(true);
+    try {
+      await onPatch(document.id, { isActive: !document.isActive });
+      onToast('success', document.isActive ? 'Document unpublished' : 'Document published');
+    } catch (err) {
+      onToast('error', err instanceof Error ? err.message : 'Could not change this document’s status');
+    } finally {
+      setTogglingActive(false);
+    }
+  };
+
   return (
-    <article className="bg-white border border-gray-100 rounded-lg hover:shadow-lg hover:border-gray-200 transition-all duration-300">
+    <article
+      className={`bg-white border rounded-lg hover:shadow-lg transition-all duration-300 ${
+        document.isActive ? 'border-gray-100 hover:border-gray-200' : 'border-gray-100 opacity-60'
+      }`}
+    >
       <div className="p-5 flex items-start gap-4">
-        <div className="w-16 h-20 flex-shrink-0 rounded-md overflow-hidden bg-neutral-100 border border-neutral-200 flex items-center justify-center">
+        <button
+          type="button"
+          onClick={() => setPreviewing(true)}
+          className="w-16 h-20 flex-shrink-0 rounded-md overflow-hidden bg-neutral-100 border border-neutral-200 flex items-center justify-center hover:opacity-80 transition-opacity"
+          aria-label={`Preview ${document.title}`}
+          title="Preview"
+        >
           {document.thumbnailUrl ? (
             <Image
               src={document.thumbnailUrl}
@@ -88,10 +115,17 @@ export function DocumentCard({ document, onPatch, onDelete, onToast }: DocumentC
           ) : (
             <FileText size={20} className="text-neutral-300" />
           )}
-        </div>
+        </button>
 
         <div className="min-w-0 flex-1">
-          <h2 className="text-lg font-bold text-black truncate mb-0.5">{document.title}</h2>
+          <div className="flex items-center gap-2 mb-0.5">
+            <h2 className="text-lg font-bold text-black truncate">{document.title}</h2>
+            {!document.isActive && (
+              <span className="flex-shrink-0 text-xs px-2 py-0.5 rounded-full font-bold bg-yellow-100 text-yellow-800 border border-yellow-300">
+                INACTIVE
+              </span>
+            )}
+          </div>
           <a
             href={`/documents/${document.slug}`}
             target="_blank"
@@ -104,20 +138,36 @@ export function DocumentCard({ document, onPatch, onDelete, onToast }: DocumentC
           {document.description && (
             <p className="text-sm text-neutral-600 mt-2 line-clamp-2">{document.description}</p>
           )}
-          <p className="text-xs text-neutral-400 mt-2">
-            {document.pageCount ? `${document.pageCount} page${document.pageCount === 1 ? '' : 's'}` : '—'}
-            {' • '}
-            {formatSize(document.fileSizeBytes)}
+          <p className="text-xs text-neutral-400 mt-2 flex items-center gap-1.5">
+            <span className="uppercase font-semibold text-neutral-500">{document.fileType}</span>
+            <span>•</span>
+            <span>{document.pageCount ? `${document.pageCount} page${document.pageCount === 1 ? '' : 's'}` : '—'}</span>
+            <span>•</span>
+            <span>{formatSize(document.fileSizeBytes)}</span>
           </p>
         </div>
 
-        <KebabMenu
-          items={[
-            { label: 'Edit details', icon: <Pencil size={15} />, onClick: openEdit },
-            { label: 'Replace file', icon: <RefreshCw size={15} />, onClick: () => setReplacing(true) },
-            { label: 'Delete', icon: <Trash2 size={15} />, variant: 'danger', onClick: onDelete },
-          ]}
-        />
+        <div className="flex flex-col items-end gap-2 flex-shrink-0">
+          <div className="bg-white rounded-lg border border-gray-200 px-2 py-1 flex items-center gap-1">
+            <ToggleSwitch
+              size="sm"
+              checked={document.isActive}
+              onChange={handleToggleActive}
+              disabled={togglingActive}
+              loading={togglingActive}
+              ariaLabel={document.isActive ? 'Unpublish document' : 'Publish document'}
+            />
+          </div>
+
+          <KebabMenu
+            items={[
+              { label: 'Preview', icon: <Eye size={15} />, onClick: () => setPreviewing(true) },
+              { label: 'Edit details', icon: <Pencil size={15} />, onClick: openEdit },
+              { label: 'Replace file', icon: <RefreshCw size={15} />, onClick: () => setReplacing(true) },
+              { label: 'Delete', icon: <Trash2 size={15} />, variant: 'danger', onClick: onDelete },
+            ]}
+          />
+        </div>
       </div>
 
       <Modal
@@ -156,6 +206,21 @@ export function DocumentCard({ document, onPatch, onDelete, onToast }: DocumentC
 
       <Modal open={replacing} onClose={() => setReplacing(false)} title="Replace file" size="md">
         <DocumentFileUpload slug={document.slug} isReplace onUploaded={handleReplaced} />
+      </Modal>
+
+      {/* Reuses the exact same viewer the public /documents/[slug] route
+          renders — no separate preview implementation to keep in sync. It
+          only ever mounts while the modal is open, so an admin who never
+          previews anything never pays for the react-pdf chunk. */}
+      <Modal open={previewing} onClose={() => setPreviewing(false)} title={document.title} size="full">
+        {previewing && (
+          <PdfViewerLoader
+            fileUrl={withCacheBust(document.fileUrl, document.updatedAt)}
+            slug={document.slug}
+            title={document.title}
+            thumbnailUrl={document.thumbnailUrl ? withCacheBust(document.thumbnailUrl, document.updatedAt) : null}
+          />
+        )}
       </Modal>
     </article>
   );

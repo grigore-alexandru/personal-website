@@ -4,7 +4,7 @@ import type { Document, DocumentPatch, NewDocumentInput } from '../types/documen
 
 /** Columns selected everywhere a full Document is returned. */
 const DOCUMENT_COLUMNS =
-  'id, slug, title, description, file_url, thumbnail_url, file_size_bytes, page_count, tags, access_level, created_at, updated_at';
+  'id, slug, title, description, file_url, thumbnail_url, file_size_bytes, page_count, tags, access_level, file_type, is_active, created_at, updated_at';
 
 type DocumentRow = {
   id: string;
@@ -17,6 +17,8 @@ type DocumentRow = {
   page_count: number | null;
   tags: string[] | null;
   access_level: Document['accessLevel'];
+  file_type: Document['fileType'];
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -33,6 +35,8 @@ function toDocument(row: DocumentRow): Document {
     pageCount: row.page_count,
     tags: row.tags,
     accessLevel: row.access_level,
+    fileType: row.file_type,
+    isActive: row.is_active,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -49,6 +53,8 @@ function toRowPatch(patch: DocumentPatch): Record<string, unknown> {
   if (patch.thumbnailUrl !== undefined) row.thumbnail_url = patch.thumbnailUrl;
   if (patch.fileSizeBytes !== undefined) row.file_size_bytes = patch.fileSizeBytes;
   if (patch.pageCount !== undefined) row.page_count = patch.pageCount;
+  if (patch.fileType !== undefined) row.file_type = patch.fileType;
+  if (patch.isActive !== undefined) row.is_active = patch.isActive;
 
   return row;
 }
@@ -73,10 +79,12 @@ export const getDocumentBySlug = cache(async (slug: string): Promise<Document | 
   const { data, error } = await supabase
     .from('documents')
     .select(DOCUMENT_COLUMNS)
-    // RLS already restricts anon reads to public rows, so this is defence in
-    // depth rather than the fix — but it keeps the query honest about what the
-    // public route is allowed to render, and it matches the sitemap's filter.
+    // RLS already restricts anon reads to public, active rows, so this is
+    // defence in depth rather than the fix — but it keeps the query honest
+    // about what the public route is allowed to render, and it matches the
+    // sitemap's filter.
     .eq('access_level', 'public')
+    .eq('is_active', true)
     .eq('slug', slug)
     .maybeSingle();
 
@@ -96,7 +104,8 @@ export async function listDocumentSlugs(): Promise<string[]> {
   const { data, error } = await supabase
     .from('documents')
     .select('slug')
-    .eq('access_level', 'public');
+    .eq('access_level', 'public')
+    .eq('is_active', true);
 
   if (error) {
     console.error('Error loading document slugs:', error);
@@ -118,6 +127,7 @@ export async function createDocument(input: NewDocumentInput): Promise<Document>
       file_size_bytes: input.fileSizeBytes ?? null,
       page_count: input.pageCount ?? null,
       tags: input.tags ?? null,
+      file_type: input.fileType ?? 'pdf',
     })
     .select(DOCUMENT_COLUMNS)
     .single();

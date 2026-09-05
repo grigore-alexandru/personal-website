@@ -33,7 +33,16 @@ export interface FileValidationSuccess {
 
 export type FileValidationResult = FileValidationError | FileValidationSuccess;
 
+const DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
 export function validateDocumentFile(file: File): FileValidationResult {
+  // DOCX is modeled in the schema (documents.file_type) as prep for a future
+  // upload path, but nothing renders or stores one yet — reject it here with
+  // a message that says so, rather than the generic "Only PDF files" one.
+  if (file.type === DOCX_MIME || file.name.toLowerCase().endsWith('.docx')) {
+    return { valid: false, error: 'DOCX support is coming soon — only PDF files can be uploaded for now.' };
+  }
+
   if (file.type !== 'application/pdf') {
     return { valid: false, error: 'Only PDF files are allowed.' };
   }

@@ -73,6 +73,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .from('documents')
       .select('slug, updated_at, created_at')
       .eq('access_level', 'public')
+      .eq('is_active', true)
       .limit(500),
   ] as const);
 

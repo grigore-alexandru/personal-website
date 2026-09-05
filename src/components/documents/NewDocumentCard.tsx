@@ -230,6 +230,7 @@ export function NewDocumentCard({ onCreate, onCancel }: NewDocumentCardProps) {
             slug={slugConfirmed ? slug : ''}
             disabled={!slugConfirmed}
             onUploaded={setUploaded}
+            onRemoved={() => setUploaded(null)}
           />
           {errors.file && <p className="mt-2 text-sm text-red-600">{errors.file}</p>}
         </div>

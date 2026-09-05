@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FileText, Video, Image, Link as LinkIcon } from 'lucide-react';
+import { FileText, Video, Image, Link as LinkIcon, Files } from 'lucide-react';
 
 const navigationCards = [
   {
@@ -35,6 +35,14 @@ const navigationCards = [
     path: '/admin/links',
     color: 'bg-purple-500',
     hoverColor: 'hover:bg-purple-600',
+  },
+  {
+    title: 'Documents',
+    description: 'Branded PDF presentations rendered at /documents/<slug>',
+    icon: Files,
+    path: '/admin/documents',
+    color: 'bg-rose-500',
+    hoverColor: 'hover:bg-rose-600',
   },
 ];
 

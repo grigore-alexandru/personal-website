@@ -7,6 +7,11 @@
 
 export type DocumentAccessLevel = 'public' | 'password';
 
+/** The only uploadable format today is 'pdf'. 'docx' exists on the type now
+ *  so the admin UI has an honest format badge to render, but no upload path
+ *  produces it yet — see DocumentFileUpload.tsx / validateDocumentFile. */
+export type DocumentFileType = 'pdf' | 'docx';
+
 export interface Document {
   id: string;
   slug: string;
@@ -18,6 +23,11 @@ export interface Document {
   pageCount: number | null;
   tags: string[] | null;
   accessLevel: DocumentAccessLevel;
+  fileType: DocumentFileType;
+  /** Unpublish without deleting: false 404s the public route and drops the
+   *  document from the sitemap, but leaves the row (and its storage
+   *  objects) intact for admin reactivation. */
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -32,6 +42,7 @@ export interface NewDocumentInput {
   fileSizeBytes?: number | null;
   pageCount?: number | null;
   tags?: string[] | null;
+  fileType?: DocumentFileType;
 }
 
 /** Any subset of a document's mutable fields. `slug` is deliberately absent —
@@ -42,7 +53,15 @@ export interface NewDocumentInput {
 export type DocumentPatch = Partial<
   Pick<
     Document,
-    'title' | 'description' | 'tags' | 'fileUrl' | 'thumbnailUrl' | 'fileSizeBytes' | 'pageCount'
+    | 'title'
+    | 'description'
+    | 'tags'
+    | 'fileUrl'
+    | 'thumbnailUrl'
+    | 'fileSizeBytes'
+    | 'pageCount'
+    | 'fileType'
+    | 'isActive'
   >
 >;
 
