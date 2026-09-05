@@ -753,15 +753,28 @@ export function PdfViewer({ fileUrl, slug, title, thumbnailUrl }: PdfViewerProps
           window scroll, or rootRef's while fullscreen, is still the one
           that actually moves vertically.)
 
-          overscroll-contain keeps this box's own horizontal rubber-band
-          bounce (panning past a zoomed page's left/right edge) from
-          escaping into the page-level bounce the effect above already
-          handles — two elastic bounces stacking felt worse than either
-          alone. [-webkit-overflow-scrolling] gives the same horizontal pan
-          native iOS momentum instead of a stiffer 1:1 drag. */}
+          overscroll-x-contain (NOT overscroll-contain — confirmed by direct
+          measurement, not assumed): setting only overflow-x-auto here still
+          makes the browser compute overflow-y as auto too, per the CSS spec
+          rule that coerces a 'visible' axis to 'auto' the moment the other
+          axis isn't visible — even though this div has zero vertical
+          overflow of its own (scrollHeight === clientHeight, verified).
+          overscroll-contain sets BOTH axes, and once this element is
+          nominally a vertical scroll container, 'contain' on its Y axis
+          blocks scroll-chaining to the window the instant its own
+          (zero-range) vertical scroll is "exhausted" — which is immediately,
+          always. That swallowed every real mouse-wheel/touch scroll over
+          the entire content area outright (only bypassed by JS-driven
+          window.scrollTo, which doesn't go through chaining — which is
+          exactly why this shipped once without being caught here). Scoping
+          to just the X axis leaves Y at the default 'auto' so normal
+          scrolling keeps chaining to the window as it always has, while
+          horizontal bounce (the actual point of this) still doesn't escape.
+          [-webkit-overflow-scrolling] gives the horizontal pan native iOS
+          momentum instead of a stiffer 1:1 drag. */}
       <div
         ref={containerRef}
-        className="mx-auto px-2 sm:px-4 pt-4 pb-48 overflow-x-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
+        className="mx-auto px-2 sm:px-4 pt-4 pb-48 overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]"
       >
         {loadError ? (
           <div className="w-full max-w-md mx-auto text-center py-16">
