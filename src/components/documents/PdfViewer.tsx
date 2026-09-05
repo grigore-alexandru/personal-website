@@ -23,8 +23,6 @@ import {
   ArrowUp,
   ArrowDown,
 } from 'lucide-react';
-import { useScrollDirection } from '../../hooks/useScrollDirection';
-
 // Self-hosted rather than pulled from a CDN — reliability/perf requirement,
 // and it keeps the worker version pinned to exactly what react-pdf ships
 // (copied into public/ by scripts/copy-pdf-worker.js on every install).
@@ -111,11 +109,6 @@ export function PdfViewer({ fileUrl, slug, title, thumbnailUrl }: PdfViewerProps
   const [searchIndex, setSearchIndex] = useState(0);
   const [searching, setSearching] = useState(false);
   const [searchRan, setSearchRan] = useState(false);
-
-  // Passing rootRef only while actually fullscreen: that's the one case
-  // where the toolbar needs to track a specific element's scroll instead of
-  // the window's.
-  const toolbarHidden = useScrollDirection(768, 80, isFullscreen ? rootRef.current : null);
 
   // Keeps the page-jump input in sync when currentPage changes from scrolling.
   useEffect(() => {
@@ -503,12 +496,15 @@ export function PdfViewer({ fileUrl, slug, title, thumbnailUrl }: PdfViewerProps
           : 'relative'
       }
     >
-      <div
-        ref={toolbarRef}
-        className={`sticky top-0 z-30 transition-transform duration-300 ease-out ${
-          toolbarHidden ? '-translate-y-full' : 'translate-y-0'
-        }`}
-      >
+      {/* Always sticky, never hidden or translated — only the document below
+          it scrolls/bounces. An earlier version hid this on scroll-down on
+          mobile (app-toolbar style), but iOS/Android rubber-band overscroll
+          at the very top or bottom of the page reads as a real scroll delta
+          too, which made the toolbar visibly slide away right at the
+          boundary — a jarring, unwanted animation on the one piece of chrome
+          that's supposed to be the stable anchor. Simplest correct fix: the
+          toolbar just never moves. */}
+      <div ref={toolbarRef} className="sticky top-0 z-30">
         <div className="bg-white/95 backdrop-blur border-b border-border-default shadow-token-raised">
           <div className="mx-auto max-w-5xl px-1.5 sm:px-4 py-1.5 sm:py-2 flex flex-nowrap items-center gap-0.5 sm:gap-2 overflow-x-auto">
             {/* Page navigation */}
@@ -709,8 +705,24 @@ export function PdfViewer({ fileUrl, slug, title, thumbnailUrl }: PdfViewerProps
           browser clamps scrollY before the last few pixels of content (and
           anything interactive there) are ever reachable. Confirmed directly:
           a link positioned right at a last page's bottom edge had ~15px of
-          its clickable area sitting beyond the max scrollable position. */}
-      <div ref={containerRef} className="mx-auto px-2 sm:px-4 pt-4 pb-48">
+          its clickable area sitting beyond the max scrollable position.
+
+          overflow-x-auto: without it, zooming in past the point where a
+          page's rendered width exceeds the viewport (routine on a phone —
+          the toolbar's own controls need very little zoom to get there)
+          had nowhere to overflow into but the whole document/body, which
+          made the ENTIRE page horizontally scrollable. The toolbar above is
+          a sibling, not a descendant, of this div, so it never grew to
+          match that overflow — panning right to see the rest of a zoomed
+          page ran the toolbar out of its own (unchanged, viewport-width)
+          box, leaving a gap where it visually "ended". Scoping the
+          horizontal scroll to this div instead means the page itself never
+          scrolls sideways, so the toolbar — full viewport width the whole
+          time — never runs out. (Its height stays auto/unconstrained here,
+          so this doesn't create a second, competing vertical scroll box —
+          window scroll, or rootRef's while fullscreen, is still the one
+          that actually moves vertically.) */}
+      <div ref={containerRef} className="mx-auto px-2 sm:px-4 pt-4 pb-48 overflow-x-auto">
         {loadError ? (
           <div className="w-full max-w-md mx-auto text-center py-16">
             <AlertCircle size={32} className="mx-auto mb-3 text-token-text-muted" />

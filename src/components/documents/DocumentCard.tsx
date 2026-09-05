@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Eye, ExternalLink, FileText, Pencil, RefreshCw, Trash2 } from 'lucide-react';
+import { Eye, ExternalLink, FileText, Pencil, RefreshCw, Trash2, X } from 'lucide-react';
 import { KebabMenu } from '../ui/KebabMenu';
 import { Modal } from '../ui/Modal';
 import { ToggleSwitch } from '../ui/ToggleSwitch';
 import { FormInput } from '../forms/FormInput';
 import { FormTextarea } from '../forms/FormTextarea';
 import { Button } from '../forms/Button';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
 import { DocumentFileUpload, type UploadedDocumentFile } from './DocumentFileUpload';
 import { PdfViewerLoader } from './PdfViewerLoader';
 import { withCacheBust } from '../../utils/documentsService';
@@ -37,6 +38,11 @@ export function DocumentCard({ document, onPatch, onDelete, onToast }: DocumentC
   const [title, setTitle] = useState(document.title);
   const [description, setDescription] = useState(document.description ?? '');
   const [tagsInput, setTagsInput] = useState((document.tags ?? []).join(', '));
+
+  // The preview lightbox below is hand-rolled (not the shared Modal — see
+  // its own comment), so it needs this explicitly: Escape closes it and the
+  // page behind stops scrolling, same as every other overlay in the admin.
+  useModalBehavior(previewing, () => setPreviewing(false));
 
   const openEdit = () => {
     setTitle(document.title);
@@ -210,18 +216,58 @@ export function DocumentCard({ document, onPatch, onDelete, onToast }: DocumentC
 
       {/* Reuses the exact same viewer the public /documents/[slug] route
           renders — no separate preview implementation to keep in sync. It
-          only ever mounts while the modal is open, so an admin who never
-          previews anything never pays for the react-pdf chunk. */}
-      <Modal open={previewing} onClose={() => setPreviewing(false)} title={document.title} size="full">
-        {previewing && (
-          <PdfViewerLoader
-            fileUrl={withCacheBust(document.fileUrl, document.updatedAt)}
-            slug={document.slug}
-            title={document.title}
-            thumbnailUrl={document.thumbnailUrl ? withCacheBust(document.thumbnailUrl, document.updatedAt) : null}
-          />
-        )}
-      </Modal>
+          only ever mounts while open, so an admin who never previews
+          anything never pays for the react-pdf chunk.
+
+          Deliberately not the shared Modal here: Modal's title row + its
+          px-6 content padding are right for a form, but for a component that
+          already ships its own full-width toolbar (nav/zoom/search/
+          fullscreen/download/Contact/Website), stacking a second title bar
+          on top just doubled the chrome and squeezed the real toolbar in on
+          both sides — which is exactly what read as "cheap" and "too small".
+          This is a plain lightbox instead: a near-fullscreen panel with no
+          title text at all, and the one close control floating in the
+          backdrop's own margin (outside the panel, lightbox-style) so it
+          never competes with the Website/Contact buttons in the viewer's own
+          top-right corner. */}
+      {previewing && (
+        <div
+          // z-[60], not z-50: AdminHeader (sticky top-0 z-50) sits in a
+          // different stacking context than this fixed overlay, so matching
+          // its z-index would leave the two order-dependent instead of
+          // reliably stacked — exactly the bug the kebab menu had. Clearing
+          // it outright avoids relying on DOM order at all.
+          className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-6"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setPreviewing(false);
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setPreviewing(false)}
+            aria-label="Close preview"
+            className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10 p-2 rounded-full bg-white/90 hover:bg-white text-neutral-600 hover:text-black shadow-lg transition-colors"
+          >
+            <X size={20} />
+          </button>
+
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Preview: ${document.title}`}
+            className="relative bg-white rounded-xl w-full h-full max-w-6xl shadow-2xl overflow-hidden"
+          >
+            <div className="h-full overflow-y-auto">
+              <PdfViewerLoader
+                fileUrl={withCacheBust(document.fileUrl, document.updatedAt)}
+                slug={document.slug}
+                title={document.title}
+                thumbnailUrl={document.thumbnailUrl ? withCacheBust(document.thumbnailUrl, document.updatedAt) : null}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </article>
   );
 }
