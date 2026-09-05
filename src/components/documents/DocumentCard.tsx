@@ -92,7 +92,7 @@ export function DocumentCard({ document, onPatch, onDelete, onToast }: DocumentC
 
   return (
     <article
-      className={`bg-white border rounded-lg hover:shadow-lg transition-all duration-300 ${
+      className={`relative bg-white border rounded-lg hover:shadow-lg transition-all duration-300 ${
         document.isActive ? 'border-gray-100 hover:border-gray-200' : 'border-gray-100 opacity-60'
       }`}
     >
@@ -147,19 +147,19 @@ export function DocumentCard({ document, onPatch, onDelete, onToast }: DocumentC
           </p>
         </div>
 
-        <div className="flex flex-col items-end gap-2 flex-shrink-0">
-          <div className="bg-white rounded-lg border border-gray-200 px-2 py-1 flex items-center gap-1">
-            <ToggleSwitch
-              size="sm"
-              checked={document.isActive}
-              onChange={handleToggleActive}
-              disabled={togglingActive}
-              loading={togglingActive}
-              ariaLabel={document.isActive ? 'Unpublish document' : 'Publish document'}
-            />
-          </div>
+        <div className="relative flex items-center gap-1 bg-white rounded-lg border border-gray-200 px-2 py-1 flex-shrink-0">
+          <ToggleSwitch
+            size="sm"
+            checked={document.isActive}
+            onChange={handleToggleActive}
+            disabled={togglingActive}
+            loading={togglingActive}
+            ariaLabel={document.isActive ? 'Unpublish document' : 'Publish document'}
+          />
 
           <KebabMenu
+            size="sm"
+            width="w-40"
             items={[
               { label: 'Preview', icon: <Eye size={15} />, onClick: () => setPreviewing(true) },
               { label: 'Edit details', icon: <Pencil size={15} />, onClick: openEdit },
