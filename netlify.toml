@@ -17,6 +17,22 @@
 [build]
   command = "npm run build"
 
+  # Build ONLY the production context (the `main` branch).
+  #
+  # Exit 0 tells Netlify "nothing to do, skip"; exit 1 means "build". So this
+  # test builds when CONTEXT is production and skips everything else — branch
+  # deploys of `dev`, deploy previews, the lot.
+  #
+  # This is the safety net, not the primary control: by the time it runs, the
+  # build has already been queued and started. The real saving comes from
+  # Branch deploys = None and Deploy Previews = off in the Netlify UI, which
+  # stop the build being queued at all. This line exists so that a stray branch
+  # deploy — someone flipping that toggle, or a context we did not anticipate —
+  # cannot quietly burn a full build.
+  #
+  # See docs/WORKFLOW.md.
+  ignore = "[ \"$CONTEXT\" != \"production\" ]"
+
 [build.environment]
   NODE_VERSION = "20"
 

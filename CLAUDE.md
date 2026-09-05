@@ -52,3 +52,22 @@ When asked to write code or execute a phase of the migration, follow this sequen
 2.  **Define the Boundary:** Explicitly state if the new code is a Server or Client component.
 3.  **Provide the Code:** Write the complete, production-ready code.
 4.  **Safety Check:** Briefly explain the edge cases you avoided (e.g., "I added 'use client' here to prevent Framer Motion from crashing the server") and confirm that 100% feature parity was maintained.
+
+---
+
+## 🔀 GIT & DEPLOY WORKFLOW (NON-NEGOTIABLE)
+
+Netlify rebuilds the whole site on every push to `main`, and build minutes are
+a limited monthly resource we have already exhausted once.
+
+* **Work and commit on `dev`.** Never commit directly to `main`.
+* **Never push without being asked.** Pushing `dev` is cheap; pushing `main`
+  spends a build. Both wait for an explicit instruction.
+* **Deploying means merging `dev` into `main` and pushing `main`** — one build
+  for however many commits have accumulated. Only do this when asked to deploy.
+* **Verify locally first**, because a build is expensive: `npm run build`,
+  `npm run check:metadata`, `npx tsc --noEmit`. After a deploy, `npm run
+  check:crawlers` against the live site.
+
+Full rationale, the required Netlify settings, and the command reference are in
+`docs/WORKFLOW.md`.
