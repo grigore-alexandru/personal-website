@@ -1,0 +1,16 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "regions": ["fra1"],
+  "git": {
+    "deploymentEnabled": {
+      "REACT-SPA-VERSION": false,
+      "REACT-NEXT-MIGRATION": false
+    }
+  },
+  "functions": {
+    "src/app/og/route.ts": {
+      "maxDuration": 20
+    }
+  }
+}

@@ -21,8 +21,8 @@ export const PERSON_ID = `${SITE_URL}/#person`;
 export const WEBSITE_ID = `${SITE_URL}/#website`;
 
 /**
- * Rewrites any image URL through Netlify's Image CDN so the crawler is handed a
- * JPEG of exactly 1200x630.
+ * Rewrites any image URL through this site's own transformer (src/app/og) so
+ * the crawler is handed a JPEG of exactly 1200x630.
  *
  * This one indirection fixes three separate problems at once:
  *   - content posters are capped at 480px wide at upload time, which is below
@@ -31,28 +31,27 @@ export const WEBSITE_ID = `${SITE_URL}/#website`;
  *   - `og:image:width/height` were hardcoded to 1200x630 on images that were
  *     never that size, so the declaration lied to the scraper.
  *
- * Remote hosts must be allowlisted under `[images]` in netlify.toml.
+ * This used to be Netlify's Image CDN (`/.netlify/images?...&fit=cover&fm=jpg`).
+ * Vercel's optimizer is NOT a drop-in replacement — `/_vercel/image` takes only
+ * `url`, `w` and `q`, so it can neither crop to a fixed aspect ratio nor force
+ * JPEG. `/og` exists to do exactly what the Netlify transform did; the shape of
+ * the query string is deliberately the same so the two are easy to compare.
+ *
+ * Remote hosts must be listed in image-hosts.json, which is also what
+ * next.config.js and scripts/check-metadata.mjs read.
  */
 export function ogImage(src?: string | null): string {
   if (!src || src.startsWith('data:')) return DEFAULT_OG_IMAGE;
 
   const absolute = src.startsWith('http') ? src : `${SITE_URL}${src}`;
 
-  // Already a Netlify transform (e.g. the default card being passed back
-  // through) — re-wrapping it would double-encode the nested `url` param.
-  if (absolute.includes('/.netlify/images?')) return absolute;
+  // Already a transform (e.g. the default card being passed back through) —
+  // re-wrapping it would double-encode the nested `url` param.
+  if (absolute.startsWith(`${SITE_URL}/og?`)) return absolute;
 
-  const params = new URLSearchParams({
-    url: absolute,
-    w: '1200',
-    h: '630',
-    fit: 'cover',
-    position: 'center',
-    fm: 'jpg',
-    q: '75',
-  });
-
-  return `${SITE_URL}/.netlify/images?${params.toString()}`;
+  // `w`, `h`, `fit`, `position`, `fm` and `q` are fixed by the route itself and
+  // are not accepted as parameters: a card is 1200x630 JPEG or it is a bug.
+  return `${SITE_URL}/og?url=${encodeURIComponent(absolute)}`;
 }
 
 /**

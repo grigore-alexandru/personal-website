@@ -24,7 +24,7 @@ Next.js Server Components are the default. You must explicitly define `"use clie
 * **On-Demand Revalidation:** Do NOT use `force-dynamic`. Pages must be statically cached. We will use Next.js `revalidatePath` triggered by Supabase Webhooks to update pages when database rows change.
 
 ### 3. Native SEO & Discovery
-* **Purge Legacy Tools:** Do NOT use `react-helmet-async`, Netlify Edge Functions, or legacy Supabase sitemap generators.
+* **Purge Legacy Tools:** Do NOT use `react-helmet-async` or legacy Supabase sitemap generators. Use the native Metadata API and `app/sitemap.ts`.
 * **Metadata API:** Use the native `generateMetadata` function in dynamic routes to inject Open Graph data, Canonical URLs, and titles directly into the server HTML.
 * **Core Web Vitals:** Replace all standard `<img>` tags with Next.js `<Image>` (from `next/image`) for automatic WebP optimization and layout shift prevention.
 
@@ -34,7 +34,7 @@ Next.js Server Components are the default. You must explicitly define `"use clie
 
 ### 5. Mega S4 Cloud Security
 * **Presigned URLs:** Generation of S3 presigned URLs must happen in a Next.js Server Action or Route Handler to protect `VITE_MEGA_S4_ACCOUNT_ID` and secret keys.
-* **Direct Uploads:** The Next.js server acts ONLY as the authenticator. Heavy video/image uploads must stream directly from the user's browser to the S4 bucket to prevent Vercel/Netlify memory timeouts.
+* **Direct Uploads:** The Next.js server acts ONLY as the authenticator. Heavy video/image uploads must stream directly from the user's browser to the S4 bucket to prevent serverless memory and duration timeouts.
 
 ### 6. Absolute UI/UX Fidelity & Feature Parity
 * **Pixel-Perfect Recreation:** For every single UI component and piece of layout, the visual output and user interaction must look and function *exactly, literally, exactly the same* as it did in the Vite application. 
@@ -57,17 +57,22 @@ When asked to write code or execute a phase of the migration, follow this sequen
 
 ## 🔀 GIT & DEPLOY WORKFLOW (NON-NEGOTIABLE)
 
-Netlify rebuilds the whole site on every push to `main`, and build minutes are
-a limited monthly resource we have already exhausted once.
+The site is hosted on **Vercel** (migrated from Netlify, September 2026).
+`main` is public; `dev` gets a preview URL.
 
 * **Work and commit on `dev`.** Never commit directly to `main`.
-* **Never push without being asked.** Pushing `dev` is cheap; pushing `main`
-  spends a build. Both wait for an explicit instruction.
-* **Deploying means merging `dev` into `main` and pushing `main`** — one build
-  for however many commits have accumulated. Only do this when asked to deploy.
-* **Verify locally first**, because a build is expensive: `npm run build`,
-  `npm run check:metadata`, `npx tsc --noEmit`. After a deploy, `npm run
-  check:crawlers` against the live site.
+* **Never push without being asked.** Pushing `dev` publishes a preview;
+  pushing `main` publishes to the live domain. Both wait for an explicit
+  instruction.
+* **Deploying means merging `dev` into `main` and pushing `main`.** Only do
+  this when asked to deploy.
+* **Verify locally first:** `npm run build`, `npx tsc --noEmit`,
+  `npm run check:metadata`. After a deploy, `npm run check:crawlers` against
+  the live site. Both checks are required — `check:metadata` reads build
+  output, `check:crawlers` reads the live edge, and correct HTML that crawlers
+  cannot reach is still broken.
+* **Rolling back is a dashboard action**, not a commit: Vercel → Deployments →
+  Promote to Production. Never push a revert to fix a live incident.
 
-Full rationale, the required Netlify settings, and the command reference are in
-`docs/WORKFLOW.md`.
+Full rationale and the failure modes that are invisible in a browser are in
+`docs/WORKFLOW.md`; the migration itself is in `docs/VERCEL-MIGRATION.md`.

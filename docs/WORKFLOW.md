@@ -6,199 +6,137 @@ way.
 The short version:
 
 ```
-work and commit on  dev   →  push dev whenever (no build, free)
+work and commit on  dev   →  push dev  →  preview URL you can actually open
                               ↓  only when you say "deploy"
-                            main  →  exactly one Netlify build
+                            main  →  production
 ```
 
 ---
 
-## The problem this solves
+## History: what this used to protect against
 
-Netlify rebuilds the entire site on every push to the branch it is watching.
-Each rebuild costs build minutes, and we have a monthly allowance. Working
-directly on `main` meant:
+The site ran on Netlify until September 2026. Netlify rebuilt the whole site on
+every push to the branch it watched, each rebuild cost minutes from a monthly
+allowance, and **we exhausted that allowance on 2026-09-04, which left an urgent
+fix undeployable.** The workflow at the time existed almost entirely to ration
+builds: branch deploys off, deploy previews off, and an `ignore` line in
+`netlify.toml` that killed any build outside the production context.
 
-- every small commit cost a full rebuild;
-- half-finished or broken work cost a rebuild too;
-- a five-commit afternoon cost five rebuilds to ship one change.
+That constraint is gone. Vercel's Hobby plan does not meter builds the same way,
+so **the `dev` branch now gets a preview deployment** — a real URL, on real
+infrastructure, that you can click through before merging. That is a safety net
+this project never had, and it is the main day-to-day improvement from the move.
 
-We hit the limit on 2026-09-04, which left an urgent fix undeployable. The
-workflow below exists to make that not happen again.
+**The `dev` → `main` discipline stays**, for a better reason than cost: `main`
+is what the public sees, and nothing should land there that has not been looked
+at somewhere else first.
 
-## The important part: check what Netlify is set to build
+## What builds, and what does not
 
-What Netlify builds is a per-project setting, and it is worth knowing exactly
-where you stand before assuming a branch is free:
+Controlled by `vercel.json` plus one dashboard setting:
 
-- **Branch deploys are opt-in.** Out of the box Netlify builds the production
-  branch and does *not* build other branches under their own subdomain unless
-  they have been added to the list. So pushing `dev` is normally free — but
-  only if nobody has switched this to "Deploy all branches", which is one click
-  away in the UI and would make every `dev` push cost a full build.
-- **Deploy Previews are opt-out.** They are on by default for pull requests
-  against the production branch, and they *do* consume build minutes. This is
-  the setting most likely to be spending credits without anyone noticing, and
-  it is the reason this workflow merges directly rather than going through PRs.
-
-So set both explicitly rather than relying on defaults, and treat the settings
-as the real control:
-
-| Layer | What it does | Where it lives |
+| Branch | What happens | Set where |
 |---|---|---|
-| **1. Netlify settings** | Stops non-production builds being queued at all | Netlify UI (one-time) |
-| **2. `ignore` in `netlify.toml`** | Kills any build that starts in a non-production context | This repo |
-| **3. The `dev` branch** | Lets us commit freely without touching the branch Netlify watches | Git |
+| `main` | Deploys to **production** (`alexandrugrigore.com`) | Vercel → Settings → Git → Production Branch |
+| `dev` | Deploys to a **preview URL** | Default behaviour |
+| `REACT-SPA-VERSION`, `REACT-NEXT-MIGRATION` | **Never build.** Archived. | `vercel.json` → `git.deploymentEnabled` |
 
-Layer 1 is the saving. Layer 2 is insurance in case someone flips the toggle
-back. Layer 3 is the ergonomics.
-
-### One-time Netlify setup
-
-In **Project configuration → Build & deploy → Continuous deployment → Branches
-and deploy contexts → Configure**:
-
-- **Production branch:** `main`
-- **Branch deploys:** `None`
-- **Deploy Previews:** off
-
-Setting these explicitly matters more than the defaults happening to be
-favourable: it means a stray click cannot start costing money silently.
-
-Note the ordering limitation — `netlify.toml` only takes effect once it has
-been deployed, so layer 2 cannot protect a branch that has never been built.
-Only the UI setting can. If branch deploys were ever switched on, turn them off
-*before* pushing a new branch.
+To stop a branch building, add it to `git.deploymentEnabled` in `vercel.json`
+with `false`. Unlike Netlify's `ignore` line — which ran *after* the build had
+already been queued and started — this prevents the deployment being created at
+all.
 
 ---
 
 ## Day to day
 
-### 1. Work on `dev`
-
 ```bash
-git switch dev
-```
-
-Commit as often as you like. Nothing here triggers a build.
-
-```bash
+# you are on dev
 git add -A
-git commit -m "fix: correct the og:image aspect ratio"
+git commit -m "fix(blog): ..."
+git push origin dev          # → preview URL appears in the Vercel dashboard
 ```
 
-### 2. Push `dev` when you want a backup
+Open the preview, click through what you changed. When it is right:
 
 ```bash
-git push origin dev
+git checkout main
+git merge dev
+git push origin main         # → production
+git checkout dev
 ```
 
-Costs nothing once the Netlify settings above are in place. Worth doing at the
-end of a session so the work is not only on your laptop.
+Ten commits merged and pushed together produce **one** production deployment.
 
-### 3. Deploy — only when you say so
+### Rolling back
 
-```bash
-git switch main
-git merge dev          # fast-forward: dev's commits move onto main as-is
-git push origin main   # ← the one and only build
-git switch dev         # go back to working
-```
+Vercel → **Deployments** → find the last good one → ⋯ → **Promote to
+Production**. Instant, and it does not rebuild.
 
-Ten commits merged and pushed together produce **one** build, because Netlify
-builds the branch head, not each commit. That is the whole saving: batching.
-
-### 4. After deploying
-
-`dev` and `main` now point at the same commit, so there is nothing to sync.
-Carry on committing to `dev`.
+This is strictly better than reverting a commit and pushing, which takes a full
+build cycle. Revert the commit afterwards, at your leisure.
 
 ---
 
-## Verify before you spend a build
+## Verify locally first
 
-A build is expensive now, so it is worth being confident before spending one.
-All of these run locally and cost nothing:
-
-```bash
-npm run build            # does it compile and prerender?
-npm run check:metadata   # OG tags, JSON-LD, image hosts in the build output
-npx tsc --noEmit         # types
-```
-
-And after the deploy goes out:
+A production deployment is not expensive any more, but a broken one is still
+public. Before merging to `main`:
 
 ```bash
-npm run check:crawlers   # does the LIVE site serve real pages to WhatsApp/Google?
+npm run build            # must compile and prerender cleanly
+npx tsc --noEmit         # must be silent
+npm run check:metadata   # post-build guard, reads .next/
 ```
 
-`check:crawlers` is the one that catches problems no browser will ever show
-you — see the note in `netlify.toml` about the Prerender extension.
+After deploying:
+
+```bash
+npm run check:crawlers   # hits the LIVE site as five crawler user agents
+```
+
+`check:metadata` inspects build output; `check:crawlers` inspects the live edge.
+**Both are needed** — correct HTML that crawlers cannot reach is still broken,
+and that exact failure has happened here before. See the header comments in
+`scripts/check-crawler-access.mjs` for the incident it was written after.
 
 ---
 
-## Why this shape, and what it costs
+## Things that can silently break the live site
 
-The honest framing: a long-lived branch that sits parallel to `main` is
-**not** what current practice recommends. GitHub Flow and trunk-based
-development both push toward `main` plus *short-lived* branches, and the
-long-lived `develop` branch from GitFlow is widely considered its worst part —
-the constant `main` ↔ `develop` reconciliation is pure overhead.
+Each of these produces a site that looks perfect to you, logged in, in a
+browser — and is broken for everyone or everything else.
 
-Those objections are almost entirely about **teams**: branches drift apart,
-merges become archaeology, and people integrate late. Here:
+1. **Deployment Protection left on for production.**
+   Vercel → Settings → Deployment Protection. If Vercel Authentication is
+   enabled on production, Google and every visitor get a login wall. You will
+   not notice, because your browser is authenticated. `npm run check:crawlers`
+   catches this.
 
-- there is one developer, so there are no competing branches to drift from;
-- `dev` and `main` are identical the moment a deploy happens;
-- merges are fast-forwards, so there is no reconciliation at all.
+2. **A new image host not added to `image-hosts.json`.**
+   Every remote image host must be listed there. Miss one and `next/image`
+   throws, and social cards fall back to the generic default.
+   `npm run check:metadata` catches this.
 
-What we are really doing is trunk-based development with the *push* batched
-rather than the *work*. The cost is one extra concept (`dev`) and remembering
-to merge. The benefit is that build spend is decoupled from commit frequency,
-which is the actual constraint.
+3. **`REVALIDATE_SECRET` drifting from the database.**
+   Supabase's `trigger_revalidate()` has the token hardcoded. If the Vercel
+   environment variable stops matching, content edits stop appearing on the
+   public site — with no error anywhere the admin can see. Test by editing a
+   post title and loading the public page in a private window.
 
-**We deliberately do not use a branch per feature.** For a solo project that is
-ceremony without a payoff — nobody is reviewing a PR, and each PR would cost a
-Deploy Preview build. One working branch is the right amount of structure here.
-
-### When to reconsider
-
-- **A second developer joins** → switch to short-lived feature branches off
-  `main` with PRs, and turn Deploy Previews back on. Review is worth the build
-  minutes at that point.
-- **Something risky is being tried** (a Next.js major upgrade, a redesign) →
-  make a throwaway branch off `dev` for it, so `dev` stays deployable.
-- **Build minutes stop being scarce** → the `ignore` line and the Netlify
-  toggles can stay; they cost nothing and still prevent accidental builds.
+4. **Putting anything crawlers need under `/api/`.**
+   `robots.ts` disallows `/api/` for all user agents. This is why the og:image
+   transformer is at `/og` and not `/api/og`. Meta's scrapers apply robots.txt
+   to image fetches, so an og:image under `/api/` yields a blank card and
+   flawless-looking HTML.
 
 ---
 
 ## Reference
 
-| Task | Command |
-|---|---|
-| Start working | `git switch dev` |
-| See what is unmerged | `git log --oneline main..dev` |
-| See what will deploy | `git diff main..dev --stat` |
-| Back up without deploying | `git push origin dev` |
-| Deploy | `git switch main && git merge dev && git push origin main && git switch dev` |
-| Undo a local commit, keep changes | `git reset --soft HEAD~1` |
-| Check which branch you are on | `git status -sb` |
-
-If `git merge dev` ever reports something other than a fast-forward, it means
-`main` gained a commit that `dev` does not have — most likely an edit made
-directly on `main`. Get back in sync with:
-
-```bash
-git switch dev
-git merge main    # bring main's commit into dev first
-```
-
-then deploy as usual.
-
-## Sources
-
-- [Netlify — Branch deploys](https://docs.netlify.com/deploy/deploy-types/branch-deploys/)
-- [Netlify — Deploy Previews](https://docs.netlify.com/deploy/deploy-types/deploy-previews/)
-- [Netlify — Ignore builds](https://docs.netlify.com/build/configure-builds/ignore-builds/)
-- [Netlify — Build environment variables](https://docs.netlify.com/build/configure-builds/environment-variables/)
+- Migration runbook: [`docs/VERCEL-MIGRATION.md`](./VERCEL-MIGRATION.md)
+- Project config: [`vercel.json`](../vercel.json) and [`vercel.README.md`](../vercel.README.md)
+- Image hosts: [`image-hosts.json`](../image-hosts.json) and [`image-hosts.README.md`](../image-hosts.README.md)
+- [Vercel — Git configuration](https://vercel.com/docs/project-configuration/git-configuration)
+- [Vercel — Instant rollback](https://vercel.com/docs/deployments/rollback-production-deployment)
+- [Vercel — Deployment protection](https://vercel.com/docs/deployment-protection)

@@ -11,6 +11,13 @@
  * was not intercepted — could reveal it. Only requesting the page *as a
  * crawler* shows the problem.
  *
+ * The extension is gone with Netlify itself, but the check is not obsolete: the
+ * same class of bug — a page that is fine in a browser and broken for a crawler
+ * — is reachable on any host. On Vercel the likely causes are Deployment
+ * Protection left enabled on the production domain (which serves an SSO wall,
+ * not the page) and a robots.txt rule that blocks the og:image path. Both are
+ * invisible to a logged-in human opening the site in a tab.
+ *
  * `check-metadata.mjs` inspects build output; this inspects the live edge.
  * Both are needed: correct HTML that crawlers cannot reach is still broken.
  */

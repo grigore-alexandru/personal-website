@@ -95,7 +95,7 @@ Update the content by modifying:
 This project can be deployed to various platforms:
 
 - **Vercel**: Connect your GitHub repository for automatic deployments
-- **Netlify**: Drag and drop the `dist` folder after building
+- **Vercel**: connected to GitHub; pushing `main` deploys production, `dev` deploys a preview. See `docs/WORKFLOW.md`.
 - **GitHub Pages**: Use GitHub Actions for automatic deployment
 
 ### Build for Production

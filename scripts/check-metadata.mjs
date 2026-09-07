@@ -17,8 +17,8 @@
  *      <JsonLd> component.
  *   3. og:image pointing at a local path with no file behind it — /og-default.jpg
  *      was referenced by seven routes and never existed.
- *   4. Remote og:image hosts missing from netlify.toml's `remote_images`, which
- *      makes the Netlify Image CDN transform 400 instead of falling back.
+ *   4. Remote og:image hosts missing from image-hosts.json, which makes the
+ *      /og transform fall back to the generic card instead of the real image.
  *   5. Titles over 60 characters and descriptions over 200, both of which get
  *      truncated mid-thought on every platform.
  */
@@ -41,11 +41,9 @@ function walk(dir) {
   });
 }
 
-const allowedHosts = (() => {
-  const toml = readFileSync('netlify.toml', 'utf8');
-  const block = /remote_images\s*=\s*\[([\s\S]*?)\]/.exec(toml)?.[1] ?? '';
-  return [...block.matchAll(/"https:\/\/([^/"]+)/g)].map((m) => m[1].replace(/\\/g, ''));
-})();
+// The same list next.config.js and src/app/og/route.ts read. Previously parsed
+// out of the old netlify.toml with a regex; it is JSON now, so it cannot drift.
+const allowedHosts = JSON.parse(readFileSync('image-hosts.json', 'utf8'));
 
 // React escapes apostrophes as &#x27;, so a naive named-entity-only decoder
 // counts 6 characters where the reader sees 1 and reports false failures.
@@ -94,16 +92,21 @@ for (const file of files) {
     const { pathname, searchParams, host } = new URL(url);
 
     // A local asset must actually exist in public/.
-    if (host === 'alexandrugrigore.com' && !pathname.startsWith('/.netlify/')) {
+    if (host === 'alexandrugrigore.com' && pathname !== '/og') {
       if (!existsSync(join(PUBLIC_DIR, pathname))) fail(`og:image 404 — no public${pathname}`);
     }
 
-    // A Netlify transform must name a host the CDN is allowed to fetch.
-    if (pathname === '/.netlify/images') {
+    // A /og transform must name a host the route is allowed to fetch, or it
+    // silently degrades every card on the page to the generic default.
+    if (pathname === '/og') {
       const source = searchParams.get('url');
-      const sourceHost = source ? new URL(source).host : null;
-      if (sourceHost && !allowedHosts.includes(sourceHost)) {
-        fail(`og:image source host not in netlify.toml remote_images: ${sourceHost}`);
+      if (!source) {
+        fail('og:image points at /og with no ?url= source');
+      } else {
+        const sourceHost = new URL(source).host;
+        if (sourceHost !== 'alexandrugrigore.com' && !allowedHosts.includes(sourceHost)) {
+          fail(`og:image source host not in image-hosts.json: ${sourceHost}`);
+        }
       }
     }
   }

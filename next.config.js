@@ -1,34 +1,12 @@
+// The one list of remote image hosts, shared with src/app/og/route.ts and
+// scripts/check-metadata.mjs. See image-hosts.README.md for why it is a file
+// and not three hand-synced copies.
+const IMAGE_HOSTS = require('./image-hosts.json');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 's3.eu-central-1.s4.mega.io',
-      },
-      {
-        protocol: 'https',
-        // Mega S4's generic/global edge host — some asset URLs resolve here
-        // instead of the region-specific host above.
-        hostname: 's3.g.s4.mega.io',
-      },
-      {
-        protocol: 'https',
-        hostname: 'lqbyvubbzexujviflunv.supabase.co',
-      },
-      {
-        protocol: 'https',
-        hostname: 'images.pexels.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'img.youtube.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'placehold.co',
-      },
-    ],
+    remotePatterns: IMAGE_HOSTS.map((hostname) => ({ protocol: 'https', hostname })),
   },
   async redirects() {
     return [

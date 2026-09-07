@@ -12,9 +12,9 @@ import { getDocumentBySlug, withCacheBust } from './documentsService';
  * Everything a short link needs in order to reproduce its destination's card.
  *
  * `image` is always a final, ready-to-emit absolute URL. Internal destinations
- * run theirs through ogImage() (Netlify Image CDN, 1200x630 JPEG); external
- * ones are passed through untouched, because the Image CDN only accepts hosts
- * allowlisted in netlify.toml and would 400 on a third-party domain.
+ * run theirs through ogImage() (the /og transformer, 1200x630 JPEG); external
+ * ones are passed through untouched, because /og only accepts hosts listed in
+ * image-hosts.json and would fall back to the generic card on a third party.
  */
 export interface LinkPreview {
   title: string;

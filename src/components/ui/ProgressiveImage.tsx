@@ -28,9 +28,14 @@ interface ProgressiveImageProps {
  * contributor to page weight on the listing pages, which render many of
  * these at once.
  *
- * Now backed by next/image: automatic resizing/format conversion via
- * Netlify's Image CDN, real srcset, and native lazy-loading — while keeping
- * the exact same external API so none of the 6 call sites need to change.
+ * Now backed by next/image: automatic resizing/format conversion via Vercel's
+ * image optimizer, real srcset, and native lazy-loading — while keeping the
+ * exact same external API so none of the 6 call sites need to change.
+ *
+ * Unrelated to src/app/og: that route exists only for social-card og:images,
+ * which need a fixed 1200x630 JPEG crop the optimizer cannot produce. On-page
+ * images want exactly the opposite — the viewer's best format at the size the
+ * layout asks for — so they go through next/image as normal.
  */
 export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
   src,
