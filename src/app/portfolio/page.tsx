@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
 import PortfolioLandingContent from './PortfolioLandingContent';
 import { buildMetadata } from '../../lib/seo';
+import { PAGE_CARDS } from '../../config/pageCards';
 
 export const metadata: Metadata = buildMetadata({
   title: 'Portfolio',
-  description: 'Projects and work I\'m proud of, across clients and formats.',
+  description: PAGE_CARDS.portfolio.description,
+  card: 'portfolio',
   path: '/portfolio',
 });
 

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { buildMetadata } from '../../../lib/seo';
+import { PAGE_CARDS } from '../../../config/pageCards';
 import { loadProjects, countProjects } from '../../../utils/dataLoader';
 import { loadProjectTypes, loadAllClients } from '../../../utils/portfolioService';
 import ProjectsListClient from './ProjectsListClient';
@@ -8,7 +9,8 @@ import { ProjectCardSkeleton } from '../../../components/ui/SkeletonLoader';
 
 export const metadata: Metadata = buildMetadata({
   title: 'Projects',
-  description: 'Commercials, documentaries, and branded content — the projects I\'ve directed and produced.',
+  description: PAGE_CARDS.projects.description,
+  card: 'projects',
   path: '/portfolio/projects',
 });
 

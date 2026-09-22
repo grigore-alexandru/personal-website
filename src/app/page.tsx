@@ -2,14 +2,13 @@ import type { Metadata } from 'next';
 import UnderConstruction from '../components/pages/UnderConstruction';
 import { SITE_NAME } from '../config/site';
 import { buildMetadata } from '../lib/seo';
-
-const DESCRIPTION =
-  'Video director and creative producer. I work with brands, agencies, and artists on commercials, documentaries, and visual content.';
+import { PAGE_CARDS } from '../config/pageCards';
 
 export const metadata: Metadata = {
   ...buildMetadata({
     title: SITE_NAME,
-    description: DESCRIPTION,
+    description: PAGE_CARDS.home.description,
+    card: 'home',
     path: '',
   }),
   // absolute bypasses the root template so the tab reads "Alexandru Grigore"

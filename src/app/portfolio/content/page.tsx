@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { buildMetadata } from '../../../lib/seo';
+import { PAGE_CARDS } from '../../../config/pageCards';
 import { loadPublishedContentWithProjects, countPublishedContent } from '../../../utils/contentService';
 import { loadAllClients, loadProjectTypes } from '../../../utils/portfolioService';
 import ContentGridClient from './ContentGridClient';
@@ -8,7 +9,8 @@ import { ContentGridItemSkeleton } from '../../../components/ui/SkeletonLoader';
 
 export const metadata: Metadata = buildMetadata({
   title: 'Content',
-  description: 'Videos and photos from the work — reels, edits, and individual pieces across projects.',
+  description: PAGE_CARDS.content.description,
+  card: 'content',
   path: '/portfolio/content',
 });
 

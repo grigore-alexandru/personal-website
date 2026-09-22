@@ -91,7 +91,18 @@ for (const file of files) {
 
     const { pathname, searchParams, host } = new URL(url);
 
-    // A local asset must actually exist in public/.
+    // A build-time page card (src/app/og/card/[card]/route.tsx) must actually
+    // have been rendered. It is prerendered, so the proof is its output file —
+    // a typo'd card name would otherwise ship a perfectly-formed 404 URL.
+    const card = /^\/og\/card\/([^/]+)$/.exec(pathname)?.[1];
+    if (host === 'alexandrugrigore.com' && card) {
+      if (!existsSync(join(APP_DIR, 'og', 'card', `${card}.body`))) {
+        fail(`og:image card "${card}" was not generated at build time`);
+      }
+      continue;
+    }
+
+    // Any other local asset must actually exist in public/.
     if (host === 'alexandrugrigore.com' && pathname !== '/og') {
       if (!existsSync(join(PUBLIC_DIR, pathname))) fail(`og:image 404 — no public${pathname}`);
     }

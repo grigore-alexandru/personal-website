@@ -44,9 +44,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: content.title,
     description: content.caption ?? `${isVideo ? 'Video' : 'Image'} by ${SITE_NAME}`,
     path: `/portfolio/content/${content.slug}`,
-    // Falls back to the default card when a row has no poster, rather than
-    // shipping an empty images array and therefore no og:image at all.
+    // Falls back to the "Content" section card when a row has no poster,
+    // rather than shipping an empty images array and therefore no og:image.
     image: posterUrl(content),
+    card: 'content',
     imageAlt: content.title,
     type: isVideo ? 'video.other' : 'website',
     publishedTime: content.published_at ?? content.created_at,
@@ -74,7 +75,7 @@ export default async function ContentDetailPage({ params }: PageProps) {
                 '@type': 'VideoObject',
                 name: content.title,
                 description,
-                thumbnailUrl: ogImage(poster),
+                thumbnailUrl: ogImage(poster, 'content'),
                 contentUrl: content.url,
                 url: canonicalUrl,
                 uploadDate: content.published_at ?? content.created_at,
@@ -87,7 +88,7 @@ export default async function ContentDetailPage({ params }: PageProps) {
                 name: content.title,
                 description,
                 contentUrl: content.url,
-                thumbnailUrl: ogImage(poster),
+                thumbnailUrl: ogImage(poster, 'content'),
                 url: canonicalUrl,
                 creator: { '@id': PERSON_ID },
               }

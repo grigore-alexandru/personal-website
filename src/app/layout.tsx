@@ -11,6 +11,7 @@ import {
   SITE_IN_LANGUAGE,
   SITE_DESCRIPTION,
   DEFAULT_OG_IMAGE,
+  pageCardUrl,
   PERSON_ID,
   WEBSITE_ID,
 } from '../config/site';
@@ -25,6 +26,11 @@ const poppins = Poppins({
   display: 'swap',
   variable: '--font-poppins',
 });
+
+// Default share card for any route that does not build its own metadata
+// (404s, redirector fallbacks). DEFAULT_OG_IMAGE stays for the Person schema
+// node below and as the /og transformer's last-resort fallback.
+const HOME_CARD = pageCardUrl('home');
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -49,8 +55,8 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
     images: [
       {
-        url: DEFAULT_OG_IMAGE,
-        secureUrl: DEFAULT_OG_IMAGE,
+        url: HOME_CARD,
+        secureUrl: HOME_CARD,
         type: 'image/jpeg',
         width: 1200,
         height: 630,
@@ -62,7 +68,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
-    images: [DEFAULT_OG_IMAGE],
+    images: [HOME_CARD],
   },
   icons: {
     icon: [

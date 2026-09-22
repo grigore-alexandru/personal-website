@@ -76,7 +76,7 @@ export async function internalPreview(target: URL): Promise<LinkPreview | null> 
       description: metaDescription(
         post.excerpt || extractTextFromTipTap(post.content) || `Blog post by ${SITE_NAME}`
       ),
-      image: ogImage(post.heroImageLarge),
+      image: ogImage(post.heroImageLarge, 'blog'),
       imageAlt: post.title,
       type: 'article',
       url: `${SITE_URL}/blog/${post.slug}`,
@@ -92,7 +92,7 @@ export async function internalPreview(target: URL): Promise<LinkPreview | null> 
       description: metaDescription(
         `${project.project_type.name} project for ${project.client_name}.`
       ),
-      image: ogImage(project.hero_image_large),
+      image: ogImage(project.hero_image_large, 'projects'),
       imageAlt: project.title,
       type: 'article',
       url: `${SITE_URL}/portfolio/projects/${project.slug}`,
@@ -109,7 +109,7 @@ export async function internalPreview(target: URL): Promise<LinkPreview | null> 
       description: metaDescription(
         content.caption ?? `${isVideo ? 'Video' : 'Image'} by ${SITE_NAME}`
       ),
-      image: ogImage(poster(content.thumbnail)),
+      image: ogImage(poster(content.thumbnail), 'content'),
       imageAlt: content.title,
       type: isVideo ? 'video.other' : 'website',
       url: `${SITE_URL}/portfolio/content/${content.slug}`,
@@ -123,7 +123,7 @@ export async function internalPreview(target: URL): Promise<LinkPreview | null> 
       ...base,
       title: doc.title,
       description: metaDescription(doc.description || `${doc.title} — a document from ${SITE_NAME}`),
-      image: ogImage(doc.thumbnailUrl ? withCacheBust(doc.thumbnailUrl, doc.updatedAt) : null),
+      image: ogImage(doc.thumbnailUrl ? withCacheBust(doc.thumbnailUrl, doc.updatedAt) : null, 'documents'),
       imageAlt: doc.title,
       type: 'article',
       url: `${SITE_URL}/documents/${doc.slug}`,

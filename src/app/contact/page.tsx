@@ -3,12 +3,12 @@ import Image from 'next/image';
 import { Facebook, Instagram, Linkedin, Mail, MapPin, Phone, type LucideIcon } from 'lucide-react';
 import { designTokens } from '../../styles/tokens';
 import { buildMetadata } from '../../lib/seo';
-
-const DESCRIPTION = "Get in touch — email, call, or find me on social. Based in Bucharest, Romania.";
+import { PAGE_CARDS } from '../../config/pageCards';
 
 export const metadata: Metadata = buildMetadata({
   title: 'Contact',
-  description: DESCRIPTION,
+  description: PAGE_CARDS.contact.description,
+  card: 'contact',
   path: '/contact',
 });
 

@@ -9,6 +9,7 @@ import {
   pageTitle,
   metaDescription,
 } from '../config/site';
+import type { PageCardKey } from '../config/pageCards';
 
 /**
  * The single place Open Graph and Twitter metadata is assembled.
@@ -33,6 +34,9 @@ export interface PageMeta {
   /** Original remote URL. Transformed to a 1200x630 JPEG; falls back to the
    *  default card when null. */
   image?: string | null;
+  /** Section card to use when `image` is empty — e.g. 'blog' for a post with
+   *  no hero, or the page's own card for list and static pages. */
+  card?: PageCardKey;
   imageAlt?: string;
   type?: 'website' | 'article' | 'video.other' | 'profile';
   /** ISO 8601. Emitted as article:published_time / article:modified_time. */
@@ -43,7 +47,7 @@ export interface PageMeta {
 
 export function buildMetadata(meta: PageMeta): Metadata {
   const url = `${SITE_URL}${meta.path}`;
-  const image = ogImage(meta.image);
+  const image = ogImage(meta.image, meta.card);
   const socialTitle = ogTitle(meta.title);
   const description = metaDescription(meta.description, SITE_DESCRIPTION);
 

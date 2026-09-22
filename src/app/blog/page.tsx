@@ -2,12 +2,14 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { loadAllPosts, countAllPosts } from '../../utils/blogLoader';
 import { buildMetadata } from '../../lib/seo';
+import { PAGE_CARDS } from '../../config/pageCards';
 import BlogListClient from './BlogListClient';
 import { BlogPostCardSkeleton } from '../../components/ui/SkeletonLoader';
 
 export const metadata: Metadata = buildMetadata({
   title: 'Blog',
-  description: 'Notes on filmmaking, creative process, and the projects I\'m working on.',
+  description: PAGE_CARDS.blog.description,
+  card: 'blog',
   path: '/blog',
 });
 

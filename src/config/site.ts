@@ -2,6 +2,9 @@
 // Nothing here reaches for the database or the request — it is pure, so it is
 // safe to import from Server Components, Route Handlers and the sitemap alike.
 
+// Type-only import: erased at compile time, so this file stays dependency-free.
+import type { PageCardKey } from './pageCards';
+
 export const SITE_NAME = 'Alexandru Grigore';
 export const SITE_URL = 'https://alexandrugrigore.com';
 
@@ -15,6 +18,20 @@ export const SITE_DESCRIPTION =
 
 /** Real 1200x630 JPEG in /public — regenerate with scripts/generate-brand-assets.py. */
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.jpg`;
+
+/**
+ * Bump when the card design in src/app/og/card/[card]/route.tsx changes.
+ *
+ * Facebook and WhatsApp cache an og:image by URL, effectively forever. Without a
+ * new URL a redesigned card would never reach anyone who has shared the page
+ * before; with one, the next scrape fetches the new image.
+ */
+export const OG_CARD_VERSION = 1;
+
+/** The build-time share card for a page with no image of its own. */
+export function pageCardUrl(card: PageCardKey): string {
+  return `${SITE_URL}/og/card/${card}?v=${OG_CARD_VERSION}`;
+}
 
 /** Stable @id for the Person node every JSON-LD graph on the site points at. */
 export const PERSON_ID = `${SITE_URL}/#person`;
@@ -39,15 +56,22 @@ export const WEBSITE_ID = `${SITE_URL}/#website`;
  *
  * Remote hosts must be listed in image-hosts.json, which is also what
  * next.config.js and scripts/check-metadata.mjs read.
+ *
+ * `card` names the section to fall back to when there is no image — a blog
+ * post with no hero gets the "Blog" card rather than the generic one.
  */
-export function ogImage(src?: string | null): string {
-  if (!src || src.startsWith('data:')) return DEFAULT_OG_IMAGE;
+export function ogImage(src?: string | null, card?: PageCardKey): string {
+  // No image of our own: the page's section card ("Blog", "Projects"...) says
+  // far more about the link than the site-wide generic card does.
+  if (!src || src.startsWith('data:')) return card ? pageCardUrl(card) : DEFAULT_OG_IMAGE;
 
   const absolute = src.startsWith('http') ? src : `${SITE_URL}${src}`;
 
-  // Already a transform (e.g. the default card being passed back through) —
-  // re-wrapping it would double-encode the nested `url` param.
-  if (absolute.startsWith(`${SITE_URL}/og?`)) return absolute;
+  // Already one of ours — a transform, or a build-time page card. Both are
+  // 1200x630 JPEG already; re-wrapping would only double-encode the URL.
+  if (absolute.startsWith(`${SITE_URL}/og?`) || absolute.startsWith(`${SITE_URL}/og/`)) {
+    return absolute;
+  }
 
   // `w`, `h`, `fit`, `position`, `fm` and `q` are fixed by the route itself and
   // are not accepted as parameters: a card is 1200x630 JPEG or it is a bug.
