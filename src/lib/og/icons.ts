@@ -1,4 +1,4 @@
-import type { PageCardIcon } from '../../../../config/pageCards';
+import type { PageCardIcon } from '../../config/pageCards';
 
 /**
  * Lucide icon geometry (ISC licence), copied verbatim from

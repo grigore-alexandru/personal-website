@@ -4,8 +4,8 @@ import { PdfViewerLoader as PdfViewer } from '../../../components/documents/PdfV
 import { getDocumentBySlug, listDocumentSlugs, withCacheBust } from '../../../utils/documentsService';
 import { buildMetadata, noindexMetadata } from '../../../lib/seo';
 import { JsonLd } from '../../../components/seo/JsonLd';
+import { documentDescription } from '../../../lib/itemMeta';
 import {
-  SITE_NAME,
   SITE_URL,
   SITE_IN_LANGUAGE,
   PERSON_ID,
@@ -28,10 +28,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   return buildMetadata({
     title: doc.title,
-    description: doc.description || `${doc.title} — a document from ${SITE_NAME}`,
+    description: documentDescription(doc),
     path: `/documents/${doc.slug}`,
     image: doc.thumbnailUrl ? withCacheBust(doc.thumbnailUrl, doc.updatedAt) : null,
-    card: 'documents',
+    // No thumbnail: a card carrying this document's own title.
+    card: { type: 'documents', slug: doc.slug, updatedAt: doc.updatedAt },
     imageAlt: doc.title,
     type: 'article',
     publishedTime: doc.createdAt,
@@ -44,9 +45,7 @@ export default async function DocumentPage({ params }: PageProps) {
   if (!doc) notFound();
 
   const canonicalUrl = `${SITE_URL}/documents/${doc.slug}`;
-  const description = metaDescription(
-    doc.description || `${doc.title} — a document from ${SITE_NAME}`
-  );
+  const description = metaDescription(documentDescription(doc));
 
   return (
     <main className="min-h-screen bg-surface-sunken">
@@ -57,7 +56,11 @@ export default async function DocumentPage({ params }: PageProps) {
           name: doc.title,
           description,
           url: canonicalUrl,
-          image: ogImage(doc.thumbnailUrl ? withCacheBust(doc.thumbnailUrl, doc.updatedAt) : null, 'documents'),
+          image: ogImage(doc.thumbnailUrl ? withCacheBust(doc.thumbnailUrl, doc.updatedAt) : null, {
+            type: 'documents',
+            slug: doc.slug,
+            updatedAt: doc.updatedAt,
+          }),
           dateCreated: doc.createdAt,
           dateModified: doc.updatedAt,
           inLanguage: SITE_IN_LANGUAGE,

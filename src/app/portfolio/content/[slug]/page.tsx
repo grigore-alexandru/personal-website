@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import {
   SITE_URL,
-  SITE_NAME,
   SITE_IN_LANGUAGE,
   PERSON_ID,
   ogImage,
@@ -10,6 +9,7 @@ import {
 } from '../../../../config/site';
 import { buildMetadata, noindexMetadata } from '../../../../lib/seo';
 import { JsonLd } from '../../../../components/seo/JsonLd';
+import { contentDescription } from '../../../../lib/itemMeta';
 import {
   loadContentBySlug,
   loadAdjacentContent,
@@ -42,12 +42,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   return buildMetadata({
     title: content.title,
-    description: content.caption ?? `${isVideo ? 'Video' : 'Image'} by ${SITE_NAME}`,
+    description: contentDescription(content),
     path: `/portfolio/content/${content.slug}`,
-    // Falls back to the "Content" section card when a row has no poster,
-    // rather than shipping an empty images array and therefore no og:image.
     image: posterUrl(content),
-    card: 'content',
+    // No poster: a card carrying this item's own title.
+    card: {
+      type: 'content',
+      slug: content.slug,
+      updatedAt: content.published_at ?? content.created_at,
+    },
     imageAlt: content.title,
     type: isVideo ? 'video.other' : 'website',
     publishedTime: content.published_at ?? content.created_at,
@@ -63,7 +66,12 @@ export default async function ContentDetailPage({ params }: PageProps) {
   const isVideo = content.content_type?.slug === 'video';
   const poster = posterUrl(content);
   const canonicalUrl = `${SITE_URL}/portfolio/content/${content.slug}`;
-  const description = metaDescription(content.caption);
+  const itemRef = {
+    type: 'content' as const,
+    slug: content.slug,
+    updatedAt: content.published_at ?? content.created_at,
+  };
+  const description = metaDescription(contentDescription(content));
 
   return (
     <>
@@ -75,7 +83,7 @@ export default async function ContentDetailPage({ params }: PageProps) {
                 '@type': 'VideoObject',
                 name: content.title,
                 description,
-                thumbnailUrl: ogImage(poster, 'content'),
+                thumbnailUrl: ogImage(poster, itemRef),
                 contentUrl: content.url,
                 url: canonicalUrl,
                 uploadDate: content.published_at ?? content.created_at,
@@ -88,7 +96,7 @@ export default async function ContentDetailPage({ params }: PageProps) {
                 name: content.title,
                 description,
                 contentUrl: content.url,
-                thumbnailUrl: ogImage(poster, 'content'),
+                thumbnailUrl: ogImage(poster, itemRef),
                 url: canonicalUrl,
                 creator: { '@id': PERSON_ID },
               }

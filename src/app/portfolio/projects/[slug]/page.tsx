@@ -10,6 +10,7 @@ import {
 } from '../../../../config/site';
 import { buildMetadata, noindexMetadata } from '../../../../lib/seo';
 import { JsonLd } from '../../../../components/seo/JsonLd';
+import { projectDescription } from '../../../../lib/itemMeta';
 import { loadProject, loadProjects, loadAdjacentProjects } from '../../../../utils/dataLoader';
 import { designTokens } from '../../../../styles/tokens';
 import ProjectHero from '../../../../components/ProjectHero';
@@ -36,13 +37,6 @@ export async function generateStaticParams() {
   return projects.map((p) => ({ slug: p.slug }));
 }
 
-function projectDescription(project: {
-  project_type: { name: string };
-  client_name: string;
-}): string {
-  return `${project.project_type.name} project for ${project.client_name}.`;
-}
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const project = await loadProject(params.slug);
   if (!project) return noindexMetadata('Project Not Found');
@@ -52,7 +46,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description: projectDescription(project),
     path: `/portfolio/projects/${project.slug}`,
     image: project.hero_image_large,
-    card: 'projects',
+    // No hero: a card carrying this project's own title.
+    card: {
+      type: 'projects',
+      slug: project.slug,
+      updatedAt: project.updated_at ?? project.created_at,
+    },
     imageAlt: project.title,
     type: 'article',
     publishedTime: project.created_at,
@@ -93,7 +92,11 @@ export default async function ProjectDetailPage({ params }: PageProps) {
           '@type': 'CreativeWork',
           name: project.title,
           description: projectDescription(project),
-          image: ogImage(project.hero_image_large, 'projects'),
+          image: ogImage(project.hero_image_large, {
+            type: 'projects',
+            slug: project.slug,
+            updatedAt: project.updated_at ?? project.created_at,
+          }),
           url: canonicalUrl,
           dateCreated: project.created_at,
           dateModified: project.updated_at ?? project.created_at,

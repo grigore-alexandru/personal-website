@@ -8,7 +8,6 @@ import TipTapImage from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
 import {
   SITE_URL,
-  SITE_NAME,
   SITE_IN_LANGUAGE,
   PERSON_ID,
   ogImage,
@@ -16,8 +15,8 @@ import {
 } from '../../../config/site';
 import { buildMetadata, noindexMetadata } from '../../../lib/seo';
 import { JsonLd } from '../../../components/seo/JsonLd';
+import { postDescription } from '../../../lib/itemMeta';
 import { loadPost, loadAllPosts } from '../../../utils/blogLoader';
-import { extractTextFromTipTap } from '../../../utils/dataLoader';
 import { designTokens } from '../../../styles/tokens';
 import BlogPostScrollButton from '../../../components/BlogPostScrollButton';
 import ScrollToTop from '../../../components/ScrollToTop';
@@ -39,11 +38,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: post.title,
     // buildMetadata collapses whitespace and cuts on a word boundary, so the
     // raw excerpt (or the flattened body) can be handed over untouched.
-    description:
-      post.excerpt || extractTextFromTipTap(post.content) || `Blog post by ${SITE_NAME}`,
+    description: postDescription(post),
     path: `/blog/${post.slug}`,
     image: post.heroImageLarge,
-    card: 'blog',
+    // No hero: a card carrying this post's own title, not the generic "Blog".
+    card: { type: 'blog', slug: post.slug, updatedAt: post.updatedAt ?? post.publishedAt },
     imageAlt: post.title,
     type: 'article',
     publishedTime: post.publishedAt,
@@ -84,9 +83,7 @@ export default async function BlogPostPage({ params }: PageProps) {
 
   const contentHtml = renderTipTap(post!.content);
 
-  const description = metaDescription(
-    post!.excerpt || extractTextFromTipTap(post!.content)
-  );
+  const description = metaDescription(postDescription(post!));
   const canonicalUrl = `${SITE_URL}/blog/${post!.slug}`;
 
   return (
@@ -97,7 +94,11 @@ export default async function BlogPostPage({ params }: PageProps) {
           '@type': 'BlogPosting',
           headline: post!.title,
           description,
-          image: ogImage(post!.heroImageLarge, 'blog'),
+          image: ogImage(post!.heroImageLarge, {
+            type: 'blog',
+            slug: post!.slug,
+            updatedAt: post!.updatedAt ?? post!.publishedAt,
+          }),
           url: canonicalUrl,
           datePublished: post!.publishedAt,
           dateModified: post!.updatedAt ?? post!.publishedAt,

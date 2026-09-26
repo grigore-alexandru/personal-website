@@ -91,13 +91,24 @@ for (const file of files) {
 
     const { pathname, searchParams, host } = new URL(url);
 
-    // A build-time page card (src/app/og/card/[card]/route.tsx) must actually
-    // have been rendered. It is prerendered, so the proof is its output file —
-    // a typo'd card name would otherwise ship a perfectly-formed 404 URL.
+    // A build-time card must actually have been rendered. Both kinds are
+    // prerendered, so the proof is the output file — a typo'd card name or a
+    // section that never got enumerated would otherwise ship a perfectly
+    // well-formed URL that 404s, which is invisible until someone shares it.
+    //
+    // Item cards (/og/item/blog/a-post) are only prerendered for rows that
+    // existed at build time — but a page's HTML is only in this build output
+    // under the same condition, so anything referenced here must be present.
     const card = /^\/og\/card\/([^/]+)$/.exec(pathname)?.[1];
-    if (host === 'alexandrugrigore.com' && card) {
-      if (!existsSync(join(APP_DIR, 'og', 'card', `${card}.body`))) {
-        fail(`og:image card "${card}" was not generated at build time`);
+    const item = /^\/og\/item\/([^/]+)\/([^/]+)$/.exec(pathname);
+
+    if (host === 'alexandrugrigore.com' && (card || item)) {
+      const output = card
+        ? join(APP_DIR, 'og', 'card', `${card}.body`)
+        : join(APP_DIR, 'og', 'item', item[1], `${decodeURIComponent(item[2])}.body`);
+
+      if (!existsSync(output)) {
+        fail(`og:image card "${pathname}" was not generated at build time`);
       }
       continue;
     }

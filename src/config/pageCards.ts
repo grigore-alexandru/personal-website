@@ -107,3 +107,25 @@ export type PageCardKey = keyof typeof PAGE_CARDS;
 export function isPageCardKey(value: string): value is PageCardKey {
   return Object.prototype.hasOwnProperty.call(PAGE_CARDS, value);
 }
+
+/**
+ * The sections whose rows can have an image of their own, and therefore the
+ * ones that can need a per-item card when a row has none. The remaining
+ * sections (/contact, /story...) are single pages, so their section card is
+ * always the right answer.
+ */
+export const ITEM_CARD_TYPES = ['blog', 'projects', 'content', 'documents'] as const;
+
+export type ItemCardType = (typeof ITEM_CARD_TYPES)[number];
+
+export function isItemCardType(value: string): value is ItemCardType {
+  return (ITEM_CARD_TYPES as readonly string[]).includes(value);
+}
+
+/** A row with no image, identified well enough to draw its card.
+ *  `updatedAt` only busts caches — the card is drawn from the live row. */
+export interface ItemCardRef {
+  type: ItemCardType;
+  slug: string;
+  updatedAt?: string | null;
+}

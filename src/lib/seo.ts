@@ -8,8 +8,9 @@ import {
   ogTitle,
   pageTitle,
   metaDescription,
+  type OgFallback,
 } from '../config/site';
-import type { PageCardKey } from '../config/pageCards';
+
 
 /**
  * The single place Open Graph and Twitter metadata is assembled.
@@ -34,9 +35,10 @@ export interface PageMeta {
   /** Original remote URL. Transformed to a 1200x630 JPEG; falls back to the
    *  default card when null. */
   image?: string | null;
-  /** Section card to use when `image` is empty — e.g. 'blog' for a post with
-   *  no hero, or the page's own card for list and static pages. */
-  card?: PageCardKey;
+  /** What to show when `image` is empty: a section name ('blog') for a list or
+   *  static page, or a row reference for a detail page, which produces a card
+   *  carrying that row's own title. */
+  card?: OgFallback;
   imageAlt?: string;
   type?: 'website' | 'article' | 'video.other' | 'profile';
   /** ISO 8601. Emitted as article:published_time / article:modified_time. */

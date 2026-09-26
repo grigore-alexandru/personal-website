@@ -3,7 +3,7 @@
 // safe to import from Server Components, Route Handlers and the sitemap alike.
 
 // Type-only import: erased at compile time, so this file stays dependency-free.
-import type { PageCardKey } from './pageCards';
+import type { ItemCardRef, PageCardKey } from './pageCards';
 
 export const SITE_NAME = 'Alexandru Grigore';
 export const SITE_URL = 'https://alexandrugrigore.com';
@@ -33,6 +33,25 @@ export function pageCardUrl(card: PageCardKey): string {
   return `${SITE_URL}/og/card/${card}?v=${OG_CARD_VERSION}`;
 }
 
+/**
+ * The card for one row that has no image — it carries the row's own title.
+ *
+ * `updatedAt` rides along as a cache-bust. Facebook and WhatsApp cache an
+ * og:image by URL effectively forever, so without it a retitled post would keep
+ * showing its old card to anyone who had shared it.
+ */
+export function itemCardUrl({ type, slug, updatedAt }: ItemCardRef): string {
+  const stamp = updatedAt ? `&u=${Date.parse(updatedAt) || 0}` : '';
+  return `${SITE_URL}/og/item/${type}/${encodeURIComponent(slug)}?v=${OG_CARD_VERSION}${stamp}`;
+}
+
+/** Where to fall back when a page has no image: a whole section, or one row. */
+export type OgFallback = PageCardKey | ItemCardRef;
+
+function fallbackUrl(fallback: OgFallback): string {
+  return typeof fallback === 'string' ? pageCardUrl(fallback) : itemCardUrl(fallback);
+}
+
 /** Stable @id for the Person node every JSON-LD graph on the site points at. */
 export const PERSON_ID = `${SITE_URL}/#person`;
 export const WEBSITE_ID = `${SITE_URL}/#website`;
@@ -57,13 +76,15 @@ export const WEBSITE_ID = `${SITE_URL}/#website`;
  * Remote hosts must be listed in image-hosts.json, which is also what
  * next.config.js and scripts/check-metadata.mjs read.
  *
- * `card` names the section to fall back to when there is no image — a blog
- * post with no hero gets the "Blog" card rather than the generic one.
+ * `fallback` says what to show when there is no image: a section name, or a
+ * row reference, in which case the card carries that row's own title.
  */
-export function ogImage(src?: string | null, card?: PageCardKey): string {
-  // No image of our own: the page's section card ("Blog", "Projects"...) says
-  // far more about the link than the site-wide generic card does.
-  if (!src || src.startsWith('data:')) return card ? pageCardUrl(card) : DEFAULT_OG_IMAGE;
+export function ogImage(src?: string | null, fallback?: OgFallback): string {
+  // No image of our own: a card naming the row, or failing that the section,
+  // says far more about the link than the site-wide generic card does.
+  if (!src || src.startsWith('data:')) {
+    return fallback ? fallbackUrl(fallback) : DEFAULT_OG_IMAGE;
+  }
 
   const absolute = src.startsWith('http') ? src : `${SITE_URL}${src}`;
 

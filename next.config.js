@@ -33,6 +33,13 @@ const nextConfig = {
     return config;
   },
   experimental: {
+    // The item-card route renders on demand for a post published after the
+    // last build, so its serverless function needs the vendored fonts. The
+    // path is built at runtime (`Poppins-${weight}.ttf`), which Next's file
+    // tracing cannot follow, so include them explicitly.
+    outputFileTracingIncludes: {
+      '/og/item/[type]/[slug]': ['./src/assets/fonts/**'],
+    },
     // Next.js 14's bundled webpack has an ESM/CJS interop bug that crashes
     // pdfjs-dist v5's self-bundled pdf.mjs at import time with
     // "Object.defineProperty called on non-object" (webpack/webpack#20095,

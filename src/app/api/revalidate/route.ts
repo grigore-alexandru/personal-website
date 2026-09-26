@@ -36,6 +36,11 @@ export async function POST(req: NextRequest) {
     if (slug) {
       revalidatePath(`/blog/${slug}`, 'page');
       revalidated.push(`/blog/${slug}`);
+
+      // The row's own share card, for rows with no image. Rendered from the
+      // live row, so an edited title would otherwise keep serving the old one.
+      revalidatePath(`/og/item/blog/${slug}`);
+      revalidated.push(`/og/item/blog/${slug}`);
     }
   }
 
@@ -50,6 +55,11 @@ export async function POST(req: NextRequest) {
     if (slug) {
       revalidatePath(`/portfolio/projects/${slug}`, 'page');
       revalidated.push(`/portfolio/projects/${slug}`);
+
+      // The row's own share card, for rows with no image. Rendered from the
+      // live row, so an edited title would otherwise keep serving the old one.
+      revalidatePath(`/og/item/projects/${slug}`);
+      revalidated.push(`/og/item/projects/${slug}`);
     }
   }
 
@@ -63,6 +73,11 @@ export async function POST(req: NextRequest) {
     if (slug) {
       revalidatePath(`/portfolio/content/${slug}`, 'page');
       revalidated.push(`/portfolio/content/${slug}`);
+
+      // The row's own share card, for rows with no image. Rendered from the
+      // live row, so an edited title would otherwise keep serving the old one.
+      revalidatePath(`/og/item/content/${slug}`);
+      revalidated.push(`/og/item/content/${slug}`);
     }
   }
 
@@ -75,6 +90,11 @@ export async function POST(req: NextRequest) {
     if (slug) {
       revalidatePath(`/documents/${slug}`, 'page');
       revalidated.push(`/documents/${slug}`);
+
+      // The row's own share card, for rows with no image. Rendered from the
+      // live row, so an edited title would otherwise keep serving the old one.
+      revalidatePath(`/og/item/documents/${slug}`);
+      revalidated.push(`/og/item/documents/${slug}`);
     }
   }
 
