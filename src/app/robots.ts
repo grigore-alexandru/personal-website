@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/admin/', '/api/', '/r/'],
+        disallow: ['/admin/', '/api/', '/r/', '/apps/'],
       },
       {
         // Social scrapers MUST be allowed to fetch /r/. Meta's crawler honours

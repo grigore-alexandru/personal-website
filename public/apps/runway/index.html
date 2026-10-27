@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <!-- One drawing everywhere: the tab icon (rounded) and the Dock / installed-app icon (macOS rounds it). -->
+    <link rel="icon" type="image/png" sizes="64x64" href="/apps/runway/icons/favicon-64.png" />
+    <link rel="icon" type="image/svg+xml" href="/apps/runway/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apps/runway/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/apps/runway/manifest.webmanifest" />
+    <meta name="apple-mobile-web-app-title" content="Application Runway" />
+    <title>Application Runway</title>
+    <script>
+      // Apply the saved theme before first paint (no flash). Mirrors src/ui/theme.ts.
+      (function () {
+        var theme = 'light';
+        try {
+          var saved = JSON.parse(localStorage.getItem('runway-ui-v1') || '{}');
+          if (saved && saved.state && saved.state.theme) theme = saved.state.theme;
+          if (theme === 'system' && !(saved.version >= 2)) theme = 'light'; // v2 default
+        } catch (e) {}
+        if (theme === 'system') {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
+    <script type="module" crossorigin src="/apps/runway/assets/index-yHhzNR-Q.js"></script>
+    <link rel="stylesheet" crossorigin href="/apps/runway/assets/index-I3L1jXdN.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
