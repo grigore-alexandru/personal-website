@@ -193,3 +193,16 @@ export const setFoodEstimate = (amountCents: number, amountMaxCents: number | nu
       if (c.category === "mancare" && c.amountCents == null) Object.assign(c, { amountCents, amountMaxCents, source: "manual" as const });
   return next;
 };
+
+/** Swap two days' plans (title, kind, status, cover, notes, costs, items); the dates stay where they are. */
+export const swapDays = (a: string, b: string): Mutation => (doc) => {
+  const next = clone(doc);
+  const da = mustDay(next, a);
+  const db = mustDay(next, b);
+  if (a === b) return next;
+  const { date: _a, ...planA } = da;
+  const { date: _b, ...planB } = db;
+  Object.assign(da, planB);
+  Object.assign(db, planA);
+  return next;
+};

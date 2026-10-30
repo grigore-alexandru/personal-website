@@ -177,7 +177,11 @@ export function PlacePhoto({
             } else setFailed(true);
           }}
         />
-      ) : (
+      ) : null}
+      {url && !failed && !thumb && photo?.credit && (
+        <span className="absolute bottom-1 right-1.5 max-w-[90%] truncate rounded bg-black/45 px-1.5 py-0.5 text-[9px] text-white/90">{photo.credit}</span>
+      )}
+      {url && !failed ? null : (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-gradient-to-br from-neutral-100 to-neutral-200 text-neutral-400 p-2 text-center">
           <ImageIcon size={thumb ? 18 : 28} />
           {!thumb && place && <span className="text-xs font-medium text-neutral-500">{place.name}</span>}

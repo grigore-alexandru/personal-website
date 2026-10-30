@@ -8,7 +8,7 @@ import type { Day, Item, Place } from '@/lib/trips/schema';
 import { dayBudget, sumLines } from '@/lib/trips/money';
 import { formatDateRo, navigationTarget, weekdayOf } from '@/lib/trips/time';
 import { dayTravelMinutes, itemName, legKey } from '@/lib/trips/validate';
-import { addPlaceToDay, moveItem, removeCost, removeItem, setDayStatus, setItemDone, updateDay, updateItem } from '@/lib/trips/mutations';
+import { addPlaceToDay, moveItem, removeCost, removeItem, setDayStatus, setItemDone, swapDays, updateDay, updateItem } from '@/lib/trips/mutations';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Modal } from '@/components/ui/Modal';
 import { useTrip } from '../TripProvider';
@@ -28,7 +28,7 @@ const typingNow = () => {
 
 /** Ziua — one day in detail, with every light edit. */
 export function DayScreen({ date }: { date: string }) {
-  const { doc, places, warnings, mutate } = useTrip();
+  const { doc, places, warnings, mutate, toast } = useTrip();
   const router = useRouter();
   const index = doc.days.findIndex((d) => d.date === date);
   const day = doc.days[index];
@@ -107,6 +107,28 @@ export function DayScreen({ date }: { date: string }) {
             </button>
           ))}
         </div>
+        <label className="mt-2 flex items-center gap-2 text-xs font-semibold text-neutral-600">
+          Schimbă planul cu ziua
+          <select
+            value=""
+            onChange={(e) => {
+              const other = e.target.value;
+              if (!other || !mutate(swapDays(day.date, other))) return;
+              toast(`„${day.title}” e acum pe ${formatDateRo(other)}`);
+              router.push(dayHref(other));
+            }}
+            className="flex-1 min-w-0 min-h-[40px] rounded-lg border border-neutral-300 bg-white px-2 text-sm font-normal"
+          >
+            <option value="">alege…</option>
+            {doc.days
+              .filter((d) => d.date !== day.date)
+              .map((d) => (
+                <option key={d.date} value={d.date}>
+                  {dayOptionLabel(d)}
+                </option>
+              ))}
+          </select>
+        </label>
       </div>
 
       <div className="grid grid-cols-3 gap-2">

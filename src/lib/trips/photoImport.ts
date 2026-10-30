@@ -1,6 +1,6 @@
-// src/lib/trips/photoImport.ts — server/Node only (sharp + fs). Converts the Obsidian PNGs of each place to
-// WebP (1600 px, q78) + thumbnail (600 px, q72), uploads them to trip-media/<trip>/<place>/<n>.webp and writes
-// the paths into the document through commit() (so it never overwrites edits made meanwhile).
+// src/lib/trips/photoImport.ts — server/Node only (sharp + fs). Converts each place's source images to
+// WebP (1280 px, q70) + thumbnail (512 px, q65), small enough for mobile data, uploads them to
+// trip-media/<trip>/<place>/<n>.webp and writes the paths into the document through commit() (so it never overwrites edits made meanwhile).
 // Used by scripts/trips/upload-photos.ts (service role) and the local-only route /api/admin/trips/photos
 // (the signed-in admin's session; storage policies allow admins to write trip-media).
 import { existsSync } from "node:fs";
@@ -12,8 +12,8 @@ import { commit, supabaseStore } from "./sync";
 export const PHOTO_BUCKET = "trip-media";
 
 export async function encode(file: string) {
-  const full = await sharp(file).rotate().resize({ width: 1600, withoutEnlargement: true }).webp({ quality: 78 }).toBuffer();
-  const thumb = await sharp(file).rotate().resize({ width: 600, withoutEnlargement: true }).webp({ quality: 72 }).toBuffer();
+  const full = await sharp(file).rotate().resize({ width: 1280, withoutEnlargement: true }).webp({ quality: 70, effort: 5 }).toBuffer();
+  const thumb = await sharp(file).rotate().resize({ width: 512, withoutEnlargement: true }).webp({ quality: 65, effort: 5 }).toBuffer();
   return { full, thumb };
 }
 
@@ -23,12 +23,14 @@ export async function importPhotos(opts: {
   supabase: any; // supabase-js client (service role or admin session)
   tripId: string;
   mediaDir: string;
+  /** Re-encode and re-upload photos that already have a path (same storage path, overwritten). */
+  force?: boolean;
   /** When set, writes the WebP files here instead of uploading and saves nothing. */
   dryRunDir?: string;
   write?: (path: string, body: Buffer) => void;
   log?: (line: string) => void;
 }): Promise<ImportResult> {
-  const { supabase, tripId, mediaDir, dryRunDir, write, log = () => undefined } = opts;
+  const { supabase, tripId, mediaDir, force = false, dryRunDir, write, log = () => undefined } = opts;
   if (!existsSync(mediaDir)) throw new Error(`media folder not found: ${mediaDir}`);
   const store = supabaseStore(supabase);
   const snap = await store.load(tripId);
@@ -38,7 +40,7 @@ export async function importPhotos(opts: {
   let skipped = 0;
   for (const place of snap.doc.places) {
     for (const [index, photo] of place.photos.entries()) {
-      if (photo.path) {
+      if (photo.path && !force) {
         skipped++;
         continue;
       }

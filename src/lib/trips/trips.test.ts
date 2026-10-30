@@ -162,3 +162,14 @@ test("food estimate fills only the day food lines without a price", async () => 
   assert.equal(day(next, "2026-11-05").costs.find((c) => c.id === "mancare")!.amountCents, 5000);
   assert.ok(TripDoc.safeParse(next).success);
 });
+
+test("swapDays exchanges the plans of two days and keeps the document valid", async () => {
+  const { swapDays } = await import("./mutations");
+  const next = swapDays("2026-11-03", "2026-11-10")(seed);
+  assert.equal(day(next, "2026-11-03").title, "Stanford");
+  assert.equal(day(next, "2026-11-10").title, day(seed, "2026-11-03").title);
+  assert.equal(day(next, "2026-11-10").items[0].placeId, "alcatraz");
+  assert.deepEqual(next.days.map((d) => d.date), seed.days.map((d) => d.date));
+  assert.ok(TripDoc.safeParse(next).success);
+  assert.deepEqual(validateDay(day(next, "2026-11-10"), next).filter((w) => w.severity === "error"), []);
+});

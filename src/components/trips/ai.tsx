@@ -11,7 +11,7 @@ import { currentPosition, type LatLng } from './geo';
 /**
  * "Întreabă AI": every screen describes what it shows (useAiContext); the header button turns that
  * into a prompt and hands it to Claude (claude.ai/new?q=… opens a new chat with the prompt filled in),
- * Gemini (no documented prefill link: the prompt is copied, then Gemini opens — paste it), or the
+ * Gemini (gemini.google.com/app?q=… — the prompt is also copied, in case the app opens without it), or the
  * phone's share sheet (pick the Claude or Gemini app there). Nothing is sent anywhere until you tap.
  */
 export type AiPage = {
@@ -62,6 +62,9 @@ export function buildPrompt(opts: { page: AiPage | null; question: string; today
     );
   if (page) parts.push('', `Ce văd în aplicație — ${page.title}:`, ...page.lines.map((l) => `- ${l}`));
   parts.push('', `Întrebarea mea: ${question.trim() || page?.suggestions[0] || 'Ce îmi recomanzi?'}`);
+  parts.push(
+    'Dacă ai acces la Supabase (proiectul lqbyvubbzexujviflunv) și la skill-ul trip-planner, citește planul complet din public.trip_documents, rândul sf-2026.',
+  );
   parts.push('Răspunde scurt, în română. Pentru fiecare loc recomandat dă adresa, cât durează de unde sunt (pe jos / cu transportul) și dacă e deschis acum.');
   const text = parts.join('\n');
   return text.length > MAX_PROMPT ? `${text.slice(0, MAX_PROMPT - 1)}…` : text;
@@ -121,6 +124,7 @@ export function AskAiButton() {
     location: withLocation ? location : null,
   });
   const claudeUrl = `https://claude.ai/new?q=${encodeURIComponent(prompt)}`;
+  const geminiUrl = `https://gemini.google.com/app?q=${encodeURIComponent(prompt)}`;
   const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 
   const copy = async (silent = false) => {
@@ -185,10 +189,10 @@ export function AskAiButton() {
                   Claude
                 </a>
                 <a
-                  href="https://gemini.google.com/app"
+                  href={geminiUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={() => void copy(true).then((ok) => ok && toast('Promptul e copiat — lipește-l în Gemini.'))}
+                  onClick={() => void copy(true)}
                   className="inline-flex items-center justify-center min-h-[48px] rounded-xl bg-[#1a73e8] text-white font-semibold"
                 >
                   Gemini
@@ -211,7 +215,7 @@ export function AskAiButton() {
                 </button>
               </div>
               <p className="text-[11px] text-neutral-500">
-                Claude se deschide cu promptul completat. Pentru Gemini promptul se copiază și îl lipești. „Partajează” deschide meniul telefonului, de unde
+                Claude și Gemini se deschid cu promptul completat (la Gemini e și copiat, dacă aplicația nu-l preia — îl lipești). „Partajează” deschide meniul telefonului, de unde
                 poți alege aplicația Claude sau Gemini.
               </p>
 

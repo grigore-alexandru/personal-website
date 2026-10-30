@@ -53,6 +53,7 @@ export const Photo = z.object({
   source: z.string(), // Obsidian attachment file name
   path: z.string().nullable(), // storage path in bucket trip-media once uploaded
   alt: z.string(),
+  credit: z.string().nullable().optional(), // author + license for photos that are not the user's own (Wikimedia Commons)
 });
 
 export const Duration = z.object({

@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).maybeSingle();
   if (!(profile as { is_admin?: boolean } | null)?.is_admin) return NextResponse.json({ message: 'Admins only' }, { status: 403, headers: noStore });
 
-  let body: { tripId?: string; mediaDir?: string };
+  let body: { tripId?: string; mediaDir?: string; force?: boolean };
   try {
     body = await request.json();
   } catch {
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
   if (!body.mediaDir) return NextResponse.json({ message: 'mediaDir is required' }, { status: 400, headers: noStore });
 
   try {
-    const result = await importPhotos({ supabase, tripId, mediaDir: body.mediaDir, log: (line) => console.log('[trip photos]', line) });
+    const result = await importPhotos({ supabase, tripId, mediaDir: body.mediaDir, force: body.force === true, log: (line) => console.log('[trip photos]', line) });
     return NextResponse.json(result, { headers: noStore });
   } catch (e) {
     return NextResponse.json({ message: e instanceof Error ? e.message : String(e) }, { status: 500, headers: noStore });
