@@ -11,6 +11,8 @@ import { useTrip } from '../TripProvider';
 import { dayHref, placeHref } from '../tripConfig';
 import { scheduledDates, ticketsToBuy } from '../helpers';
 import { Card, Chip, ExtLink, SectionTitle } from '../ui';
+import { useAiContext } from '../ai';
+import { ticketsPage } from '../aiPages';
 
 /** Bilete — tickets to buy, tickets bought, and every fixed time of the trip. */
 export function BileteScreen() {
@@ -18,6 +20,7 @@ export function BileteScreen() {
   const todo = ticketsToBuy(doc);
   const dates = scheduledDates(doc);
   const booked = doc.places.filter((p) => p.booking?.status === 'booked');
+  useAiContext(ticketsPage(doc));
 
   type Fixed = { date: string; time: string | null; label: string; kind: 'fixed' | 'deadline' | 'flight'; href: string };
   const fixed: Fixed[] = [

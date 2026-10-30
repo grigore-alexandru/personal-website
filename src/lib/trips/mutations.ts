@@ -184,3 +184,12 @@ export function parseDollarRange(text: string): [number | null, number | null] {
   if (max != null && (min == null || max < min)) throw new MutationError("Intervalul trebuie să fie de la mic la mare, de exemplu 24-30");
   return [min, max === min ? null : max];
 }
+
+/** Fill every day-level food line that has no price yet with the same daily estimate (prices already set stay). */
+export const setFoodEstimate = (amountCents: number, amountMaxCents: number | null): Mutation => (doc) => {
+  const next = clone(doc);
+  for (const day of next.days)
+    for (const c of day.costs)
+      if (c.category === "mancare" && c.amountCents == null) Object.assign(c, { amountCents, amountMaxCents, source: "manual" as const });
+  return next;
+};

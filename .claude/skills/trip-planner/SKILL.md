@@ -27,6 +27,7 @@ Answer in the user's language (usually Romanian). Never address the user by name
 | Want | Call |
 |---|---|
 | Move / reorder an item | `select public.trip_move_item('sf-2026', '<item id>', '<to date>', <position or null>);` |
+| New place (e.g. a restaurant) | `select public.trip_add_place('sf-2026', '{"id":"<slug>","name":"…","kind":"food","area":"sf","location":{"name":"…","address":"…","lat":…,"lng":…,"googlePlaceId":"…"},"notes":"O masă: $14–17. …"}'::jsonb);` — kinds: zone, attraction, museum, daytrip, event, nature, food; geocode with the Google Maps MCP first. Food places: put the meal price at the start of `notes` ("O masă: $X–Y."), leave `costTemplate` empty (food is budgeted per day, in `day.costs` category `mancare`). |
 | Schedule a place | `select public.trip_add_item('sf-2026', '<date>', '{"id":"i-MMDD-<place>","placeId":"<place>"}'::jsonb, <position or null>);` (copies the place's cost template) |
 | Add a non-place item (ferry, deadline) | `... trip_add_item(..., '{"id":"i-MMDD-<slug>","label":"Feribot …","kind":"transport","start":"09:25","fixed":true}'::jsonb)` |
 | Unschedule | `select public.trip_remove_item('sf-2026', '<item id>');` |
@@ -63,4 +64,7 @@ After every change say exactly what changed: `zi · element · vechi → nou`.
 - App: `src/app/admin/trips/sf-2026/` (routes) and `src/components/trips/` (screens, `TripProvider`); library and tests in `src/lib/trips/` (`npm run test:trips`).
 - Database: `supabase/migrations/20261030120000_create_trip_planner.sql`, `20261030120100_create_trip_media.sql`. Seed: `data/trips/sf-2026.seed.json` (already imported; the database is now the source of truth).
 - Photos: `npm run trips:photos -- --media "<Obsidian>/Writing/Media" --dry-run` (needs `SUPABASE_SERVICE_ROLE_KEY` in the shell, never in the repo).
+- Food: each day has a `mancare` line in `day.costs`; Buget shows them in their own "Mâncare" section. Food places (`kind: "food"`) are an orange layer on the map.
+- "Întreabă AI" in the app header builds a prompt from the current screen (selected place, day, location) and opens claude.ai/new?q=… — such prompts start with "Sunt în călătorie în San Francisco… folosesc aplicația mea de planificare".
+- Photos: local-only import on Locuri (`next dev`) or `npm run trips:photos`; the dev server can't read the Google Drive folder, so copy the PNGs to a local folder first.
 - The app accepts `?azi=YYYY-MM-DD` on any trip page to preview another day as "today".

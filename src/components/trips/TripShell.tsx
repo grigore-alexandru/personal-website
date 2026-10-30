@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import { CalendarDays, Check, CloudOff, Database, Loader2, Map, MapPin, Sun, Ticket, Wallet } from 'lucide-react';
 import { useTrip, type SyncState } from './TripProvider';
 import { TABS } from './tripConfig';
+import { AiProvider, AskAiButton } from './ai';
 
 const ICONS = { sun: Sun, calendar: CalendarDays, map: Map, pin: MapPin, ticket: Ticket, wallet: Wallet } as const;
 
@@ -24,16 +25,20 @@ export function TripShell({ children }: { children: ReactNode }) {
   const active = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
+    <AiProvider>
     <div className="min-h-screen bg-neutral-50 text-neutral-900">
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-neutral-200" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         <div className="max-w-[960px] mx-auto px-4 h-14 flex items-center justify-between gap-3">
           <Link href={TABS[0].href} className="text-lg font-bold tracking-tight">
             San Francisco
           </Link>
-          <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${s.className}`} aria-live="polite">
-            <s.Icon size={14} />
-            {s.label}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${s.className}`} aria-live="polite" title={s.label}>
+              <s.Icon size={14} />
+              <span className={sync === 'saved' ? 'hidden sm:inline' : ''}>{s.label}</span>
+            </span>
+            <AskAiButton />
+          </div>
         </div>
         <nav className="hidden md:block max-w-[960px] mx-auto px-4" aria-label="Secțiuni">
           <ul className="flex gap-1">
@@ -85,5 +90,6 @@ export function TripShell({ children }: { children: ReactNode }) {
         </ul>
       </nav>
     </div>
+    </AiProvider>
   );
 }

@@ -10,11 +10,14 @@ import { setItemDone } from '@/lib/trips/mutations';
 import { useTrip } from '../TripProvider';
 import { BASE, dayHref } from '../tripConfig';
 import { coverOf, minutesText, photoPlace, ticketsToBuy } from '../helpers';
+import { useAiContext } from '../ai';
+import { aziPage } from '../aiPages';
 import { Card, MoneyText, NavigateButtons, NoteText, PlacePhoto, StatusChip, WarningList } from '../ui';
 
 /** Azi — what matters right now, in San Francisco time. */
 export function AziScreen() {
   const { doc, today } = useTrip();
+  useAiContext(aziPage(doc, today));
   const phase = tripPhase(doc, today);
   if (phase === 'before') return <Before />;
   if (phase === 'after') return <After />;

@@ -6,6 +6,8 @@ import { formatDateShort, weekdayName, weekdayOf } from '@/lib/trips/time';
 import { useTrip } from '../TripProvider';
 import { DAY_KIND, dayHref } from '../tripConfig';
 import { coverOf, doneCount, photoPlace, ticketsToBuy } from '../helpers';
+import { useAiContext } from '../ai';
+import { zilePage } from '../aiPages';
 import { MoneyText, PlacePhoto, StatusChip, WarningDot } from '../ui';
 
 const WEEK_HEAD = ['Lun', 'Mar', 'Mie', 'Joi', 'Vin', 'Sâm', 'Dum'];
@@ -13,6 +15,7 @@ const WEEK_HEAD = ['Lun', 'Mar', 'Mie', 'Joi', 'Vin', 'Sâm', 'Dum'];
 /** Zile — the whole period: 7-column calendar from 640 px, a list below. */
 export function ZileScreen() {
   const { doc, warnings, today, places } = useTrip();
+  useAiContext(zilePage(doc));
   const total = tripBudget(doc).total;
   const confirmed = doc.days.filter((d) => d.status === 'confirmed').length;
   const tickets = ticketsToBuy(doc).length;

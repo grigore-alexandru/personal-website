@@ -61,7 +61,7 @@ export const Duration = z.object({
   maxMinutes: z.number().int().positive().nullable(),
 });
 
-export const PlaceKind = z.enum(["zone", "attraction", "museum", "daytrip", "event", "nature"]);
+export const PlaceKind = z.enum(["zone", "attraction", "museum", "daytrip", "event", "nature", "food"]);
 export const Area = z.enum(["sf", "marin", "east-bay", "peninsula", "south-bay", "coast", "napa", "bay"]);
 
 export const Place = z.object({

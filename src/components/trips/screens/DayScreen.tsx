@@ -15,6 +15,8 @@ import { useTrip } from '../TripProvider';
 import { AREA, BASE, DAY_KIND, dayHref, placeHref } from '../tripConfig';
 import { coverOf, dayOptionLabel, doneCount, minutesText, photoPlace, scheduledDates } from '../helpers';
 import { AddCostForm } from '../AddCostForm';
+import { useAiContext } from '../ai';
+import { dayPage } from '../aiPages';
 import { Card, Chip, CostLineRow, ExtLink, MoneyText, NavigateButtons, NoteText, PlacePhoto, SectionTitle, StatusChip, WarningList } from '../ui';
 
 const typingNow = () => {
@@ -43,6 +45,8 @@ export function DayScreen({ date }: { date: string }) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [prev, next, router]);
+
+  useAiContext(day ? dayPage(day, doc) : { title: `Ziua ${date}`, lines: [], suggestions: [] });
 
   if (!day) {
     return (

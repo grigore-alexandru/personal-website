@@ -151,3 +151,14 @@ test("app additions: add/remove cost, update day, dollar ranges", async () => {
   assert.deepEqual(parseDollarRange(""), [null, null]);
   assert.throws(() => parseDollarRange("30-24"));
 });
+
+test("food estimate fills only the day food lines without a price", async () => {
+  const { setFoodEstimate, updateCost } = await import("./mutations");
+  const priced = updateCost({ scope: "day", date: "2026-11-05" }, "mancare", { amountCents: 5000 })(seed);
+  const next = setFoodEstimate(2600, 4000)(priced);
+  const food = next.days.flatMap((d) => d.costs.filter((c) => c.category === "mancare"));
+  assert.equal(food.length, 18);
+  assert.equal(food.filter((c) => c.amountCents === 2600 && c.amountMaxCents === 4000).length, 17);
+  assert.equal(day(next, "2026-11-05").costs.find((c) => c.id === "mancare")!.amountCents, 5000);
+  assert.ok(TripDoc.safeParse(next).success);
+});

@@ -8,6 +8,9 @@ import type { CostOwner } from '@/lib/trips/mutations';
 import { useTrip } from '../TripProvider';
 import { dayHref } from '../tripConfig';
 import { AddCostForm } from '../AddCostForm';
+import { FoodBudget } from '../FoodBudget';
+import { useAiContext } from '../ai';
+import { budgetPage } from '../aiPages';
 import { AmountInput, Card, CostLineRow, MoneyText, SectionTitle } from '../ui';
 
 const paidOnly = (m: Money): Money => ({ ...m, minCents: m.paidCents, maxCents: m.paidCents, missing: 0 });
@@ -30,7 +33,9 @@ function Bar({ money, max }: { money: Money; max: number }) {
 export function BugetScreen() {
   const { doc } = useTrip();
   const b = tripBudget(doc);
-  const missing = missingPriceLines(doc);
+  useAiContext(budgetPage(doc));
+  const missing = missingPriceLines(doc).filter((r) => r.line.category !== 'mancare');
+  const missingFood = b.total.missing - missing.length;
   const cats = Object.keys(CATEGORY_LABEL) as CostCategory[];
   const catMax = Math.max(0, ...cats.map((c) => b.byCategory[c].maxCents));
   const dayMax = Math.max(0, ...b.perDay.map((d) => d.money.maxCents));
@@ -82,6 +87,8 @@ export function BugetScreen() {
         </Card>
       </section>
 
+      <FoodBudget />
+
       <section>
         <SectionTitle>Pe zile</SectionTitle>
         <Card className="p-2">
@@ -115,6 +122,11 @@ export function BugetScreen() {
 
       <section id="de-completat" className="scroll-mt-20">
         <SectionTitle>De completat ({missing.length})</SectionTitle>
+        {missingFood > 0 && (
+          <p className="-mt-1 mb-2 text-xs text-neutral-500">
+            Plus {missingFood} {missingFood === 1 ? 'linie' : 'linii'} de mâncare — le completezi în <a href="#mancare" className="underline">secțiunea Mâncare</a>.
+          </p>
+        )}
         {missing.length === 0 ? (
           <Card className="p-4 text-sm text-neutral-600">Toate costurile au preț.</Card>
         ) : (

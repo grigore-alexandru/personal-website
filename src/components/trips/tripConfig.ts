@@ -27,6 +27,8 @@ export const DAY_KIND: Record<Day['kind'], { label: string; tint: string; dot: s
 };
 
 export const UNSCHEDULED_HEX = '#a3a3a3';
+/** Food places (restaurants, Whole Foods hot bars) on the map. */
+export const FOOD_HEX = '#f97316';
 
 export const PLACE_KIND: Record<Place['kind'], string> = {
   zone: 'Zonă',
@@ -35,6 +37,7 @@ export const PLACE_KIND: Record<Place['kind'], string> = {
   daytrip: 'Excursie',
   event: 'Eveniment',
   nature: 'Natură',
+  food: 'Mâncare',
 };
 
 export const AREA: Record<Place['area'], string> = {

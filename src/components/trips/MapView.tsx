@@ -5,7 +5,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { GeoPoint } from '@/lib/trips/schema';
 
-export type MapMarker = { id: string; lat: number; lng: number; color: string; title: string; label?: string };
+export type MapMarker = { id: string; lat: number; lng: number; color: string; title: string; label?: string; food?: boolean };
 
 // San Francisco proper, for the "Oraș" button.
 const SF_BOUNDS = L.latLngBounds([37.705, -122.52], [37.835, -122.355]);
@@ -17,6 +17,22 @@ const pin = (m: MapMarker) =>
     iconAnchor: m.label ? [14, 14] : [9, 9],
     html: `<span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:9999px;background:${m.color};border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4);color:#fff;font:700 12px/1 system-ui,sans-serif">${m.label ?? ''}</span>`,
   });
+
+// Food places: rounded square with a fork-and-knife glyph, so they read apart from sights.
+const foodPin = (m: MapMarker) =>
+  L.divIcon({
+    className: '',
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+    html: `<span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:7px;background:${m.color};border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4);color:#fff;font-size:12px;line-height:1">🍴</span>`,
+  });
+
+const me = L.divIcon({
+  className: '',
+  iconSize: [18, 18],
+  iconAnchor: [9, 9],
+  html: '<span style="display:block;width:100%;height:100%;border-radius:9999px;background:#2563eb;border:3px solid #fff;box-shadow:0 0 0 6px rgba(37,99,235,.25)"></span>',
+});
 
 const home = L.divIcon({
   className: '',
@@ -32,10 +48,12 @@ export default function MapView({
   line,
   fit,
   onSelect,
+  user,
 }: {
   markers: MapMarker[];
   base: GeoPoint | null;
   line: boolean;
+  user: { lat: number; lng: number } | null;
   fit: { mode: 'city' | 'all'; n: number };
   onSelect: (id: string) => void;
 }) {
@@ -62,8 +80,11 @@ export default function MapView({
   }, []);
 
   const allBounds = () => {
-    const pts: L.LatLngExpression[] = markers.map((m) => [m.lat, m.lng]);
+    // In a day view, frame the day's stops (food pins may sit outside them); otherwise everything.
+    const framed = line && markers.some((m) => !m.food) ? markers.filter((m) => !m.food) : markers;
+    const pts: L.LatLngExpression[] = framed.map((m) => [m.lat, m.lng]);
     if (base) pts.push([base.lat, base.lng]);
+    if (user) pts.push([user.lat, user.lng]);
     return pts.length ? L.latLngBounds(pts) : SF_BOUNDS;
   };
 
@@ -72,21 +93,23 @@ export default function MapView({
     const m = map.current;
     if (!g || !m) return;
     g.clearLayers();
-    if (line && markers.length > 1) {
+    const stops = markers.filter((x) => !x.food);
+    if (line && stops.length > 1) {
       L.polyline(
-        markers.map((x) => [x.lat, x.lng] as L.LatLngTuple),
-        { color: markers[0].color, weight: 3, opacity: 0.7, dashArray: '6 6' },
+        stops.map((x) => [x.lat, x.lng] as L.LatLngTuple),
+        { color: stops[0].color, weight: 3, opacity: 0.7, dashArray: '6 6' },
       ).addTo(g);
     }
     for (const mk of markers) {
-      L.marker([mk.lat, mk.lng], { icon: pin(mk), title: mk.title, keyboard: true })
+      L.marker([mk.lat, mk.lng], { icon: mk.food ? foodPin(mk) : pin(mk), title: mk.title, keyboard: true, zIndexOffset: mk.food ? -100 : 0 })
         .on('click', () => select.current(mk.id))
         .addTo(g);
     }
     if (base) L.marker([base.lat, base.lng], { icon: home, title: base.name ?? 'Cazare' }).addTo(g);
+    if (user) L.marker([user.lat, user.lng], { icon: me, title: 'Tu ești aici', zIndexOffset: 1000 }).addTo(g);
     m.fitBounds(allBounds(), { padding: [30, 30], maxZoom: 15 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [markers, base, line]);
+  }, [markers, base, line, user]);
 
   useEffect(() => {
     if (!map.current || fit.n === 0) return;

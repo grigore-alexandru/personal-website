@@ -10,6 +10,8 @@ import { addPlaceToDay, setBookingStatus } from '@/lib/trips/mutations';
 import { useTrip } from '../TripProvider';
 import { AREA, BASE, PLACE_KIND, dayHref, placeHref } from '../tripConfig';
 import { dayOptionLabel, scheduledDates } from '../helpers';
+import { useAiContext } from '../ai';
+import { placePage } from '../aiPages';
 import { Card, Chip, ExtLink, NavigateButtons, NoteText, PlacePhoto, SectionTitle } from '../ui';
 
 const searchUrl = (p: Place) => {
@@ -25,6 +27,7 @@ export function PlaceScreen({ placeId }: { placeId: string }) {
   const { doc, places, mutate, toast } = useTrip();
   const place = places.get(placeId);
   const [when, setWhen] = useState('');
+  useAiContext(place ? placePage(place, doc) : { title: 'Loc', lines: [], suggestions: [] });
 
   if (!place) {
     return (

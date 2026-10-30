@@ -10,6 +10,9 @@ import { useTrip } from '../TripProvider';
 import { AREA, PLACE_KIND, placeHref } from '../tripConfig';
 import { donePlaceIds, scheduledDates } from '../helpers';
 import { Chip, MoneyText, PlacePhoto } from '../ui';
+import { useAiContext } from '../ai';
+import { placesPage } from '../aiPages';
+import { PhotoImport } from '../PhotoImport';
 
 type Filter = 'all' | 'unscheduled' | 'scheduled' | 'done';
 const FILTERS: { id: Filter; label: string }[] = [
@@ -57,9 +60,12 @@ export function LocuriScreen() {
     return true;
   });
 
+  useAiContext(placesPage(doc, list));
+
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Locuri</h1>
+      <PhotoImport />
       <div className="relative">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Caută" className="w-full min-h-[44px] rounded-xl border border-neutral-300 bg-white pl-9 pr-3 text-sm" />
