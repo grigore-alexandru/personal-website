@@ -95,3 +95,6 @@ temp/
 # whatever pdfjs-dist version is actually installed — never commit it, or it
 # can silently drift out of sync with the installed package.
 /public/pdf.worker.min.mjs
+
+# Trip photos: local dry-run output of scripts/trips/upload-photos.ts
+/tmp-photos/

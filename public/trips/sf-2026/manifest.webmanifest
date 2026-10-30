@@ -1,0 +1,15 @@
+{
+  "name": "San Francisco",
+  "short_name": "San Francisco",
+  "start_url": "/admin/trips/sf-2026/azi",
+  "scope": "/admin/trips/sf-2026/",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#ffffff",
+  "lang": "ro",
+  "icons": [
+    { "src": "/trips/sf-2026/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/trips/sf-2026/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/trips/sf-2026/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

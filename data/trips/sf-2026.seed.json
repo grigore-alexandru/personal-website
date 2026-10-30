@@ -1,0 +1,2664 @@
+{
+  "version": 1,
+  "trip": {
+    "id": "sf-2026",
+    "title": "San Francisco",
+    "timezone": "America/Los_Angeles",
+    "currency": "USD",
+    "startDate": "2026-11-02",
+    "endDate": "2026-11-19",
+    "base": null,
+    "arrival": {
+      "date": "2026-11-02",
+      "time": null,
+      "airport": "SFO"
+    },
+    "departure": {
+      "date": "2026-11-19",
+      "time": null,
+      "airport": "SFO"
+    },
+    "fxRonPerUsd": null,
+    "notes": null
+  },
+  "places": [
+    {
+      "id": "stanford",
+      "name": "Stanford / Palo Alto",
+      "kind": "daytrip",
+      "area": "peninsula",
+      "parentId": null,
+      "priority": null,
+      "location": {
+        "name": "Stanford University",
+        "address": "450 Jane Stanford Way, Stanford, CA 94305, USA",
+        "lat": 37.42766,
+        "lng": -122.17006,
+        "googlePlaceId": "ChIJneqLZyq7j4ARf2j8RBrwzSk"
+      },
+      "meetingPoint": null,
+      "photos": [
+        {
+          "source": "Pasted image 20260805150402.png",
+          "path": null,
+          "alt": "Stanford / Palo Alto"
+        }
+      ],
+      "duration": {
+        "text": "4 zile; cursuri / plimbări",
+        "minMinutes": null,
+        "maxMinutes": null
+      },
+      "hours": null,
+      "transport": "Stau în San Francisco, mă transport până la Stanford — la 1h de San Francisco.",
+      "booking": null,
+      "costTemplate": [],
+      "links": [],
+      "notes": "Cursuri / plimbări.",
+      "source": {
+        "obsidianHeading": "Stanford/Palo Alto - 4 Zile"
+      }
+    },
+    {
+      "id": "half-moon-bay",
+      "name": "Half Moon Bay",
+      "kind": "daytrip",
+      "area": "coast",
+      "parentId": null,
+      "priority": null,
+      "location": {
+        "name": "Half Moon Bay",
+        "address": "Half Moon Bay, CA 94019, USA",
+        "lat": 37.4635519,
+        "lng": -122.4285862,
+        "googlePlaceId": "ChIJC8sZCqULj4ARVJvnNcic_V4"
+      },
+      "meetingPoint": null,
+      "photos": [
+        {
+          "source": "Pasted image 20260805145521.png",
+          "path": null,
+          "alt": "Half Moon Bay"
+        }
+      ],
+      "duration": {
+        "text": "o zi",
+        "minMinutes": null,
+        "maxMinutes": null
+      },
+      "hours": null,
+      "transport": "Transport cu Caltrain + SamTrans 294 — 2h30 dus, 2h30 întors. Plec dimineața la 5:23, mă întorc cu transportul de 20:23.",
+      "booking": null,
+      "costTemplate": [],
+      "links": [],
+      "notes": null,
+      "source": {
+        "obsidianHeading": "Half Moon Bay - O ZI"
+      }
+    },
+    {
+      "id": "north-beach",
+      "name": "North Beach",
+      "kind": "zone",
+      "area": "sf",
+      "parentId": null,
+      "priority": null,
+      "location": {
+        "name": "North Beach",
+        "address": "North Beach, San Francisco, CA, USA",
+        "lat": 37.7994612,
+        "lng": -122.4089071,
+        "googlePlaceId": "ChIJrRkHSfCAhYARBpeYSlBnwX8"
+      },
+      "meetingPoint": null,
+      "photos": [
+        {
+          "source": "Pasted image 20260805150734.png",
+          "path": null,
+          "alt": "North Beach"
+        }
+      ],
+      "duration": null,
+      "hours": null,
+      "transport": null,
+      "booking": null,
+      "costTemplate": [],
+      "links": [],
+      "notes": null,
+      "source": {
+        "obsidianHeading": "San Francisco - Zone"
+      }
+    },
+    {
+      "id": "downtown",
+      "name": "Downtown",
+      "kind": "zone",
+      "area": "sf",
+      "parentId": null,
+      "priority": null,
+      "location": {
+        "name": "Union Square",
+        "address": "Union Square, San Francisco, CA 94108, USA",
+        "lat": 37.7879358,
+        "lng": -122.4075139,
+        "googlePlaceId": "ChIJW5D3LYmAhYARb92CmHj1bOM"
+      },
+      "meetingPoint": null,
+      "photos": [
+        {
+          "source": "Pasted image 20260805191655.png",
+          "path": null,
+          "alt": "Downtown"
+        }
+      ],
+      "duration": null,
+      "hours": null,
+      "transport": null,
+      "booking": null,
+      "costTemplate": [],
+      "links": [],
+      "notes": null,
+      "source": {
+        "obsidianHeading": "San Francisco - Zone"
+      }
+    },
+    {
+      "id": "castro",
+      "name": "Castro",
+      "kind": "zone",
+      "area": "sf",
+      "parentId": null,
+      "priority": null,
+      "location": {
+        "name": "The Castro",
+        "address": "The Castro, San Francisco, CA 94114, USA",
+        "lat": 37.7608937,
+        "lng": -122.435033,
+        "googlePlaceId": "ChIJndQGNht-j4ARiXwy1QZmpsk"
+      },
+      "meetingPoint": null,
+      "photos": [
+        {
+          "source": "Pasted image 20260805150802.png",
+          "path": null,
+          "alt": "Castro"
+        }
+      ],
+      "duration": null,
+      "hours": null,
+      "transport": null,
+      "booking": null,
+      "costTemplate": [],
+      "links": [],
+      "notes": null,
+      "source": {
+        "obsidianHeading": "San Francisco - Zone"
+      }
+    },
+    {
+      "id": "russian-hill",
+      "name": "Russian Hill",
+      "kind": "zone",
+      "area": "sf",
+      "parentId": null,
+      "priority": null,
+      "location": {
+        "name": "Russian Hill",
+        "address": "Russian Hill, San Francisco, CA, USA",
+        "lat": 37.8001413,
+        "lng": -122.4192681,
+        "googlePlaceId": "ChIJdZaCGuaAhYARxWlcNTgaA-c"
+      },
+      "meetingPoint": null,
+      "photos": [
+        {
+          "source": "Pasted image 20260805150920.png",
+          "path": null,
+          "alt": "Russian Hill"
+        }
+      ],
+      "duration": null,
+      "hours": null,
+      "transport": null,
+      "booking": null,
+      "costTemplate": [],
+      "links": [],
+      "notes": null,
+      "source": {
+        "obsidianHeading": "San Francisco - Zone"
+      }
+    },
+    {
+      "id": "presidio",
+      "name": "Presidio",
+      "kind": "zone",
+      "area": "sf",
+      "parentId": null,
+      "priority": null,
+      "location": {
+        "name": "Presidio of San Francisco",
+        "address": "Presidio of San Francisco, San Francisco, CA, USA",
+        "lat": 37.7923841,
+        "lng": -122.4810057,
+        "googlePlaceId": "ChIJmxVaCN-GhYARYH--_Fayr7Q"
+      },
+      "meetingPoint": null,
+      "photos": [
+        {
+          "source": "Pasted image 20260805151037.png",
+          "path": null,
+          "alt": "Presidio"
+        }
+      ],
+      "duration": null,
+      "hours": null,
+      "transport": null,
+      "booking": null,
+      "costTemplate": [],
+      "links": [],
+      "notes": null,
+      "source": {
+        "obsidianHeading": "San Francisco - Zone"
+      }
+    },
+    {
+      "id": "crissy-field",
+      "name": "Crissy Field",
+      "kind": "zone",
+      "area": "sf",
+      "parentId": null,
+      "priority": null,
+      "location": {
+        "name": "Crissy Field",
+        "address": "Crissy Field, San Francisco, CA 94129, USA",
+        "lat": 37.8040257,
+        "lng": -122.4650165,
+        "googlePlaceId": "ChIJVbMlhdyGhYARADaqASKRFVs"
+      },
+      "meetingPoint": null,
+      "photos": [
+        {
+          "source": "Pasted image 20260807145641.png",
+          "path": null,
+          "alt": "Crissy Field"
+        },
+        {
+          "source": "Pasted image 20260805151211.png",
+          "path": null,
+          "alt": "Crissy Field"
+        }
+      ],
+      "duration": null,
+      "hours": null,
+      "transport": null,
+      "booking": null,
+      "costTemplate": [],
+      "links": [],
+      "notes": null,
+      "source": {
+        "obsidianHeading": "San Francisco - Zone"
+      }
+    },
+    {
+      "id": "golden-gate-park",
+      "name": "Golden Gate Park",
+      "kind": "zone",
+      "area": "sf",
+      "parentId": null,
+      "priority": null,
+      "location": {
+        "name": "Golden Gate Park",
+        "address": "Golden Gate Park, San Francisco, CA, USA",
+        "lat": 37.7689203,
+        "lng": -122.482977,
+        "googlePlaceId": "ChIJY_dFYHKHhYARMKc772iLvnE"
+      },
+      "meetingPoint": null,
+      "photos": [
+        {
+          "source": "Pasted image 20260805150945.png",
+          "path": null,
+          "alt": "Golden Gate Park"
+        }
+      ],
+      "duration": null,
+      "hours": null,
+      "transport": null,
+      "booking": null,
+      "costTemplate": [],
+      "links": [],
+      "notes": null,
+      "source": {
+        "obsidianHeading": "San Francisco - Zone"
+      }
+    },
+    {
+      "id": "coit-tower",
+      "name": "Coit Tower",
+      "kind": "attraction",
+      "area": "sf",
+      "parentId": null,
+      "priority": null,
+      "location": {
+        "name": "Coit Tower",
+        "address": "1 Telegraph Hill Blvd, San Francisco, CA 94133, USA",
+        "lat": 37.8023949,
+        "lng": -122.4058222,
+        "googlePlaceId": "ChIJAQAAQIyAhYARRN3yIQG4hd4"
+      },
+      "meetingPoint": null,
+      "photos": [
+        {
+          "source": "Pasted image 20261030120427.png",
+          "path": null,
+          "alt": "Coit Tower"
+        }
+      ],
+      "duration": null,
+      "hours": null,
+      "transport": null,
+      "booking": null,
+      "costTemplate": [],
+      "links": [],
+      "notes": null,
+      "source": {
+        "obsidianHeading": "San Francisco - Zone"
+      }
+    },
+    {
+      "id": "ocean-beach",
+      "name": "Ocean Beach",
+      "kind": "zone",
+      "area": "sf",
+      "parentId": null,
+      "priority": null,
+      "location": {
+        "name": "Ocean Beach",
+        "address": "Ocean Beach, San Francisco, CA, USA",
+        "lat": 37.7593921,
+        "lng": -122.510734,
+        "googlePlaceId": "ChIJY8btaZSHhYAR_GctC494Hoo"
+      },
+      "meetingPoint": null,
+      "photos": [
+        {
+          "source": "Pasted image 20260805192046.png",
+          "path": null,
+          "alt": "Ocean Beach"
+        }
+      ],
+      "duration": null,
+      "hours": null,
+      "transport": null,
+      "booking": null,
+      "costTemplate": [],
+      "links": [],
+      "notes": null,
+      "source": {
+        "obsidianHeading": "San Francisco - Zone"
+      }
+    },
+    {
+      "id": "lands-end",
+      "name": "Lands End",
+      "kind": "zone",
+      "area": "sf",
+      "parentId": null,
+      "priority": null,
+      "location": {
+        "name": "Lands End Lookout",
+        "address": "680 Point Lobos Ave, San Francisco, CA 94121, USA",
+        "lat": 37.779723,
+        "lng": -122.5115887,
+        "googlePlaceId": "ChIJud4Rs7KHhYARZX7u45tQsjA"
+      },
+      "meetingPoint": null,
+      "photos": [
+        {
+          "source": "Pasted image 20260805151151.png",
+          "path": null,
+          "alt": "Lands End"
+        }
+      ],
+      "duration": null,
+      "hours": null,
+      "transport": null,
+      "booking": null,
+      "costTemplate": [],
+      "links": [],
+      "notes": null,
+      "source": {
+        "obsidianHeading": "San Francisco - Zone"
+      }
+    },
+    {
+      "id": "twin-peaks",
+      "name": "Twin Peaks",
+      "kind": "zone",
+      "area": "sf",
+      "parentId": null,
+      "priority": null,
+      "location": {
+        "name": "Twin Peaks",
+        "address": "Twin Peaks, San Francisco, CA, USA",
+        "lat": 37.7536596,
+        "lng": -122.4506849,
+        "googlePlaceId": "ChIJp71fQgh-j4ARV7YEtWUmni0"
+      },
+      "meetingPoint": null,
+      "photos": [
+        {
+          "source": "Pasted image 20260805192200.png",
+          "path": null,
+          "alt": "Twin Peaks"
+        }
+      ],
+      "duration": null,
+      "hours": null,
+      "transport": null,
+      "booking": null,
+      "costTemplate": [],
+      "links": [],
+      "notes": null,
+      "source": {
+        "obsidianHeading": "San Francisco - Zone"
+      }
+    },
+    {
+      "id": "haight-ashbury",
+      "name": "Haight-Ashbury",
+      "kind": "zone",
+      "area": "sf",
+      "parentId": null,
+      "priority": null,
+      "location": {
+        "name": "Haight-Ashbury",
+        "address": "Haight-Ashbury, San Francisco, CA 94117, USA",
+        "lat": 37.7702175,
+        "lng": -122.4453615,
+        "googlePlaceId": "ChIJX_Qyn6yAhYARSAqN56vATTI"
+      },
+      "meetingPoint": null,
+      "photos": [
+        {
+          "source": "Pasted image 20260805150834.png",
+          "path": null,
+          "alt": "Haight-Ashbury"
+        }
+      ],
+      "duration": null,
+      "hours": null,
+      "transport": null,
+      "booking": null,
+      "costTemplate": [],
+      "links": [],
+      "notes": null,
+      "source": {
+        "obsidianHeading": "San Francisco - Zone"
+      }
+    },
+    {
+      "id": "chinatown",
+      "name": "Chinatown",
+      "kind": "zone",
+      "area": "sf",
+      "parentId": null,
+      "priority": null,
+      "location": {
+        "name": "Chinatown",
+        "address": "Chinatown, San Francisco, CA, USA",
+        "lat": 37.7944675,
+        "lng": -122.4048082,
+        "googlePlaceId": "ChIJHYqlWIuAhYARrIAPZpIwnyg"
+      },
+      "meetingPoint": null,
+      "photos": [
+        {
+          "source": "Pasted image 20260805151301.png",
+          "path": null,
+          "alt": "Chinatown"
+        }
+      ],
+      "duration": null,
+      "hours": null,
+      "transport": null,
+      "booking": null,
+      "costTemplate": [],
+      "links": [],
+      "notes": null,
+      "source": {
+        "obsidianHeading": "San Francisco - Zone"
+      }
+    },
+    {
+      "id": "mission-district",
+      "name": "Mission District",
+      "kind": "zone",
+      "area": "sf",
+      "parentId": null,
+      "priority": null,
+      "location": {
+        "name": "Mission District",
+        "address": "Mission District, San Francisco, CA, USA",
+        "lat": 37.7635614,
+        "lng": -122.4173724,
+        "googlePlaceId": "ChIJIzOAXzx-j4ARiVHkPQcAWAM"
+      },
+      "meetingPoint": null,
+      "photos": [
+        {
+          "source": "Pasted image 20260805171730.png",
+          "path": null,
+          "alt": "Mission District"
+        }
+      ],
+      "duration": null,
+      "hours": null,
+      "transport": null,
+      "booking": null,
+      "costTemplate": [],
+      "links": [],
+      "notes": null,
+      "source": {
+        "obsidianHeading": "San Francisco - Zone"
+      }
+    },
+    {
+      "id": "palace-of-fine-arts",
+      "name": "Palace of Fine Arts",
+      "kind": "attraction",
+      "area": "sf",
+      "parentId": null,
+      "priority": null,
+      "location": {
+        "name": "Palace of Fine Arts",
+        "address": "3301 Lyon St, San Francisco, CA 94123, USA",
+        "lat": 37.8029308,
+        "lng": -122.4484231,
+        "googlePlaceId": "ChIJgUYUENWGhYAR9awaWIrbYOk"
+      },
+      "meetingPoint": null,
+      "photos": [
+        {
+          "source": "Pasted image 20260807145526.png",
+          "path": null,
+          "alt": "Palace of Fine Arts"
+        }
+      ],
+      "duration": null,
+      "hours": null,
+      "transport": null,
+      "booking": null,
+      "costTemplate": [],
+      "links": [],
+      "notes": null,
+      "source": {
+        "obsidianHeading": "San Francisco - Zone"
+      }
+    },
+    {
+      "id": "mission-dolores-park",
+      "name": "Mission Dolores Park",
+      "kind": "zone",
+      "area": "sf",
+      "parentId": null,
+      "priority": null,
+      "location": {
+        "name": "Mission Dolores Park",
+        "address": "Dolores St & 19th St, San Francisco, CA 94114, USA",
+        "lat": 37.7602015,
+        "lng": -122.4267959,
+        "googlePlaceId": "ChIJp3CqeRd-j4ARYI0i8e_kGKY"
+      },
+      "meetingPoint": null,
+      "photos": [
+        {
+          "source": "Pasted image 20261030153954.png",
+          "path": null,
+          "alt": "Mission Dolores Park"
+        }
+      ],
+      "duration": null,
+      "hours": null,
+      "transport": null,
+      "booking": null,
+      "costTemplate": [],
+      "links": [],
+      "notes": null,
+      "source": {
+        "obsidianHeading": "San Francisco - Zone"
+      }
+    },
+    {
+      "id": "alcatraz",
+      "name": "Alcatraz",
+      "kind": "attraction",
+      "area": "sf",
+      "parentId": null,
+      "priority": null,
+      "location": {
+        "name": "Alcatraz Island",
+        "address": "Alcatraz Island, San Francisco, CA 94133, USA",
+        "lat": 37.8269775,
+        "lng": -122.4229555,
+        "googlePlaceId": "ChIJmRyMs_mAhYARpViaf6JEWNE"
+      },
+      "meetingPoint": {
+        "name": "Pier 33 Alcatraz Landing",
+        "address": "Pier 33 Ste 200, San Francisco, CA 94111, USA",
+        "lat": 37.8065473,
+        "lng": -122.4049057,
+        "googlePlaceId": "ChIJz1LKBvmAhYARFdpe008kIVU"
+      },
+      "photos": [
+        {
+          "source": "Pasted image 20260807145556.png",
+          "path": null,
+          "alt": "Alcatraz"
+        },
+        {
+          "source": "Pasted image 20261030110839.png",
+          "path": null,
+          "alt": "Alcatraz"
+        }
+      ],
+      "duration": {
+        "text": "3 ore (Day Tour)",
+        "minMinutes": 180,
+        "maxMinutes": 180
+      },
+      "hours": null,
+      "transport": "Plecare de la Pier 33. Feribotul durează cam 15 minute în fiecare direcție.",
+      "booking": {
+        "required": true,
+        "status": "todo",
+        "url": "https://alcatrazcitycruises.com/",
+        "bookBy": null,
+        "reference": null,
+        "note": "Day Tour. Vino la Pier 33 cu ~30 de minute înainte pentru coadă și control."
+      },
+      "costTemplate": [
+        {
+          "id": "bilet",
+          "label": "Bilet Alcatraz Day Tour",
+          "category": "bilet",
+          "amountCents": 4795,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "note",
+          "verifiedAt": null,
+          "note": null
+        }
+      ],
+      "links": [
+        {
+          "label": "Bilete Alcatraz City Cruises",
+          "url": "https://alcatrazcitycruises.com/"
+        }
+      ],
+      "notes": "Pre-departure: Plan to arrive at Pier 33 about 30 minutes early to line up and pass through security.\nFerry Ride: The crossing takes roughly 15 minutes each way.\nThe Climb: It takes about 10–15 minutes to walk the steep, quarter-mile uphill path from the island dock to the cellhouse (a 13-story climb). A free electric shuttle (S.E.A.T.) is available at the dock if you have mobility needs.\nThe Audio Tour: The core cellhouse audio guide runs about 45 minutes, though you can pause it and walk at your own pace.",
+      "source": {
+        "obsidianHeading": "Alcatraz - Day Tour - 3 ore"
+      }
+    },
+    {
+      "id": "muir-woods",
+      "name": "Muir Woods",
+      "kind": "nature",
+      "area": "marin",
+      "parentId": null,
+      "priority": null,
+      "location": {
+        "name": "Muir Woods National Monument",
+        "address": "Muir Woods National Monument, Mill Valley, CA 94941, USA",
+        "lat": 37.8970199,
+        "lng": -122.5811177,
+        "googlePlaceId": "ChIJrWJnvbSRhYAR-a__aHZY_3o"
+      },
+      "meetingPoint": null,
+      "photos": [
+        {
+          "source": "Pasted image 20260805145452.png",
+          "path": null,
+          "alt": "Muir Woods"
+        }
+      ],
+      "duration": {
+        "text": "3–4 ore dimineața",
+        "minMinutes": 180,
+        "maxMinutes": 240
+      },
+      "hours": null,
+      "transport": "La 1h20 cu autobuzul de San Francisco, ajung pe la 8 dimineața. Plec cu autobuzul — 1h până la Sausalito.",
+      "booking": null,
+      "costTemplate": [
+        {
+          "id": "intrare",
+          "label": "Intrare Muir Woods",
+          "category": "bilet",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        }
+      ],
+      "links": [],
+      "notes": null,
+      "source": {
+        "obsidianHeading": "Muir Woods - 3-4 Ore dimineata"
+      }
+    },
+    {
+      "id": "sausalito",
+      "name": "Sausalito",
+      "kind": "zone",
+      "area": "marin",
+      "parentId": null,
+      "priority": null,
+      "location": {
+        "name": "Sausalito",
+        "address": "Sausalito, CA 94965, USA",
+        "lat": 37.856463,
+        "lng": -122.47865,
+        "googlePlaceId": "ChIJhy1PB0WEhYAR8rPFniJvSgk"
+      },
+      "meetingPoint": null,
+      "photos": [
+        {
+          "source": "Pasted image 20260805145706.png",
+          "path": null,
+          "alt": "Sausalito"
+        }
+      ],
+      "duration": {
+        "text": "5–6 ore la prânz",
+        "minMinutes": 300,
+        "maxMinutes": 360
+      },
+      "hours": null,
+      "transport": "Plec la ~18 cu feribotul înspre San Francisco.",
+      "booking": null,
+      "costTemplate": [],
+      "links": [],
+      "notes": "Aici pot și mânca.",
+      "source": {
+        "obsidianHeading": "Sausalito - 5-6 ore la pranz"
+      }
+    },
+    {
+      "id": "berkeley",
+      "name": "Berkeley",
+      "kind": "daytrip",
+      "area": "east-bay",
+      "parentId": null,
+      "priority": null,
+      "location": {
+        "name": "UC Berkeley",
+        "address": "Berkeley, CA, USA",
+        "lat": 37.8712141,
+        "lng": -122.255463,
+        "googlePlaceId": "ChIJwdcixRh3j4ARiTJrO-o0gNo"
+      },
+      "meetingPoint": null,
+      "photos": [
+        {
+          "source": "Pasted image 20261030110736.png",
+          "path": null,
+          "alt": "Berkeley"
+        }
+      ],
+      "duration": {
+        "text": "5–6 ore — vizitez facultatea",
+        "minMinutes": 300,
+        "maxMinutes": 360
+      },
+      "hours": null,
+      "transport": null,
+      "booking": null,
+      "costTemplate": [],
+      "links": [],
+      "notes": "Mă văd cu Clara, poate îmi face un tur.",
+      "source": {
+        "obsidianHeading": "Berkeley - 5-6 Ore - vizitez facultatea"
+      }
+    },
+    {
+      "id": "silicon-valley",
+      "name": "Silicon Valley",
+      "kind": "daytrip",
+      "area": "south-bay",
+      "parentId": null,
+      "priority": null,
+      "location": null,
+      "meetingPoint": null,
+      "photos": [],
+      "duration": {
+        "text": "o zi",
+        "minMinutes": null,
+        "maxMinutes": null
+      },
+      "hours": null,
+      "transport": "1h+ cu Caltrain.",
+      "booking": null,
+      "costTemplate": [],
+      "links": [],
+      "notes": "HP Garage, Google Visitor Experience (visitable), Apple Park Visitor Center, Nvidia Headquarters, Intel Museum.",
+      "source": {
+        "obsidianHeading": "Sillicon Valley - O zi"
+      }
+    },
+    {
+      "id": "hp-garage",
+      "name": "HP Garage",
+      "kind": "attraction",
+      "area": "peninsula",
+      "parentId": "silicon-valley",
+      "priority": null,
+      "location": {
+        "name": "HP Garage",
+        "address": "367 Addison Ave, Palo Alto, CA 94301, USA",
+        "lat": 37.4430392,
+        "lng": -122.1546249,
+        "googlePlaceId": "ChIJE5Nk7rC7j4ARW_lI6P5DoMg"
+      },
+      "meetingPoint": null,
+      "photos": [],
+      "duration": null,
+      "hours": null,
+      "transport": null,
+      "booking": null,
+      "costTemplate": [],
+      "links": [],
+      "notes": null,
+      "source": {
+        "obsidianHeading": "Sillicon Valley - O zi"
+      }
+    },
+    {
+      "id": "google-visitor-experience",
+      "name": "Google Visitor Experience",
+      "kind": "attraction",
+      "area": "peninsula",
+      "parentId": "silicon-valley",
+      "priority": null,
+      "location": {
+        "name": "Google Visitor Experience",
+        "address": "2000 N Shoreline Blvd Ground Floor, Mountain View, CA 94043, USA",
+        "lat": 37.4215862,
+        "lng": -122.0806376,
+        "googlePlaceId": "ChIJofgfKfm5j4ARxFyZjOroOyI"
+      },
+      "meetingPoint": null,
+      "photos": [],
+      "duration": null,
+      "hours": null,
+      "transport": null,
+      "booking": null,
+      "costTemplate": [],
+      "links": [],
+      "notes": null,
+      "source": {
+        "obsidianHeading": "Sillicon Valley - O zi"
+      }
+    },
+    {
+      "id": "apple-park-visitor-center",
+      "name": "Apple Park Visitor Center",
+      "kind": "attraction",
+      "area": "south-bay",
+      "parentId": "silicon-valley",
+      "priority": null,
+      "location": {
+        "name": "Apple Park Visitor Center",
+        "address": "10600 N Tantau Ave, Cupertino, CA 95014, USA",
+        "lat": 37.332773,
+        "lng": -122.0053844,
+        "googlePlaceId": "ChIJ0aPn18W1j4ARgC9zTSPeQRc"
+      },
+      "meetingPoint": null,
+      "photos": [],
+      "duration": null,
+      "hours": null,
+      "transport": null,
+      "booking": null,
+      "costTemplate": [],
+      "links": [],
+      "notes": null,
+      "source": {
+        "obsidianHeading": "Sillicon Valley - O zi"
+      }
+    },
+    {
+      "id": "nvidia-hq",
+      "name": "Nvidia Headquarters",
+      "kind": "attraction",
+      "area": "south-bay",
+      "parentId": "silicon-valley",
+      "priority": null,
+      "location": {
+        "name": "NVIDIA Headquarters",
+        "address": "2788 San Tomas Expy, Santa Clara, CA 95051, USA",
+        "lat": 37.3706254,
+        "lng": -121.9671894,
+        "googlePlaceId": "ChIJ24DEAifKj4ARyQheuUd4UnY"
+      },
+      "meetingPoint": null,
+      "photos": [],
+      "duration": null,
+      "hours": null,
+      "transport": null,
+      "booking": null,
+      "costTemplate": [],
+      "links": [],
+      "notes": null,
+      "source": {
+        "obsidianHeading": "Sillicon Valley - O zi"
+      }
+    },
+    {
+      "id": "intel-museum",
+      "name": "Intel Museum",
+      "kind": "museum",
+      "area": "south-bay",
+      "parentId": "silicon-valley",
+      "priority": null,
+      "location": {
+        "name": "Intel Museum",
+        "address": "2200 Mission College Blvd, Santa Clara, CA 95054, USA",
+        "lat": 37.3878532,
+        "lng": -121.9635026,
+        "googlePlaceId": "ChIJi0P5bJHJj4ARlze0BLmnRHY"
+      },
+      "meetingPoint": null,
+      "photos": [],
+      "duration": null,
+      "hours": null,
+      "transport": null,
+      "booking": null,
+      "costTemplate": [],
+      "links": [],
+      "notes": null,
+      "source": {
+        "obsidianHeading": "Sillicon Valley - O zi"
+      }
+    },
+    {
+      "id": "imax",
+      "name": "IMAX",
+      "kind": "event",
+      "area": "sf",
+      "parentId": null,
+      "priority": null,
+      "location": null,
+      "meetingPoint": null,
+      "photos": [],
+      "duration": {
+        "text": "3–5 ore",
+        "minMinutes": 180,
+        "maxMinutes": 300
+      },
+      "hours": null,
+      "transport": null,
+      "booking": {
+        "required": true,
+        "status": "todo",
+        "url": "https://www.fandango.com/dune-part-one-and-dune-part-two-double-feature-2026-248265/movie-overview",
+        "bookBy": null,
+        "reference": null,
+        "note": "Booking Dune — primele Dune-uri. Data și sala de verificat."
+      },
+      "costTemplate": [
+        {
+          "id": "bilet",
+          "label": "Bilet IMAX",
+          "category": "bilet",
+          "amountCents": 2400,
+          "amountMaxCents": 3000,
+          "qty": 1,
+          "paid": false,
+          "source": "note",
+          "verifiedAt": null,
+          "note": "24–30 de dolari per bilet"
+        }
+      ],
+      "links": [
+        {
+          "label": "Dune Part One + Part Two (double feature)",
+          "url": "https://www.fandango.com/dune-part-one-and-dune-part-two-double-feature-2026-248265/movie-overview"
+        },
+        {
+          "label": "Once Upon a Time in Hollywood",
+          "url": "https://www.fandango.com/once-upon-a-time-in-hollywood-211527/movie-overview"
+        }
+      ],
+      "notes": "Unul dintre cele mai mișto din lume — 24-30 de dolari per bilet. Booking Dune primele dune-uri.",
+      "source": {
+        "obsidianHeading": "IMAX Cinema - 3/5 Ore"
+      }
+    },
+    {
+      "id": "napa-valley",
+      "name": "Napa Valley",
+      "kind": "daytrip",
+      "area": "napa",
+      "parentId": null,
+      "priority": null,
+      "location": {
+        "name": "Napa",
+        "address": "Napa, CA, USA",
+        "lat": 38.2975381,
+        "lng": -122.286865,
+        "googlePlaceId": "ChIJ797y-Of_hIARJceEMzqfYtY"
+      },
+      "meetingPoint": {
+        "name": "San Francisco Ferry Building",
+        "address": "1 Ferry Building, San Francisco, CA 94105, USA",
+        "lat": 37.7954425,
+        "lng": -122.3936136,
+        "googlePlaceId": "ChIJWTGPjmaAhYARxz6l1hOj92w"
+      },
+      "photos": [
+        {
+          "source": "Pasted image 20261030120343.png",
+          "path": null,
+          "alt": "Napa Valley"
+        }
+      ],
+      "duration": {
+        "text": "o zi",
+        "minMinutes": null,
+        "maxMinutes": null
+      },
+      "hours": null,
+      "transport": "~1 oră și jumătate nord de SF.\nOPT 1 — MAȘINĂ: 1:20 ore de mers cu mașina.\nOPT 2 — AUTOBUZ: Pasul 1: Mergi la clădirea istorică Ferry Building din San Francisco și ia feribotul San Francisco Bay Ferry pe ruta spre Vallejo. Călătoria pe apă durează cam o oră și îți oferă vederi superbe spre Alcatraz și poduri. Pasul 2: Chiar de la terminalul de feribot din Vallejo, te urci în autobuzul expres Vine Transit (Linia 21), care te duce direct în centrul orașului Napa (Napa Transit Center) în aproximativ 30-40 de minute.",
+      "booking": null,
+      "costTemplate": [],
+      "links": [
+        {
+          "label": "San Francisco Bay Ferry",
+          "url": "https://sanfranciscobayferry.com/"
+        }
+      ],
+      "notes": null,
+      "source": {
+        "obsidianHeading": "Napa Valley"
+      }
+    },
+    {
+      "id": "angel-island",
+      "name": "Angel Island",
+      "kind": "daytrip",
+      "area": "bay",
+      "parentId": null,
+      "priority": null,
+      "location": {
+        "name": "Ayala Cove, Angel Island",
+        "address": "Ayala Cove Pier - Angel Island, Tiburon, CA 94920, USA",
+        "lat": 37.86831,
+        "lng": -122.43509,
+        "googlePlaceId": "ChIJJf4n4ZGDhYAR9vlA4LjbplY"
+      },
+      "meetingPoint": {
+        "name": "San Francisco Ferry Building",
+        "address": "1 Ferry Building, San Francisco, CA 94105, USA",
+        "lat": 37.7954425,
+        "lng": -122.3936136,
+        "googlePlaceId": "ChIJWTGPjmaAhYARxz6l1hOj92w"
+      },
+      "photos": [
+        {
+          "source": "Pasted image 20261030153634.png",
+          "path": null,
+          "alt": "Angel Island"
+        }
+      ],
+      "duration": {
+        "text": "o zi (09:25 – 16:55)",
+        "minMinutes": null,
+        "maxMinutes": null
+      },
+      "hours": {
+        "text": "Primul feribot din SF spre insulă: 09:25 · ultimul feribot de pe insulă spre SF: 16:55",
+        "open": null,
+        "close": null,
+        "closedWeekdays": []
+      },
+      "transport": "Iau feribotul companiei Golden Gate Ferry de la clădirea istorică Ferry Building (sau feriboturile Blue & Gold Fleet de la Pier 41). Călătoria pe apă durează în jur de 30-40 de minute.",
+      "booking": {
+        "required": true,
+        "status": "todo",
+        "url": "https://thebikehut.org/",
+        "bookBy": null,
+        "reference": null,
+        "note": "Bicicletă: $26 pe zi pentru hybrid / mountain bike (adult)."
+      },
+      "costTemplate": [
+        {
+          "id": "bicicleta",
+          "label": "Bicicletă (The Bike Hut)",
+          "category": "altele",
+          "amountCents": 2600,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "note",
+          "verifiedAt": null,
+          "note": "$26 per day for adult hybrid and mountain bikes"
+        }
+      ],
+      "links": [
+        {
+          "label": "The Bike Hut",
+          "url": "https://thebikehut.org/"
+        }
+      ],
+      "notes": "Ce fac\nDrumeție spre Mount Livermore: Traseul principal te duce până în cel mai înalt punct al insulei (238 de metri). Urcarea durează în jur de 1,5 – 2 ore pe o potecă lejeră mrginită de stejari și pini.\nTurul Perimetral cu Bicicleta: Există un drum asfaltat de aproximativ 8 km (Perimeter Road) care înconjoară insula. Poți închiria o bicicletă direct de pe insulă (de la Ayala Cove) sau poți veni cu una închiriată din San Francisco (luată pe feribot). Este o plimbare superbă, relativ plată, cu puncte de belvedere la fiecare curbă.\n\nPlan\n1. Debarcare în Ayala Cove: Cobori de pe feribot, îți iei bicicleta și începi să pedalezi spre dreapta pe Perimeter Road (în sensul acelor de ceasornic).\n2. Pedalat până la Sunset Trail (~15-20 minute): Drumul pe bicicletă până la baza traseului este superb, oferind primele vederi spre Podul Golden Gate.\n3. Drumeția pe jos spre vârf (~1,5 - 2 ore dus-întors): Îți legi bicicleta la rastelul de la începutul potecii. Urci pe jos pe Sunset Trail până pe platforma de observație de pe Mount Livermore (238 m), mănânci un sandviș bucurându-te de o panoramă incredibilă de 360 de grade, apoi cobori pe aceeași potecă înapoi la bicicletă.\n4. Continuarea turului pe bicicletă (~30-45 minute): Te urci înapoi pe bicicletă și continui restul cercului în jurul insulei. Vei trece pe lângă vechea Stație de Imigrare (unde te poți opri din nou, legând bicicleta la rastelele de acolo pentru a vizita muzeul) și te întorci în siguranță la feribot în Ayala Cove.",
+      "source": {
+        "obsidianHeading": "Angel Island"
+      }
+    },
+    {
+      "id": "sfmoma",
+      "name": "SFMOMA",
+      "kind": "museum",
+      "area": "sf",
+      "parentId": null,
+      "priority": null,
+      "location": {
+        "name": "San Francisco Museum of Modern Art",
+        "address": "151 3rd St, San Francisco, CA 94103, USA",
+        "lat": 37.7857182,
+        "lng": -122.4010508,
+        "googlePlaceId": "ChIJ53I1Yn2AhYAR_Vl1vNygfMg"
+      },
+      "meetingPoint": null,
+      "photos": [
+        {
+          "source": "Pasted image 20261030154430.png",
+          "path": null,
+          "alt": "SFMOMA"
+        }
+      ],
+      "duration": {
+        "text": "3–4 ore",
+        "minMinutes": 180,
+        "maxMinutes": 240
+      },
+      "hours": {
+        "text": "10:00–17:00, închis miercurea",
+        "open": "10:00",
+        "close": "17:00",
+        "closedWeekdays": [
+          3
+        ]
+      },
+      "transport": null,
+      "booking": null,
+      "costTemplate": [
+        {
+          "id": "bilet",
+          "label": "Bilet SFMOMA",
+          "category": "bilet",
+          "amountCents": 2300,
+          "amountMaxCents": 3000,
+          "qty": 1,
+          "paid": false,
+          "source": "note",
+          "verifiedAt": null,
+          "note": "Studenți 19–24 ani cu carnet/ID valabil: $23 · Adulți: $30"
+        }
+      ],
+      "links": [
+        {
+          "label": "sfmoma.org",
+          "url": "https://www.sfmoma.org/"
+        }
+      ],
+      "notes": "Studenți (cu carnet/ID valabil, 19–24 ani): $23 | Adulți: $30. Este deschis între 10:00 AM și 5:00 PM, inafara de miercuri.",
+      "source": {
+        "obsidianHeading": "SFMOMA (Museum of Modern Art) - 3-4 Ore"
+      }
+    },
+    {
+      "id": "computer-history-museum",
+      "name": "Computer History Museum",
+      "kind": "museum",
+      "area": "peninsula",
+      "parentId": null,
+      "priority": null,
+      "location": {
+        "name": "Computer History Museum",
+        "address": "1401 N Shoreline Blvd, Mountain View, CA 94043, USA",
+        "lat": 37.4142744,
+        "lng": -122.077409,
+        "googlePlaceId": "ChIJm7NJkla3j4AR8vR-HWRxgOo"
+      },
+      "meetingPoint": null,
+      "photos": [],
+      "duration": {
+        "text": "2,5 ore",
+        "minMinutes": 150,
+        "maxMinutes": 150
+      },
+      "hours": {
+        "text": "miercuri–duminică, 10:00–17:00",
+        "open": "10:00",
+        "close": "17:00",
+        "closedWeekdays": [
+          1,
+          2
+        ]
+      },
+      "transport": null,
+      "booking": null,
+      "costTemplate": [
+        {
+          "id": "bilet",
+          "label": "Bilet Computer History Museum",
+          "category": "bilet",
+          "amountCents": 1650,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "note",
+          "verifiedAt": null,
+          "note": "Preț student (cu ID valid). Prețul de adult nu e în notă."
+        }
+      ],
+      "links": [
+        {
+          "label": "CHM Tickets & Admission",
+          "url": "https://computerhistory.org/hours-admission/"
+        }
+      ],
+      "notes": "Studenți (cu ID valid) și Seniori (65+ ani): $16.50. Deschis de miercuri până duminică, între orele 10:00 AM și 5:00 PM.",
+      "source": {
+        "obsidianHeading": "The Computer History Museum (Mountain View) - 2.5 Ore"
+      }
+    }
+  ],
+  "days": [
+    {
+      "date": "2026-11-02",
+      "status": "confirmed",
+      "kind": "valley",
+      "title": "Aterizare · Stanford",
+      "coverPlaceId": "stanford",
+      "notes": "Prima zi: Stanford, confirmat.",
+      "costs": [
+        {
+          "id": "transfer-sfo",
+          "label": "Transport SFO → Stanford → cazare",
+          "category": "transport",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        },
+        {
+          "id": "mancare",
+          "label": "Mâncare",
+          "category": "mancare",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        }
+      ],
+      "items": [
+        {
+          "id": "i-1102-aterizare",
+          "placeId": null,
+          "label": "Aterizare SFO",
+          "kind": "transport",
+          "start": null,
+          "durationMin": null,
+          "fixed": true,
+          "done": false,
+          "costs": [],
+          "notes": "Ora aterizării de completat.",
+          "calendarEventId": null
+        },
+        {
+          "id": "i-1102-stanford",
+          "placeId": "stanford",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        }
+      ]
+    },
+    {
+      "date": "2026-11-03",
+      "status": "draft",
+      "kind": "city",
+      "title": "Alcatraz · North Beach · Coit Tower · Chinatown",
+      "coverPlaceId": "alcatraz",
+      "notes": null,
+      "costs": [
+        {
+          "id": "muni",
+          "label": "Muni prin oraș",
+          "category": "transport",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        },
+        {
+          "id": "mancare",
+          "label": "Mâncare",
+          "category": "mancare",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        }
+      ],
+      "items": [
+        {
+          "id": "i-1103-alcatraz",
+          "placeId": "alcatraz",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": 180,
+          "fixed": false,
+          "done": false,
+          "costs": [
+            {
+              "id": "bilet",
+              "label": "Bilet Alcatraz Day Tour",
+              "category": "bilet",
+              "amountCents": 4795,
+              "amountMaxCents": null,
+              "qty": 1,
+              "paid": false,
+              "source": "note",
+              "verifiedAt": null,
+              "note": null
+            }
+          ],
+          "notes": null,
+          "calendarEventId": null
+        },
+        {
+          "id": "i-1103-north-beach",
+          "placeId": "north-beach",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        },
+        {
+          "id": "i-1103-coit-tower",
+          "placeId": "coit-tower",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        },
+        {
+          "id": "i-1103-chinatown",
+          "placeId": "chinatown",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        }
+      ]
+    },
+    {
+      "date": "2026-11-04",
+      "status": "draft",
+      "kind": "daytrip",
+      "title": "Muir Woods + Sausalito",
+      "coverPlaceId": "muir-woods",
+      "notes": null,
+      "costs": [
+        {
+          "id": "autobuz-muir",
+          "label": "Autobuz SF → Muir Woods",
+          "category": "transport",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        },
+        {
+          "id": "autobuz-sausalito",
+          "label": "Autobuz Muir Woods → Sausalito",
+          "category": "transport",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        },
+        {
+          "id": "feribot-sausalito",
+          "label": "Feribot Sausalito → SF",
+          "category": "transport",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        },
+        {
+          "id": "mancare",
+          "label": "Prânz în Sausalito + mâncare",
+          "category": "mancare",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        }
+      ],
+      "items": [
+        {
+          "id": "i-1104-muir-woods",
+          "placeId": "muir-woods",
+          "label": null,
+          "kind": "visit",
+          "start": "08:00",
+          "durationMin": 180,
+          "fixed": false,
+          "done": false,
+          "costs": [
+            {
+              "id": "intrare",
+              "label": "Intrare Muir Woods",
+              "category": "bilet",
+              "amountCents": null,
+              "amountMaxCents": null,
+              "qty": 1,
+              "paid": false,
+              "source": "manual",
+              "verifiedAt": null,
+              "note": null
+            }
+          ],
+          "notes": "Ajung pe la 8 dimineața (1h20 cu autobuzul din SF).",
+          "calendarEventId": null
+        },
+        {
+          "id": "i-1104-autobuz-sausalito",
+          "placeId": null,
+          "label": "Autobuz spre Sausalito",
+          "kind": "transport",
+          "start": null,
+          "durationMin": 60,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        },
+        {
+          "id": "i-1104-sausalito",
+          "placeId": "sausalito",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": 300,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        },
+        {
+          "id": "i-1104-feribot-sf",
+          "placeId": null,
+          "label": "Feribot Sausalito → SF",
+          "kind": "transport",
+          "start": "18:00",
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": "Plec la ~18:00 — orarul exact de verificat.",
+          "calendarEventId": null
+        }
+      ]
+    },
+    {
+      "date": "2026-11-05",
+      "status": "draft",
+      "kind": "city",
+      "title": "SFMOMA · Downtown",
+      "coverPlaceId": "sfmoma",
+      "notes": null,
+      "costs": [
+        {
+          "id": "muni",
+          "label": "Muni prin oraș",
+          "category": "transport",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        },
+        {
+          "id": "mancare",
+          "label": "Mâncare",
+          "category": "mancare",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        }
+      ],
+      "items": [
+        {
+          "id": "i-1105-sfmoma",
+          "placeId": "sfmoma",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": 180,
+          "fixed": false,
+          "done": false,
+          "costs": [
+            {
+              "id": "bilet",
+              "label": "Bilet SFMOMA",
+              "category": "bilet",
+              "amountCents": 2300,
+              "amountMaxCents": 3000,
+              "qty": 1,
+              "paid": false,
+              "source": "note",
+              "verifiedAt": null,
+              "note": "Studenți 19–24 ani cu carnet/ID valabil: $23 · Adulți: $30"
+            }
+          ],
+          "notes": null,
+          "calendarEventId": null
+        },
+        {
+          "id": "i-1105-downtown",
+          "placeId": "downtown",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        }
+      ]
+    },
+    {
+      "date": "2026-11-06",
+      "status": "draft",
+      "kind": "daytrip",
+      "title": "Berkeley cu Clara",
+      "coverPlaceId": "berkeley",
+      "notes": "Depinde de ziua în care poate Clara.",
+      "costs": [
+        {
+          "id": "transport-berkeley",
+          "label": "Transport SF ↔ Berkeley",
+          "category": "transport",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        },
+        {
+          "id": "mancare",
+          "label": "Mâncare",
+          "category": "mancare",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        }
+      ],
+      "items": [
+        {
+          "id": "i-1106-berkeley",
+          "placeId": "berkeley",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": 300,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        }
+      ]
+    },
+    {
+      "date": "2026-11-07",
+      "status": "draft",
+      "kind": "daytrip",
+      "title": "Angel Island",
+      "coverPlaceId": "angel-island",
+      "notes": null,
+      "costs": [
+        {
+          "id": "feribot",
+          "label": "Feribot SF ↔ Angel Island (dus-întors)",
+          "category": "transport",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        },
+        {
+          "id": "mancare",
+          "label": "Sandviș pentru vârf + mâncare",
+          "category": "mancare",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        }
+      ],
+      "items": [
+        {
+          "id": "i-1107-feribot-dus",
+          "placeId": null,
+          "label": "Feribot SF → Angel Island",
+          "kind": "transport",
+          "start": "09:25",
+          "durationMin": 35,
+          "fixed": true,
+          "done": false,
+          "costs": [],
+          "notes": "Golden Gate Ferry de la Ferry Building (sau Blue & Gold Fleet de la Pier 41). Programul pentru data exactă de verificat.",
+          "calendarEventId": null
+        },
+        {
+          "id": "i-1107-angel-island",
+          "placeId": "angel-island",
+          "label": null,
+          "kind": "visit",
+          "start": "10:05",
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [
+            {
+              "id": "bicicleta",
+              "label": "Bicicletă (The Bike Hut)",
+              "category": "altele",
+              "amountCents": 2600,
+              "amountMaxCents": null,
+              "qty": 1,
+              "paid": false,
+              "source": "note",
+              "verifiedAt": null,
+              "note": "$26 per day for adult hybrid and mountain bikes"
+            }
+          ],
+          "notes": null,
+          "calendarEventId": null
+        },
+        {
+          "id": "i-1107-ultimul-feribot",
+          "placeId": null,
+          "label": "Ultimul feribot spre SF",
+          "kind": "deadline",
+          "start": "16:55",
+          "durationMin": null,
+          "fixed": true,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        }
+      ]
+    },
+    {
+      "date": "2026-11-08",
+      "status": "draft",
+      "kind": "city",
+      "title": "Golden Gate Park · Haight-Ashbury · Twin Peaks",
+      "coverPlaceId": "golden-gate-park",
+      "notes": null,
+      "costs": [
+        {
+          "id": "muni",
+          "label": "Muni prin oraș",
+          "category": "transport",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        },
+        {
+          "id": "mancare",
+          "label": "Mâncare",
+          "category": "mancare",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        }
+      ],
+      "items": [
+        {
+          "id": "i-1108-golden-gate-park",
+          "placeId": "golden-gate-park",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        },
+        {
+          "id": "i-1108-haight-ashbury",
+          "placeId": "haight-ashbury",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        },
+        {
+          "id": "i-1108-twin-peaks",
+          "placeId": "twin-peaks",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        }
+      ]
+    },
+    {
+      "date": "2026-11-09",
+      "status": "draft",
+      "kind": "valley",
+      "title": "Stanford",
+      "coverPlaceId": "stanford",
+      "notes": null,
+      "costs": [
+        {
+          "id": "caltrain",
+          "label": "Caltrain dus-întors",
+          "category": "transport",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        },
+        {
+          "id": "mancare",
+          "label": "Mâncare",
+          "category": "mancare",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        }
+      ],
+      "items": [
+        {
+          "id": "i-1109-stanford",
+          "placeId": "stanford",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        }
+      ]
+    },
+    {
+      "date": "2026-11-10",
+      "status": "draft",
+      "kind": "valley",
+      "title": "Stanford",
+      "coverPlaceId": "stanford",
+      "notes": null,
+      "costs": [
+        {
+          "id": "caltrain",
+          "label": "Caltrain dus-întors",
+          "category": "transport",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        },
+        {
+          "id": "mancare",
+          "label": "Mâncare",
+          "category": "mancare",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        }
+      ],
+      "items": [
+        {
+          "id": "i-1110-stanford",
+          "placeId": "stanford",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        }
+      ]
+    },
+    {
+      "date": "2026-11-11",
+      "status": "draft",
+      "kind": "valley",
+      "title": "Stanford",
+      "coverPlaceId": "stanford",
+      "notes": null,
+      "costs": [
+        {
+          "id": "caltrain",
+          "label": "Caltrain dus-întors",
+          "category": "transport",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        },
+        {
+          "id": "mancare",
+          "label": "Mâncare",
+          "category": "mancare",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        }
+      ],
+      "items": [
+        {
+          "id": "i-1111-stanford",
+          "placeId": "stanford",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        }
+      ]
+    },
+    {
+      "date": "2026-11-12",
+      "status": "draft",
+      "kind": "city",
+      "title": "Mission · Dolores Park",
+      "coverPlaceId": "mission-district",
+      "notes": null,
+      "costs": [
+        {
+          "id": "muni",
+          "label": "Muni prin oraș",
+          "category": "transport",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        },
+        {
+          "id": "mancare",
+          "label": "Mâncare",
+          "category": "mancare",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        }
+      ],
+      "items": [
+        {
+          "id": "i-1112-mission-district",
+          "placeId": "mission-district",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        },
+        {
+          "id": "i-1112-mission-dolores-park",
+          "placeId": "mission-dolores-park",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        }
+      ]
+    },
+    {
+      "date": "2026-11-13",
+      "status": "draft",
+      "kind": "valley",
+      "title": "Silicon Valley + Computer History Museum",
+      "coverPlaceId": "silicon-valley",
+      "notes": "Computer History Museum e deschis doar miercuri–duminică.",
+      "costs": [
+        {
+          "id": "caltrain",
+          "label": "Caltrain dus-întors",
+          "category": "transport",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        },
+        {
+          "id": "transport-local",
+          "label": "Transport local între opriri",
+          "category": "transport",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        },
+        {
+          "id": "mancare",
+          "label": "Mâncare",
+          "category": "mancare",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        }
+      ],
+      "items": [
+        {
+          "id": "i-1113-hp-garage",
+          "placeId": "hp-garage",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        },
+        {
+          "id": "i-1113-computer-history-museum",
+          "placeId": "computer-history-museum",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": 150,
+          "fixed": false,
+          "done": false,
+          "costs": [
+            {
+              "id": "bilet",
+              "label": "Bilet Computer History Museum",
+              "category": "bilet",
+              "amountCents": 1650,
+              "amountMaxCents": null,
+              "qty": 1,
+              "paid": false,
+              "source": "note",
+              "verifiedAt": null,
+              "note": "Preț student (cu ID valid). Prețul de adult nu e în notă."
+            }
+          ],
+          "notes": null,
+          "calendarEventId": null
+        },
+        {
+          "id": "i-1113-google-visitor-experience",
+          "placeId": "google-visitor-experience",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        },
+        {
+          "id": "i-1113-apple-park-visitor-center",
+          "placeId": "apple-park-visitor-center",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        },
+        {
+          "id": "i-1113-nvidia-hq",
+          "placeId": "nvidia-hq",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        },
+        {
+          "id": "i-1113-intel-museum",
+          "placeId": "intel-museum",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        }
+      ]
+    },
+    {
+      "date": "2026-11-14",
+      "status": "draft",
+      "kind": "daytrip",
+      "title": "Napa Valley",
+      "coverPlaceId": "napa-valley",
+      "notes": null,
+      "costs": [
+        {
+          "id": "feribot-vallejo",
+          "label": "Feribot SF ↔ Vallejo (dus-întors)",
+          "category": "transport",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        },
+        {
+          "id": "vine-21",
+          "label": "Vine Transit 21 Vallejo ↔ Napa (dus-întors)",
+          "category": "transport",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        },
+        {
+          "id": "mancare",
+          "label": "Mâncare",
+          "category": "mancare",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        }
+      ],
+      "items": [
+        {
+          "id": "i-1114-napa-valley",
+          "placeId": "napa-valley",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        }
+      ]
+    },
+    {
+      "date": "2026-11-15",
+      "status": "draft",
+      "kind": "city",
+      "title": "Presidio · Crissy Field · Palace of Fine Arts",
+      "coverPlaceId": "crissy-field",
+      "notes": null,
+      "costs": [
+        {
+          "id": "muni",
+          "label": "Muni prin oraș",
+          "category": "transport",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        },
+        {
+          "id": "mancare",
+          "label": "Mâncare",
+          "category": "mancare",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        }
+      ],
+      "items": [
+        {
+          "id": "i-1115-presidio",
+          "placeId": "presidio",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        },
+        {
+          "id": "i-1115-crissy-field",
+          "placeId": "crissy-field",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        },
+        {
+          "id": "i-1115-palace-of-fine-arts",
+          "placeId": "palace-of-fine-arts",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        }
+      ]
+    },
+    {
+      "date": "2026-11-16",
+      "status": "draft",
+      "kind": "daytrip",
+      "title": "Half Moon Bay",
+      "coverPlaceId": "half-moon-bay",
+      "notes": null,
+      "costs": [
+        {
+          "id": "caltrain-samtrans",
+          "label": "Caltrain + SamTrans 294 (dus-întors)",
+          "category": "transport",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        },
+        {
+          "id": "mancare",
+          "label": "Mâncare",
+          "category": "mancare",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        }
+      ],
+      "items": [
+        {
+          "id": "i-1116-plecare",
+          "placeId": null,
+          "label": "Plecare spre Half Moon Bay (Caltrain + SamTrans 294)",
+          "kind": "transport",
+          "start": "05:23",
+          "durationMin": 150,
+          "fixed": true,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        },
+        {
+          "id": "i-1116-half-moon-bay",
+          "placeId": "half-moon-bay",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        },
+        {
+          "id": "i-1116-intoarcere",
+          "placeId": null,
+          "label": "Întoarcere spre SF",
+          "kind": "transport",
+          "start": "20:23",
+          "durationMin": 150,
+          "fixed": true,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        }
+      ]
+    },
+    {
+      "date": "2026-11-17",
+      "status": "draft",
+      "kind": "city",
+      "title": "Lands End · Ocean Beach · IMAX",
+      "coverPlaceId": "lands-end",
+      "notes": null,
+      "costs": [
+        {
+          "id": "muni",
+          "label": "Muni prin oraș",
+          "category": "transport",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        },
+        {
+          "id": "mancare",
+          "label": "Mâncare",
+          "category": "mancare",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        }
+      ],
+      "items": [
+        {
+          "id": "i-1117-lands-end",
+          "placeId": "lands-end",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        },
+        {
+          "id": "i-1117-ocean-beach",
+          "placeId": "ocean-beach",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        },
+        {
+          "id": "i-1117-imax",
+          "placeId": "imax",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [
+            {
+              "id": "bilet",
+              "label": "Bilet IMAX",
+              "category": "bilet",
+              "amountCents": 2400,
+              "amountMaxCents": 3000,
+              "qty": 1,
+              "paid": false,
+              "source": "note",
+              "verifiedAt": null,
+              "note": "24–30 de dolari per bilet"
+            }
+          ],
+          "notes": "Data și ora proiecției de verificat; mută IMAX în ziua proiecției.",
+          "calendarEventId": null
+        }
+      ]
+    },
+    {
+      "date": "2026-11-18",
+      "status": "draft",
+      "kind": "city",
+      "title": "Castro · Russian Hill",
+      "coverPlaceId": "russian-hill",
+      "notes": "Zi de rezervă.",
+      "costs": [
+        {
+          "id": "muni",
+          "label": "Muni prin oraș",
+          "category": "transport",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        },
+        {
+          "id": "mancare",
+          "label": "Mâncare",
+          "category": "mancare",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        }
+      ],
+      "items": [
+        {
+          "id": "i-1118-castro",
+          "placeId": "castro",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        },
+        {
+          "id": "i-1118-russian-hill",
+          "placeId": "russian-hill",
+          "label": null,
+          "kind": "visit",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": null,
+          "calendarEventId": null
+        }
+      ]
+    },
+    {
+      "date": "2026-11-19",
+      "status": "confirmed",
+      "kind": "travel",
+      "title": "Plecare",
+      "coverPlaceId": null,
+      "notes": null,
+      "costs": [
+        {
+          "id": "transfer-sfo",
+          "label": "Transport cazare → SFO",
+          "category": "transport",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        },
+        {
+          "id": "mancare",
+          "label": "Mâncare",
+          "category": "mancare",
+          "amountCents": null,
+          "amountMaxCents": null,
+          "qty": 1,
+          "paid": false,
+          "source": "manual",
+          "verifiedAt": null,
+          "note": null
+        }
+      ],
+      "items": [
+        {
+          "id": "i-1119-spre-sfo",
+          "placeId": null,
+          "label": "Transport spre SFO",
+          "kind": "transport",
+          "start": null,
+          "durationMin": null,
+          "fixed": false,
+          "done": false,
+          "costs": [],
+          "notes": "Ora zborului de completat.",
+          "calendarEventId": null
+        }
+      ]
+    }
+  ],
+  "fixedCosts": [
+    {
+      "id": "zbor",
+      "label": "Zbor",
+      "category": "zbor",
+      "amountCents": null,
+      "amountMaxCents": null,
+      "qty": 1,
+      "paid": false,
+      "source": "manual",
+      "verifiedAt": null,
+      "note": null
+    },
+    {
+      "id": "cazare",
+      "label": "Cazare (17 nopți)",
+      "category": "cazare",
+      "amountCents": null,
+      "amountMaxCents": null,
+      "qty": 1,
+      "paid": false,
+      "source": "manual",
+      "verifiedAt": null,
+      "note": null
+    },
+    {
+      "id": "internet",
+      "label": "Internet — Connect by T-Mobile, 5 GB",
+      "category": "altele",
+      "amountCents": 1500,
+      "amountMaxCents": 2500,
+      "qty": 1,
+      "paid": false,
+      "source": "note",
+      "verifiedAt": null,
+      "note": "5 GB = $15 (+ taxe); 8 GB = $25 (+ taxe). Varianta nu e aleasă încă."
+    }
+  ],
+  "legs": {},
+  "meta": {
+    "createdAt": "2026-10-30",
+    "updatedBy": "seed",
+    "source": "Obsidian/Writing/___GAP_YEAR__/Traveling/San Francisco - Locuri de Vazut (2 Saptamani).md",
+    "geocodedAt": "2026-10-30"
+  }
+}
