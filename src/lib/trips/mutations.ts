@@ -207,3 +207,123 @@ export const swapDays = (a: string, b: string): Mutation => (doc) => {
   Object.assign(db, planA);
   return next;
 };
+
+// ---------------------------------------------------------------------------
+// Program (calendar) edits. Every change returns to a state a snapshot can restore, for "Anulează".
+// ---------------------------------------------------------------------------
+
+const hhmmToMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+const minToHhmm = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+
+/** Index for an item starting at `start` so the day's timed items stay in time order (before the first that starts later). */
+export function positionForStart(items: Item[], start: string | null, excludeId?: string): number {
+  const rest = items.filter((i) => i.id !== excludeId);
+  if (start == null) return rest.length;
+  const t = hhmmToMin(start);
+  const later = rest.findIndex((i) => i.start != null && hhmmToMin(i.start) > t);
+  return later < 0 ? rest.length : later;
+}
+
+/** Put an item on a day at a time (null = no time), keeping the day's order consistent with the times. */
+export const scheduleItem = (itemId: string, toDate: string, start: string | null, durationMin?: number | null): Mutation => (doc) => {
+  const next = clone(doc);
+  const { day, index, item } = mustItem(next, itemId);
+  const target = mustDay(next, toDate);
+  day.items.splice(index, 1);
+  item.start = start;
+  if (durationMin !== undefined) item.durationMin = durationMin;
+  target.items.splice(positionForStart(target.items, start), 0, item);
+  return next;
+};
+
+export type ItemSnapshot = { date: string; index: number; item: Item };
+
+/** What a change did to items: the previous state of every item it touched, and the ids it created. */
+export function diffItems(before: TripDoc, after: TripDoc): { snaps: ItemSnapshot[]; added: string[] } {
+  const where = (doc: TripDoc) => {
+    const m = new Map<string, { date: string; index: number; item: Item; json: string }>();
+    for (const d of doc.days) d.items.forEach((item, index) => m.set(item.id, { date: d.date, index, item, json: JSON.stringify(item) }));
+    return m;
+  };
+  const a = where(before);
+  const b = where(after);
+  const snaps: ItemSnapshot[] = [];
+  for (const [id, x] of a) {
+    const y = b.get(id);
+    if (!y || y.date !== x.date || y.index !== x.index || y.json !== x.json) snaps.push({ date: x.date, index: x.index, item: structuredClone(x.item) });
+  }
+  return { snaps, added: [...b.keys()].filter((id) => !a.has(id)) };
+}
+
+/** Undo: put touched items back exactly as they were (place, time, every field) and drop the ones the change created. */
+export const restoreItems = (snaps: ItemSnapshot[], removeIds: string[] = []): Mutation => (doc) => {
+  const next = clone(doc);
+  const drop = new Set([...removeIds, ...snaps.map((s) => s.item.id)]);
+  for (const d of next.days) d.items = d.items.filter((i) => !drop.has(i.id));
+  for (const s of [...snaps].sort((x, y) => x.index - y.index)) {
+    const day = mustDay(next, s.date);
+    day.items.splice(clampPos(s.index, day.items.length), 0, structuredClone(s.item));
+  }
+  return next;
+};
+
+/** Schedule a place on a day at a time (Program: tap an empty slot). */
+export const addPlaceAt = (placeId: string, date: string, start: string | null, durationMin: number | null): Mutation => (doc) => {
+  const day = mustDay(doc, date);
+  let next = addPlaceToDay(placeId, date, positionForStart(day.items, start))(doc);
+  const added = mustDay(next, date).items.find((i) => !day.items.some((o) => o.id === i.id))!;
+  next = updateItem(added.id, { start, durationMin })(next);
+  return next;
+};
+
+/** A free-text activity (event, meeting, meal) at a time. */
+export const addLabelItem = (date: string, label: string, kind: Item["kind"], start: string | null, durationMin: number | null): Mutation => (doc) => {
+  const next = clone(doc);
+  const day = mustDay(next, date);
+  const taken = new Set(next.days.flatMap((d) => d.items.map((i) => i.id)));
+  const item: Item = {
+    id: newItemId(date, slugify(label).slice(0, 40).replace(/-+$/, "") || "activitate", taken),
+    placeId: null,
+    label: label.trim(),
+    kind,
+    start,
+    durationMin,
+    fixed: false,
+    done: false,
+    costs: [],
+    notes: null,
+    calendarEventId: null,
+    routes: [],
+  };
+  day.items.splice(positionForStart(day.items, start), 0, item);
+  return next;
+};
+
+/**
+ * Give a time to every item of a day that has none, in the day's order: from `dayStart`, each after the
+ * previous one ends plus `gapMin` (or the computed transit time when known), not before the place opens.
+ * Items that already have a time stay where they are and move the cursor.
+ */
+export const autoScheduleDay = (date: string, opts: { dayStart?: string; gapMin?: number; defaultMin?: number } = {}): Mutation => (doc) => {
+  const { dayStart = "09:00", gapMin = 20, defaultMin = 90 } = opts;
+  const next = clone(doc);
+  const day = mustDay(next, date);
+  const places = new Map(next.places.map((p) => [p.id, p]));
+  let cursor = hhmmToMin(dayStart);
+  let prevPlace: string | null = next.trip.base ? "base" : null;
+  for (const item of day.items) {
+    const place = item.placeId ? places.get(item.placeId) : undefined;
+    const len = item.durationMin ?? place?.duration?.minMinutes ?? (item.kind === "deadline" ? 0 : defaultMin);
+    const leg = prevPlace && item.placeId ? next.legs[`${prevPlace}>${item.placeId}>transit`] : undefined;
+    if (item.start == null) {
+      let s = cursor + (leg ? leg.minutes : 0);
+      if (place?.hours?.open) s = Math.max(s, hhmmToMin(place.hours.open));
+      s = Math.ceil(s / 15) * 15;
+      if (s + len > 23 * 60 + 45) break; // no room left today; the rest stays without a time
+      item.start = minToHhmm(s);
+    }
+    if (item.kind !== "deadline") cursor = hhmmToMin(item.start) + len + gapMin;
+    if (item.placeId) prevPlace = item.placeId;
+  }
+  return next;
+};

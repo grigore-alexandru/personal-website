@@ -1,7 +1,7 @@
-import { LocuriScreen } from '@/components/trips/screens/LocuriScreen';
+import { redirect } from 'next/navigation';
+import { LOCURI_HREF } from '@/components/trips/tripConfig';
 
-export const metadata = { title: { absolute: 'Locuri · San Francisco' } };
-
+// Locuri now lives under the map (Hartă tab); old links and bookmarks land there.
 export default function Page() {
-  return <LocuriScreen />;
+  redirect(LOCURI_HREF);
 }

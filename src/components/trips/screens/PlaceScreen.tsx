@@ -8,7 +8,7 @@ import { CATEGORY_LABEL, formatMoney, lineMoney } from '@/lib/trips/money';
 import { formatDateRo, formatDateShort, navigationTarget } from '@/lib/trips/time';
 import { addPlaceToDay, setBookingStatus } from '@/lib/trips/mutations';
 import { useTrip } from '../TripProvider';
-import { AREA, BASE, PLACE_KIND, dayHref, placeHref } from '../tripConfig';
+import { AREA, LOCURI_HREF, PLACE_KIND, dayHref, placeHref } from '../tripConfig';
 import { dayOptionLabel, scheduledDates } from '../helpers';
 import { useAiContext } from '../ai';
 import { placePage } from '../aiPages';
@@ -33,7 +33,7 @@ export function PlaceScreen({ placeId }: { placeId: string }) {
     return (
       <div className="py-16 text-center">
         <p className="font-semibold">Locul nu există.</p>
-        <Link href={`${BASE}/locuri`} className="mt-3 inline-block underline">
+        <Link href={LOCURI_HREF} className="mt-3 inline-block underline">
           Înapoi la Locuri
         </Link>
       </div>
@@ -47,7 +47,7 @@ export function PlaceScreen({ placeId }: { placeId: string }) {
 
   return (
     <div className="space-y-5">
-      <Link href={parent ? placeHref(parent.id) : `${BASE}/locuri`} className="inline-flex items-center gap-1 min-h-[44px] text-sm font-semibold text-neutral-700">
+      <Link href={parent ? placeHref(parent.id) : LOCURI_HREF} className="inline-flex items-center gap-1 min-h-[44px] text-sm font-semibold text-neutral-700">
         <ChevronLeft size={18} /> {parent ? parent.name : 'Locuri'}
       </Link>
 

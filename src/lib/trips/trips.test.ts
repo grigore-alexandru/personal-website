@@ -185,3 +185,69 @@ test("unknown fields survive a parse (older clients never drop newer data)", () 
   assert.equal(parsed.days[0].items[0].futureField, true);
   assert.deepEqual(parsed.days[0].items[0].routes, []);
 });
+
+test("Program: schedule at a time keeps time order, restore undoes it, auto-schedule fills gaps", async () => {
+  const { scheduleItem, diffItems, restoreItems, addPlaceAt, addLabelItem, autoScheduleDay, positionForStart, removeItem: remove, setItemDone: done } = await import("./mutations");
+  const busy = seed.days.find((d) => d.items.length >= 3)!;
+  const other = seed.days.find((d) => d.date !== busy.date && d.items.length >= 1)!;
+  const [a, b] = busy.items;
+
+  // give the second item an early time: it moves to the front of the timed items
+  let doc = scheduleItem(b.id, busy.date, "08:00", 120)(seed);
+  doc = scheduleItem(a.id, busy.date, "11:00")(doc);
+  const ids = day(doc, busy.date).items.map((i) => i.id);
+  assert.ok(ids.indexOf(b.id) < ids.indexOf(a.id));
+  assert.equal(day(doc, busy.date).items.find((i) => i.id === b.id)!.durationMin, 120);
+  assert.equal(positionForStart(day(doc, busy.date).items, "09:00"), ids.indexOf(a.id));
+
+  // move to another day and undo
+  const moved = done(b.id, true)(remove(busy.items[2].id)(scheduleItem(a.id, other.date, "14:15")(doc)));
+  assert.ok(day(moved, other.date).items.some((i) => i.id === a.id && i.start === "14:15"));
+  const undo = diffItems(doc, moved);
+  assert.ok(undo.snaps.length >= 3); // plus items whose position shifted
+  const back = restoreItems(undo.snaps, undo.added)(moved);
+  assert.deepEqual(back.days, doc.days);
+  assert.ok(TripDoc.safeParse(back).success);
+
+  // add at a time, with a place and as free text
+  const place = seed.places.find((p) => p.kind !== "food")!;
+  const added = addLabelItem(other.date, "Concert la Fillmore", "visit", "20:00", 150)(addPlaceAt(place.id, other.date, "07:30", 60)(seed));
+  const items = day(added, other.date).items;
+  const at = items.findIndex((i) => i.placeId === place.id && i.start === "07:30");
+  assert.ok(at >= 0);
+  assert.ok(items.slice(0, at).every((i) => i.start == null || i.start <= "07:30"));
+  assert.ok(items.some((i) => i.label === "Concert la Fillmore" && i.durationMin === 150 && i.placeId === null));
+  assert.ok(TripDoc.safeParse(added).success);
+  const undoAdd = diffItems(seed, added);
+  assert.equal(undoAdd.added.length, 2);
+  assert.deepEqual(restoreItems(undoAdd.snaps, undoAdd.added)(added).days, seed.days);
+
+  // auto-schedule: every untimed item gets a time, in order, without touching timed ones
+  const cleared = structuredClone(seed);
+  for (const i of day(cleared, busy.date).items) if (!i.fixed) i.start = null;
+  const auto = autoScheduleDay(busy.date)(cleared);
+  const times = day(auto, busy.date).items.filter((i) => i.kind !== "deadline").map((i) => i.start);
+  assert.ok(times.every((t) => t != null));
+  assert.deepEqual([...times].sort(), times);
+  assert.equal(times[0] != null && times[0] >= "09:00", true);
+});
+
+test("Program layout: overlapping items share columns; week view starts on Monday inside the trip", async () => {
+  const { layoutColumns, visibleDates, shiftAnchor } = await import("../../components/trips/program/calendarLayout");
+  const placed = layoutColumns([
+    { id: "a", start: 600, end: 720 },
+    { id: "b", start: 630, end: 690 },
+    { id: "c", start: 700, end: 760 },
+    { id: "d", start: 800, end: 860 },
+  ]);
+  assert.deepEqual([placed.get("a")!.col, placed.get("b")!.col, placed.get("c")!.col], [0, 1, 1]);
+  assert.equal(placed.get("a")!.cols, 2);
+  assert.deepEqual([placed.get("d")!.col, placed.get("d")!.cols], [0, 1]);
+
+  assert.deepEqual(visibleDates(seed, "week", "2026-11-05"), ["2026-11-02", "2026-11-03", "2026-11-04", "2026-11-05", "2026-11-06", "2026-11-07", "2026-11-08"]);
+  assert.deepEqual(visibleDates(seed, "week", "2026-11-18"), ["2026-11-16", "2026-11-17", "2026-11-18", "2026-11-19"]);
+  assert.deepEqual(visibleDates(seed, "3day", "2026-11-19"), ["2026-11-17", "2026-11-18", "2026-11-19"]);
+  assert.equal(shiftAnchor(seed, "week", "2026-11-05", 1), "2026-11-09");
+  assert.equal(shiftAnchor(seed, "week", "2026-11-10", -1), "2026-11-08");
+  assert.equal(shiftAnchor(seed, "3day", "2026-11-02", -1), "2026-11-02");
+});

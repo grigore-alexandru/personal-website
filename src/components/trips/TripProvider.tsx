@@ -345,7 +345,7 @@ export function TripProvider({ children, buildId = 'local' }: { children: ReactN
     if (!doc || fromCache || !navigator.onLine) return;
     if (photoPaths && photoUrls.size === 0) return; // wait for the signed URLs
     const pages = [
-      ...['azi', 'zile', 'harta', 'locuri', 'bilete', 'buget'].map((p) => `${BASE}/${p}`),
+      ...['azi', 'zile', 'program', 'harta', 'bilete', 'buget'].map((p) => `${BASE}/${p}`),
       ...doc.days.map((d) => `${BASE}/zile/${d.date}`),
       ...doc.places.map((p) => `${BASE}/locuri/${p.id}`),
     ];

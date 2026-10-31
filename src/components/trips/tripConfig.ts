@@ -9,14 +9,18 @@ export const POLL_MS = 20_000;
 export const PHOTO_URL_TTL_S = 60 * 60 * 12;
 export const PHOTO_BUCKET = 'trip-media';
 
-export const TABS = [
+/** `also`: other paths that light up the tab (Locuri lives under Hartă; place pages keep their /locuri URL). */
+export const TABS: readonly { href: string; label: string; icon: 'sun' | 'calendar' | 'clock' | 'map' | 'ticket' | 'wallet'; also?: readonly string[] }[] = [
   { href: `${BASE}/azi`, label: 'Azi', icon: 'sun' },
   { href: `${BASE}/zile`, label: 'Zile', icon: 'calendar' },
-  { href: `${BASE}/harta`, label: 'Hartă', icon: 'map' },
-  { href: `${BASE}/locuri`, label: 'Locuri', icon: 'pin' },
+  { href: `${BASE}/program`, label: 'Program', icon: 'clock' },
+  { href: `${BASE}/harta`, label: 'Hartă', icon: 'map', also: [`${BASE}/locuri`] },
   { href: `${BASE}/bilete`, label: 'Bilete', icon: 'ticket' },
   { href: `${BASE}/buget`, label: 'Buget', icon: 'wallet' },
-] as const;
+];
+
+/** The places list, below the map. */
+export const LOCURI_HREF = `${BASE}/harta#locuri`;
 
 /** Day-kind styling. Status is never colour-only: drafts also get a dashed border and the word "propus". */
 export const DAY_KIND: Record<Day['kind'], { label: string; tint: string; dot: string; hex: string }> = {
@@ -50,6 +54,18 @@ export const AREA: Record<Place['area'], string> = {
   napa: 'Napa',
   bay: 'Golf',
 };
+
+/** Calendar colours per place kind (Program); items without a place use ITEM_KIND_HEX. */
+export const PLACE_KIND_HEX: Record<Place['kind'], string> = {
+  zone: '#6366f1',
+  attraction: '#0ea5e9',
+  museum: '#a855f7',
+  daytrip: '#10b981',
+  event: '#ec4899',
+  nature: '#22c55e',
+  food: FOOD_HEX,
+};
+export const ITEM_KIND_HEX = { visit: '#0ea5e9', transport: '#64748b', deadline: '#f59e0b', note: '#737373' } as const;
 
 export const dayHref = (date: string) => `${BASE}/zile/${date}`;
 export const placeHref = (id: string) => `${BASE}/locuri/${id}`;

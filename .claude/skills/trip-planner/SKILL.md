@@ -68,6 +68,7 @@ After every change say exactly what changed: `zi · element · vechi → nou`.
 - Photos: `npm run trips:photos -- --media "<Obsidian>/Writing/Media" --dry-run` (needs `SUPABASE_SERVICE_ROLE_KEY` in the shell, never in the repo).
 - Home: `trip.base` = 2600 Harrison St (Mission). Travel times can now be computed from `base` (procedure above). Never put the street number or apartment in links or prompts sent outside — say "Mission, Harrison St & 22nd St".
 - Offline: the app works without internet on the phone (service worker + saved plan); edits need a connection.
+- Program tab (`/admin/trips/sf-2026/program`): a calendar of the items by `start` and `durationMin` (else the place's `duration.minMinutes`, else 1 h). Items without `start` sit in its "fără oră" row, so give events from a spreadsheet a `start` and `durationMin`; `kind: "deadline"` draws as a line at its time. Locuri now lives under the map on the Hartă tab (`/harta#locuri`).
 - Muni: every day has a `muni` line at $5.70 (Muni Day Pass with Clipper, no cable car — sfmta.com, checked 2026-10-31); a single ride is $2.85.
 - Photos: `place.photos[]` = `{source, path, alt, credit?}`; `credit` is required for photos that aren't the user's own ("Foto: <author>, <license>, Wikimedia Commons"). Prefer Wikimedia Commons; never Google Maps/Search images.
 - Food: each day has a `mancare` line in `day.costs`; Buget shows them in their own "Mâncare" section. Food places (`kind: "food"`) are an orange layer on the map.

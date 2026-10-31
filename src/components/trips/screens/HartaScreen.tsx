@@ -3,8 +3,8 @@
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useMemo, useState } from 'react';
-import { LocateFixed, UtensilsCrossed, X } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
+import { ArrowDown, LocateFixed, UtensilsCrossed, X } from 'lucide-react';
 import type { Place } from '@/lib/trips/schema';
 import { formatDateShort, navigationTarget } from '@/lib/trips/time';
 import { useTrip } from '../TripProvider';
@@ -12,9 +12,10 @@ import { DAY_KIND, FOOD_HEX, UNSCHEDULED_HEX, placeHref } from '../tripConfig';
 import { dayOptionLabel, scheduledDates } from '../helpers';
 import { currentPosition, kmText, nearest, type LatLng } from '../geo';
 import { useAiContext } from '../ai';
-import { mapPage } from '../aiPages';
+import { mapPage, placesPage } from '../aiPages';
 import { NavigateButtons, PlacePhoto } from '../ui';
 import type { MapMarker } from '../MapView';
+import { LocuriSection } from './LocuriSection';
 
 // Leaflet touches `window` at import time: client-only, and only in this route's chunk.
 const MapView = dynamic(() => import('../MapView'), {
@@ -24,7 +25,7 @@ const MapView = dynamic(() => import('../MapView'), {
 
 const priceOf = (p: Place) => p.notes?.match(/\$\d+–\d+/)?.[0];
 
-/** Hartă — every place, or one day's stops in order; food places as their own layer; "near me". */
+/** Hartă — every place, or one day's stops in order; food places as their own layer; "near me". The places list (Locuri) follows below the map. */
 export function HartaScreen() {
   const { doc, places, toast } = useTrip();
   const router = useRouter();
@@ -64,7 +65,16 @@ export function HartaScreen() {
   }, [day, doc, places, dates, kindOfDate, showFood, foodPlaces]);
 
   const sel: Place | null = selected ? places.get(selected) ?? null : null;
-  useAiContext(mapPage(doc, { day, selected: sel, me, showFood }));
+  const [shown, setShown] = useState<{ list: Place[]; filtered: boolean }>({ list: [], filtered: false });
+  const onShown = useCallback((list: Place[], filtered: boolean) => setShown({ list, filtered }), []);
+  // One context for the whole tab: the map's, plus the Locuri list when a search/filter narrows it.
+  const map = mapPage(doc, { day, selected: sel, me, showFood });
+  const list = placesPage(doc, shown.list);
+  useAiContext({
+    ...map,
+    lines: shown.filtered ? [...map.lines, `Lista Locuri, filtrată — ${list.title}:`, ...list.lines.map((l) => `  ${l}`)] : map.lines,
+    suggestions: [...map.suggestions, ...list.suggestions],
+  });
 
   const setDay = (date: string) => {
     setSelected(null);
@@ -86,7 +96,12 @@ export function HartaScreen() {
 
   return (
     <div className="space-y-3">
-      <h1 className="text-2xl font-bold">Hartă</h1>
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-2xl font-bold">Hartă</h1>
+        <a href="#locuri" className="inline-flex items-center gap-1 min-h-[40px] px-3 rounded-xl text-sm font-semibold text-neutral-700 hover:bg-neutral-100">
+          Locuri <ArrowDown size={15} />
+        </a>
+      </div>
       <div className="flex items-center gap-2">
         <select value={day?.date ?? ''} onChange={(e) => setDay(e.target.value)} className="flex-1 min-w-0 min-h-[44px] rounded-xl border border-neutral-300 bg-white px-2 text-sm" aria-label="Filtru">
           <option value="">Toată călătoria</option>
@@ -122,7 +137,7 @@ export function HartaScreen() {
       </div>
       {day && <p className="text-xs text-neutral-500">Liniile arată ordinea zilei, nu traseul.</p>}
 
-      <div className="relative h-[62vh] min-h-[360px] rounded-2xl overflow-hidden border border-neutral-200 bg-neutral-100 isolate">
+      <div className="relative h-[58vh] min-h-[360px] rounded-2xl overflow-hidden border border-neutral-200 bg-neutral-100 isolate">
         <MapView markers={markers} base={doc.trip.base} line={!!day} fit={fit} onSelect={setSelected} user={me} />
 
         {sel && (
@@ -190,6 +205,10 @@ export function HartaScreen() {
           <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
           tu
         </span>
+      </div>
+
+      <div className="border-t border-neutral-200 pt-5 mt-2">
+        <LocuriSection onShown={onShown} />
       </div>
     </div>
   );

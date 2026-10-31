@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Search, Ticket } from 'lucide-react';
 import type { Place } from '@/lib/trips/schema';
 import { sumLines } from '@/lib/trips/money';
@@ -10,8 +10,6 @@ import { useTrip } from '../TripProvider';
 import { AREA, PLACE_KIND, placeHref } from '../tripConfig';
 import { donePlaceIds, scheduledDates } from '../helpers';
 import { Chip, MoneyText, PlacePhoto } from '../ui';
-import { useAiContext } from '../ai';
-import { placesPage } from '../aiPages';
 import { PhotoImport } from '../PhotoImport';
 
 type Filter = 'all' | 'unscheduled' | 'scheduled' | 'done';
@@ -37,8 +35,11 @@ function Toggle({ on, onClick, children }: { on: boolean; onClick: () => void; c
   );
 }
 
-/** Locuri — every place from the note, with search and filters. */
-export function LocuriScreen() {
+/**
+ * Locuri — every place from the note, with search and filters. Lives under the map on the Hartă tab;
+ * reports what it shows (`onShown`, with whether a filter is on) so "Întreabă AI" sees the same list.
+ */
+export function LocuriSection({ onShown }: { onShown?: (shown: Place[], filtered: boolean) => void }) {
   const { doc } = useTrip();
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
@@ -60,11 +61,18 @@ export function LocuriScreen() {
     return true;
   });
 
-  useAiContext(placesPage(doc, list));
+  const filtered = !!q || filter !== 'all' || !!kind || !!area;
+  const shownKey = list.map((p) => p.id).join();
+  useEffect(() => {
+    onShown?.(list, filtered);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `list` is rebuilt each render; its ids are the dependency
+  }, [shownKey, filtered, onShown]);
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Locuri</h1>
+    <section id="locuri" className="space-y-4 scroll-mt-20 md:scroll-mt-28">
+      <h2 className="text-2xl font-bold">
+        Locuri <span className="text-base font-semibold text-neutral-400 tabular-nums">{list.length}</span>
+      </h2>
       <PhotoImport />
       <div className="relative">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
@@ -129,6 +137,6 @@ export function LocuriScreen() {
           })}
         </ul>
       )}
-    </div>
+    </section>
   );
 }

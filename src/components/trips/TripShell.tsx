@@ -3,12 +3,12 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { CalendarDays, Check, CloudOff, Database, Loader2, Map, MapPin, Sun, Ticket, Wallet } from 'lucide-react';
+import { CalendarClock, CalendarDays, Check, CloudOff, Database, Loader2, Map, Sun, Ticket, Wallet } from 'lucide-react';
 import { useTrip, type SyncState } from './TripProvider';
 import { TABS } from './tripConfig';
 import { AiProvider, AskAiButton } from './ai';
 
-const ICONS = { sun: Sun, calendar: CalendarDays, map: Map, pin: MapPin, ticket: Ticket, wallet: Wallet } as const;
+const ICONS = { sun: Sun, calendar: CalendarDays, clock: CalendarClock, map: Map, ticket: Ticket, wallet: Wallet } as const;
 
 const SYNC: Record<SyncState, { label: string; Icon: typeof Check; className: string }> = {
   saved: { label: 'Salvat', Icon: Check, className: 'text-green-700' },
@@ -22,20 +22,21 @@ export function TripShell({ children }: { children: ReactNode }) {
   const { sync } = useTrip();
   const pathname = usePathname() ?? '';
   const s = SYNC[sync];
-  const active = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  const under = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  const active = (t: (typeof TABS)[number]) => under(t.href) || (t.also ?? []).some(under);
 
   return (
     <AiProvider>
     <div className="min-h-screen bg-neutral-50 text-neutral-900">
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-neutral-200" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         <div className="max-w-[960px] mx-auto px-4 h-14 flex items-center justify-between gap-3">
-          <Link href={TABS[0].href} className="text-lg font-bold tracking-tight">
+          <Link href={TABS[0].href} className="text-lg font-bold tracking-tight whitespace-nowrap">
             San Francisco
           </Link>
           <div className="flex items-center gap-3">
             <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${s.className}`} aria-live="polite" title={s.label}>
               <s.Icon size={14} />
-              <span className={sync === 'saved' ? 'hidden sm:inline' : ''}>{s.label}</span>
+              <span className={sync === 'saved' || sync === 'saving' ? 'hidden sm:inline' : ''}>{s.label}</span>
             </span>
             <AskAiButton />
           </div>
@@ -48,9 +49,9 @@ export function TripShell({ children }: { children: ReactNode }) {
                 <li key={t.href}>
                   <Link
                     href={t.href}
-                    aria-current={active(t.href) ? 'page' : undefined}
+                    aria-current={active(t) ? 'page' : undefined}
                     className={`inline-flex items-center gap-1.5 px-3 py-2.5 text-sm font-semibold border-b-2 ${
-                      active(t.href) ? 'border-black text-black' : 'border-transparent text-neutral-500 hover:text-black'
+                      active(t) ? 'border-black text-black' : 'border-transparent text-neutral-500 hover:text-black'
                     }`}
                   >
                     <Icon size={16} />
@@ -73,7 +74,7 @@ export function TripShell({ children }: { children: ReactNode }) {
         <ul className="grid grid-cols-6">
           {TABS.map((t) => {
             const Icon = ICONS[t.icon];
-            const on = active(t.href);
+            const on = active(t);
             return (
               <li key={t.href}>
                 <Link
