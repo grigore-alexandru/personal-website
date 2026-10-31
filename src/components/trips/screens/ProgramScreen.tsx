@@ -1,10 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
 import Link from 'next/link';
-import { AlertTriangle, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Lock, Map as MapIcon, Minus, Plus, Ticket, Undo2, Wand2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { AlertTriangle, CalendarDays, Check, Info, Trash2, ChevronDown, ChevronLeft, ChevronRight, Lock, Map as MapIcon, Minus, Plus, Ticket, Undo2, Wand2 } from 'lucide-react';
 import type { Day, Item, Place } from '@/lib/trips/schema';
-import { autoScheduleDay, diffItems, findItem, restoreItems, scheduleItem, updateItem, type Mutation } from '@/lib/trips/mutations';
+import { autoScheduleDay, diffItems, findItem, removeItem, restoreItems, scheduleItem, updateItem, type Mutation } from '@/lib/trips/mutations';
 import { formatDateRo, formatDateShort, fromMinutes, toMinutes, weekdayName, weekdayOf } from '@/lib/trips/time';
 import { itemName, type Warning } from '@/lib/trips/validate';
 import { useTrip } from '../TripProvider';
@@ -48,6 +49,19 @@ const write = (key: string, value: string) => {
 const colorOf = (item: Item, place: Place | undefined) => (place ? PLACE_KIND_HEX[place.kind] : ITEM_KIND_HEX[item.kind]);
 const short = (date: string) => `${weekdayName(date).slice(0, 3)} ${formatDateShort(date)}`;
 
+/** Right click (or a long press on something that can't be dragged): a small menu for one activity. */
+const MenuCtx = createContext<(id: string, x: number, y: number) => void>(() => {});
+
+/** contextmenu handler: never the browser's menu; ours unless a drag just happened (a long press that became a drag). */
+function useMenuFor(justDragged?: React.MutableRefObject<boolean>) {
+  const open = useContext(MenuCtx);
+  return (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!justDragged?.current) open(id, e.clientX, e.clientY);
+  };
+}
+
 type Target = { date: string; start: number | null; len: number };
 type Press = {
   item: Item;
@@ -85,6 +99,8 @@ export function ProgramScreen() {
   const [bar, setBar] = useState<{ label: string; key: number } | null>(null);
   const [drag, setDrag] = useState<{ id: string; mode: Press['mode']; target: Target | null } | null>(null);
   const [tip, setTip] = useState(() => read(TIP_KEY) == null);
+  const [menu, setMenu] = useState<{ id: string; x: number; y: number } | null>(null);
+  const openMenu = useCallback((id: string, x: number, y: number) => setMenu({ id, x, y }), []);
   const hideTip = () => {
     setTip(false);
     write(TIP_KEY, '1');
@@ -145,7 +161,11 @@ export function ProgramScreen() {
     return () => window.clearTimeout(t);
   }, [bar]);
 
-  const page = (dir: 1 | -1) => setAnchor((a) => shiftAnchor(doc, view === 'agenda' ? 'day' : view, a, dir));
+  const [slide, setSlide] = useState<1 | -1>(1);
+  const page = (dir: 1 | -1) => {
+    setSlide(dir);
+    setAnchor((a) => shiftAnchor(doc, view === 'agenda' ? 'day' : view, a, dir));
+  };
   const goToday = () => setAnchor(dates.includes(today) ? today : today < dates[0] ? dates[0] : dates[dates.length - 1]);
 
   // keyboard: ← → pages, t today, d/3/w/a views, ⌘Z / Ctrl+Z undo
@@ -193,57 +213,16 @@ export function ProgramScreen() {
   });
 
   // the grid fills the screen below the toolbars, so the page itself doesn't scroll (only the hours do)
-  const offset = 316 + (view === 'day' ? 76 : 0) + (tip ? 52 : 0);
-  const zoomButtons = view !== 'agenda' && (
-    <div className="flex-shrink-0 inline-flex items-center rounded-xl border border-neutral-200 bg-white">
-      <button type="button" onClick={() => setZoom(zoom - 1)} disabled={zoom === 0} aria-label="Micșorează" className="w-9 h-10 inline-flex items-center justify-center disabled:opacity-30">
-        <Minus size={15} />
-      </button>
-      <button type="button" onClick={() => setZoom(zoom + 1)} disabled={zoom === ZOOMS.length - 1} aria-label="Mărește" className="w-9 h-10 inline-flex items-center justify-center disabled:opacity-30">
-        <Plus size={15} />
-      </button>
-    </div>
-  );
+  const offset = 234 + (view === 'day' ? 76 : 0) + (tip ? 52 : 0);
+  const small = 'h-8 inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white disabled:opacity-30';
 
   return (
+    <MenuCtx.Provider value={openMenu}>
     <div className={`space-y-2 ${view === 'agenda' ? '' : '-mb-10 md:mb-0'}`}>
       <h1 className="sr-only md:not-sr-only text-2xl font-bold md:pb-1">Program</h1>
 
-      <div className="flex items-center gap-1.5">
-        {view !== 'agenda' && (
-          <button type="button" onClick={() => page(-1)} disabled={shown[0] === dates[0]} aria-label="Înapoi" className="w-10 h-10 inline-flex items-center justify-center rounded-xl border border-neutral-200 bg-white disabled:opacity-30">
-            <ChevronLeft size={18} />
-          </button>
-        )}
-        <p className="flex-1 min-w-0 text-center text-sm font-bold truncate first-letter:uppercase">{rangeText}</p>
-        {view !== 'agenda' && (
-          <button
-            type="button"
-            onClick={() => page(1)}
-            disabled={shown[shown.length - 1] === dates[dates.length - 1]}
-            aria-label="Înainte"
-            className="w-10 h-10 inline-flex items-center justify-center rounded-xl border border-neutral-200 bg-white disabled:opacity-30"
-          >
-            <ChevronRight size={18} />
-          </button>
-        )}
-        <button type="button" onClick={goToday} className="min-h-[40px] px-3 rounded-xl border border-neutral-200 bg-white text-sm font-semibold">
-          Azi
-        </button>
-        <button
-          type="button"
-          onClick={runUndo}
-          disabled={undo.length === 0}
-          aria-label={undo.length ? `Anulează: ${undo[undo.length - 1].label}` : 'Nimic de anulat'}
-          title="Anulează (⌘Z)"
-          className="w-10 h-10 inline-flex items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-700 disabled:opacity-30"
-        >
-          <Undo2 size={17} />
-        </button>
-      </div>
-
-      <div className="flex items-center gap-1.5">
-        <div className="flex-1 flex rounded-xl bg-neutral-200/70 p-1" role="tablist" aria-label="Vedere">
+      <div className="flex items-center gap-1">
+        <div className="flex-1 flex rounded-lg bg-neutral-200/70 p-0.5" role="tablist" aria-label="Vedere">
           {VIEWS.map((v) => (
             <button
               key={v.id}
@@ -251,16 +230,50 @@ export function ProgramScreen() {
               role="tab"
               aria-selected={view === v.id}
               onClick={() => setView(v.id)}
-              className={`flex-1 min-h-[32px] rounded-lg text-sm font-semibold ${view === v.id ? 'bg-white shadow-sm text-black' : 'text-neutral-600'}`}
+              className={`flex-1 h-7 rounded-md text-xs font-semibold ${view === v.id ? 'bg-white shadow-sm text-black' : 'text-neutral-600'}`}
             >
               {v.label}
             </button>
           ))}
         </div>
-        {zoomButtons}
+        {view !== 'agenda' && (
+          <>
+            <button type="button" onClick={() => setZoom(zoom - 1)} disabled={zoom === 0} aria-label="Micșorează" className={`${small} w-8`}>
+              <Minus size={14} />
+            </button>
+            <button type="button" onClick={() => setZoom(zoom + 1)} disabled={zoom === ZOOMS.length - 1} aria-label="Mărește" className={`${small} w-8`}>
+              <Plus size={14} />
+            </button>
+          </>
+        )}
+        <button
+          type="button"
+          onClick={runUndo}
+          disabled={undo.length === 0}
+          aria-label={undo.length ? `Anulează: ${undo[undo.length - 1].label}` : 'Nimic de anulat'}
+          title="Anulează (⌘Z)"
+          className={`${small} w-8 text-neutral-700`}
+        >
+          <Undo2 size={15} />
+        </button>
       </div>
 
-      <DateStrip days={doc.days} shown={view === 'agenda' ? [anchor] : shown} today={today} onPick={setAnchor} />
+      <div className="flex items-center gap-1">
+        {view !== 'agenda' && (
+          <button type="button" onClick={() => page(-1)} disabled={shown[0] === dates[0]} aria-label="Înapoi" className={`${small} w-8`}>
+            <ChevronLeft size={16} />
+          </button>
+        )}
+        <p className="flex-1 min-w-0 text-center text-sm font-bold truncate first-letter:uppercase">{rangeText}</p>
+        {view !== 'agenda' && (
+          <button type="button" onClick={() => page(1)} disabled={shown[shown.length - 1] === dates[dates.length - 1]} aria-label="Înainte" className={`${small} w-8`}>
+            <ChevronRight size={16} />
+          </button>
+        )}
+        <button type="button" onClick={goToday} className={`${small} px-2.5 text-xs font-semibold`}>
+          Azi
+        </button>
+      </div>
 
       {view === 'agenda' ? (
         <Agenda anchor={anchor} onOpen={setSelected} />
@@ -295,12 +308,25 @@ export function ProgramScreen() {
               setView('day');
             }}
             onPage={page}
+            slide={slide}
             change={change}
             today={today}
             nowMin={nowMin}
             warnings={warnings}
           />
         </>
+      )}
+
+      {menu && (
+        <ItemMenu
+          {...menu}
+          onClose={() => setMenu(null)}
+          onOpen={() => setSelected(menu.id)}
+          onRemove={() => {
+            const f = findItem(doc, menu.id);
+            if (f) change(`${itemName(f.item, places)} scos din program`, removeItem(menu.id));
+          }}
+        />
       )}
 
       <ActivitySheet itemId={selected} onClose={() => setSelected(null)} change={change} />
@@ -319,39 +345,7 @@ export function ProgramScreen() {
         </div>
       )}
     </div>
-  );
-}
-
-/** All trip days as small chips; the visible ones highlighted. */
-function DateStrip({ days, shown, today, onPick }: { days: Day[]; shown: string[]; today: string; onPick: (d: string) => void }) {
-  const ref = useRef<HTMLDivElement>(null);
-  // scroll only the strip itself (scrollIntoView would also move the page, fighting the agenda's own scroll)
-  useEffect(() => {
-    const box = ref.current;
-    const el = box?.querySelector<HTMLElement>(`[data-date="${shown[0]}"]`);
-    if (box && el) box.scrollTo({ left: el.offsetLeft - box.clientWidth / 2 + el.offsetWidth / 2, behavior: 'smooth' });
-  }, [shown]);
-  return (
-    <div ref={ref} className="relative -mx-4 px-4 flex gap-1 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      {days.map((d) => {
-        const on = shown.includes(d.date);
-        return (
-          <button
-            key={d.date}
-            data-date={d.date}
-            type="button"
-            onClick={() => onPick(d.date)}
-            className={`flex-shrink-0 w-11 py-1.5 rounded-xl flex flex-col items-center gap-0.5 border ${on ? 'bg-black border-black text-white' : 'bg-white border-neutral-200 text-neutral-800'}`}
-            aria-label={formatDateRo(d.date)}
-            aria-pressed={on}
-          >
-            <span className={`text-[10px] font-semibold uppercase ${on ? 'text-white/70' : 'text-neutral-500'}`}>{weekdayName(d.date).slice(0, 2)}</span>
-            <span className={`text-sm font-bold tabular-nums leading-none ${d.date === today && !on ? 'text-red-600' : ''}`}>{Number(d.date.slice(8))}</span>
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: DAY_KIND[d.kind].hex }} />
-          </button>
-        );
-      })}
-    </div>
+    </MenuCtx.Provider>
   );
 }
 
@@ -403,13 +397,15 @@ type GridProps = {
   onSlot: (date: string, start: number) => void;
   onDayHeader: (date: string) => void;
   onPage: (dir: 1 | -1) => void;
+  /** Direction of the last page change, for the slide-in. */
+  slide: 1 | -1;
   change: Change;
   today: string;
   nowMin: number;
   warnings: Record<string, Warning[]>;
 };
 
-function Grid({ days, view, hourPx, offset, trayOpen, setTrayOpen, drag, setDrag, onOpen, onSlot, onDayHeader, onPage, change, today, nowMin, warnings }: GridProps) {
+function Grid({ days, view, hourPx, offset, trayOpen, setTrayOpen, drag, setDrag, onOpen, onSlot, onDayHeader, onPage, slide, change, today, nowMin, warnings }: GridProps) {
   const { doc, places, toast } = useTrip();
   const scrollRef = useRef<HTMLDivElement>(null);
   const headRef = useRef<HTMLDivElement>(null);
@@ -597,16 +593,8 @@ function Grid({ days, view, hourPx, offset, trayOpen, setTrayOpen, drag, setDrag
 
   const begin = (e: ReactPointerEvent, item: Item, mode: Press['mode']) => {
     if (e.button !== 0 || press.current) return;
-    e.stopPropagation();
     const touch = e.pointerType !== 'mouse';
-    if (item.fixed) {
-      if (!touch) return;
-      const timer = window.setTimeout(() => toast('Ora e fixă — o schimbi din detalii (atinge activitatea).', 'error'), LONG_PRESS_MS + 150);
-      const cancel = () => window.clearTimeout(timer);
-      window.addEventListener('pointerup', cancel, { once: true });
-      window.addEventListener('pointercancel', cancel, { once: true });
-      return;
-    }
+    if (item.fixed) return; // fixed times don't drag; a long press opens the menu instead
     const at = pointAt(e.clientX, e.clientY);
     const start = item.start ? toMinutes(item.start) : null;
     const len = Math.max(gridMinutes(item, places).minutes, item.kind === 'deadline' ? 0 : SNAP_MIN);
@@ -632,20 +620,22 @@ function Grid({ days, view, hourPx, offset, trayOpen, setTrayOpen, drag, setDrag
 
   useEffect(() => endPress, [endPress]);
 
-  // swipe left / right on the grid to change page (not while dragging)
-  const swipe = useRef<{ x: number; y: number; t: number } | null>(null);
-  const onTouchStart = (e: React.TouchEvent) => {
-    const t = e.touches[0];
-    swipe.current = e.touches.length === 1 ? { x: t.clientX, y: t.clientY, t: Date.now() } : null;
+  // swipe left / right anywhere on the grid (finger or mouse) to change page; a drag of an activity wins
+  const swipe = useRef<{ x: number; y: number; t: number; id: number } | null>(null);
+  const onSwipeDown = (e: ReactPointerEvent) => {
+    swipe.current = e.button === 0 && e.isPrimary ? { x: e.clientX, y: e.clientY, t: Date.now(), id: e.pointerId } : null;
   };
-  const onTouchEnd = (e: React.TouchEvent) => {
-    const s = swipe.current;
+  const onSwipeUp = (e: ReactPointerEvent) => {
+    const sw = swipe.current;
     swipe.current = null;
-    if (!s || justDragged.current || press.current?.active) return;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - s.x;
-    const dy = t.clientY - s.y;
-    if (Math.abs(dx) > 70 && Math.abs(dx) > 1.6 * Math.abs(dy) && Date.now() - s.t < 600) onPage(dx < 0 ? 1 : -1);
+    if (!sw || sw.id !== e.pointerId || justDragged.current || press.current?.active) return;
+    const dx = e.clientX - sw.x;
+    const dy = e.clientY - sw.y;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > 1.5 * Math.abs(dy) && Date.now() - sw.t < 800) {
+      justDragged.current = true; // so the release doesn't also count as a tap on a slot
+      window.setTimeout(() => (justDragged.current = false), 0);
+      onPage(dx < 0 ? 1 : -1);
+    }
   };
 
   const cols = `${GUTTER}px repeat(${days.length}, minmax(0, 1fr))`;
@@ -658,14 +648,15 @@ function Grid({ days, view, hourPx, offset, trayOpen, setTrayOpen, drag, setDrag
   return (
     <div
       ref={scrollRef}
-      className="relative overflow-y-auto overscroll-contain rounded-2xl border border-neutral-200 bg-white h-[calc(100dvh-var(--off))] md:h-[calc(100dvh-var(--off-md))] min-h-[380px] select-none"
+      className="relative overflow-y-auto overscroll-contain rounded-2xl border border-neutral-200 bg-white h-[calc(100dvh-var(--off))] md:h-[calc(100dvh-var(--off-md))] min-h-[380px] select-none touch-pan-y"
       style={{ '--off': `${offset}px`, '--off-md': `${offset + 61}px` } as CSSProperties}
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
+      onPointerDown={onSwipeDown}
+      onPointerUp={onSwipeUp}
+      onPointerCancel={() => (swipe.current = null)}
     >
       {/* sticky header: day names + activities without a time */}
       <div ref={headRef} className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-neutral-200">
-        <div className="grid" style={{ gridTemplateColumns: cols }}>
+        <motion.div key={firstKey} className="grid" style={{ gridTemplateColumns: cols }} initial={{ x: slide * 24, opacity: 0.4 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.18 }}>
           <div />
           {days.map((d) => {
             const isToday = d.date === today;
@@ -690,7 +681,7 @@ function Grid({ days, view, hourPx, offset, trayOpen, setTrayOpen, drag, setDrag
               </button>
             );
           })}
-        </div>
+        </motion.div>
         {(maxUntimed > 0 || drag) && (
           <div className="grid border-t border-neutral-100" style={{ gridTemplateColumns: cols }}>
             <div className="flex flex-col items-center justify-start pt-1.5 text-[9px] font-semibold uppercase leading-tight text-neutral-400 text-center">
@@ -732,7 +723,15 @@ function Grid({ days, view, hourPx, offset, trayOpen, setTrayOpen, drag, setDrag
             </span>
           ))}
         </div>
-        <div ref={colsRef} className="relative col-span-full col-start-2 grid" style={{ gridTemplateColumns: `repeat(${days.length}, minmax(0, 1fr))` }}>
+        <motion.div
+          key={firstKey}
+          ref={colsRef}
+          className="relative col-span-full col-start-2 grid"
+          style={{ gridTemplateColumns: `repeat(${days.length}, minmax(0, 1fr))` }}
+          initial={{ x: slide * 24, opacity: 0.4 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.18 }}
+        >
           {/* hour lines */}
           <div className="pointer-events-none absolute inset-0">
             {Array.from({ length: 24 }, (_, h) => (
@@ -758,7 +757,7 @@ function Grid({ days, view, hourPx, offset, trayOpen, setTrayOpen, drag, setDrag
               onSlot={(min) => onSlot(d.date, min)}
             />
           ))}
-        </div>
+        </motion.div>
       </div>
     </div>
   );
@@ -796,6 +795,7 @@ function DayColumn({
   onSlot: (minute: number) => void;
 }) {
   const { doc, places } = useTrip();
+  const menuFor = useMenuFor(justDragged);
   const timed = day.items.filter((i) => i.start && i.kind !== 'deadline');
   const deadlines = day.items.filter((i) => i.start && i.kind === 'deadline');
   const events = timed.map((i) => {
@@ -885,7 +885,7 @@ function DayColumn({
             if (!justDragged.current) onOpen(i.id);
           }}
           onPointerDown={(e) => onBegin(e, i, 'move')}
-          onContextMenu={(e) => e.preventDefault()}
+          onContextMenu={(e) => menuFor(e, i.id)}
           className={`absolute inset-x-0 z-20 flex items-center ${drag?.id === i.id ? 'opacity-30' : ''}`}
           style={{ top: px(toMinutes(i.start!)) - 9, height: 18 }}
           title={`${i.start} ${itemName(i, places)}`}
@@ -952,6 +952,7 @@ function Block({
   justDragged: React.MutableRefObject<boolean>;
 }) {
   const { places } = useTrip();
+  const menuFor = useMenuFor(justDragged);
   const place = item.placeId ? places.get(item.placeId) : undefined;
   const color = colorOf(item, place);
   const photo = !!place?.photos[0]?.path;
@@ -982,7 +983,7 @@ function Block({
       }}
       onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onOpen(item.id)}
       onPointerDown={(e) => onBegin(e, item, 'move')}
-      onContextMenu={(e) => e.preventDefault()}
+      onContextMenu={(e) => menuFor(e, item.id)}
       className={`group absolute z-10 overflow-hidden rounded-lg border-l-[3px] text-left shadow-sm transition-opacity [-webkit-touch-callout:none] ${
         item.fixed ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'
       } ${faded ? 'opacity-35' : ''} ${item.done ? 'opacity-60' : ''} ${severity === 'error' ? 'ring-2 ring-red-500' : severity === 'warn' ? 'ring-1 ring-amber-400' : ''} ${
@@ -999,7 +1000,7 @@ function Block({
         </>
       )}
       <div className={`relative h-full flex flex-col ${tiny ? 'justify-center px-1' : 'px-1.5 py-1'} ${photo ? 'text-white justify-end' : 'text-neutral-900'}`}>
-        {!tiny && (
+        {!tiny && !(narrow || cols > 1) && (
           <span className={`absolute right-1 top-1 flex items-center gap-0.5 ${photo ? 'text-white' : 'text-neutral-700'}`}>
             {severity && <AlertTriangle size={11} className={photo ? '' : severity === 'error' ? 'text-red-600' : 'text-amber-600'} />}
             {bookingTodo && <Ticket size={11} />}
@@ -1007,7 +1008,7 @@ function Block({
             {item.done && <Check size={11} />}
           </span>
         )}
-        <span className={`font-semibold leading-tight ${narrow ? 'text-[10px]' : 'text-[11px]'} ${tiny ? 'truncate' : 'line-clamp-3'} ${item.done ? 'line-through' : ''} ${!tiny && !photo ? 'pr-6' : ''}`}>
+        <span className={`font-semibold leading-tight ${narrow ? 'text-[10px]' : 'text-[11px]'} ${tiny ? 'truncate' : 'line-clamp-3'} ${item.done ? 'line-through' : ''} ${!tiny && !photo && !(narrow || cols > 1) ? 'pr-6' : ''}`}>
           {tiny && !narrow ? `${item.start} ${name}` : name}
         </span>
         {!tiny && (
@@ -1046,6 +1047,7 @@ function TrayChip({
   justDragged: React.MutableRefObject<boolean>;
 }) {
   const { places } = useTrip();
+  const menuFor = useMenuFor(justDragged);
   const place = item.placeId ? places.get(item.placeId) : undefined;
   const color = colorOf(item, place);
   const name = itemName(item, places);
@@ -1059,7 +1061,7 @@ function TrayChip({
       }}
       onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onOpen(item.id)}
       onPointerDown={(e) => onBegin(e, item, 'move')}
-      onContextMenu={(e) => e.preventDefault()}
+      onContextMenu={(e) => menuFor(e, item.id)}
       title={name}
       className={`flex items-center gap-1 rounded-md border-l-[3px] pr-1 h-[22px] overflow-hidden cursor-grab [-webkit-touch-callout:none] ${faded ? 'opacity-35' : ''} ${item.done ? 'opacity-60' : ''}`}
       style={{ borderLeftColor: color, background: `${color}1f` }}
@@ -1075,6 +1077,7 @@ function TrayChip({
 /** Agenda — every day as a list with photos, times and the activities still without a time. */
 function Agenda({ anchor, onOpen }: { anchor: string; onOpen: (id: string) => void }) {
   const { doc, places, today } = useTrip();
+  const menuFor = useMenuFor();
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     ref.current?.querySelector(`[data-day="${anchor}"]`)?.scrollIntoView({ block: 'start' });
@@ -1102,14 +1105,21 @@ function Agenda({ anchor, onOpen }: { anchor: string; onOpen: (id: string) => vo
                   const { minutes, estimated } = gridMinutes(i, places);
                   return (
                     <li key={i.id}>
-                      <button type="button" onClick={() => onOpen(i.id)} className="w-full flex items-center gap-3 p-2.5 text-left hover:bg-neutral-50">
+                      <button
+                        type="button"
+                        onClick={() => onOpen(i.id)}
+                        onContextMenu={(e) => menuFor(e, i.id)}
+                        className="w-full flex items-center gap-3 p-2.5 text-left hover:bg-neutral-50 select-none [-webkit-touch-callout:none]"
+                      >
                         <span className="w-[74px] flex-shrink-0 text-xs font-semibold tabular-nums text-neutral-700">
                           {i.start ? (i.kind === 'deadline' ? i.start : `${i.start}–${fromMinutes(toMinutes(i.start) + minutes)}`) : <span className="text-neutral-400">fără oră</span>}
                         </span>
                         {place?.photos[0]?.path ? (
                           <PlacePhoto place={place} thumb className="w-11 h-11 rounded-lg flex-shrink-0" sizes="44px" />
                         ) : (
-                          <span className="w-11 h-11 rounded-lg flex-shrink-0" style={{ background: `${colorOf(i, place)}26` }} />
+                          <span className="w-11 h-11 rounded-lg flex-shrink-0 inline-flex items-center justify-center" style={{ background: `${colorOf(i, place)}26`, color: colorOf(i, place) }}>
+                            {place?.booking?.required && place.booking.status === 'todo' ? <Ticket size={18} /> : <CalendarDays size={18} />}
+                          </span>
                         )}
                         <span className="flex-1 min-w-0">
                           <span className={`block text-sm font-semibold leading-tight ${i.done ? 'line-through text-neutral-500' : ''}`}>{itemName(i, places)}</span>
@@ -1128,6 +1138,52 @@ function Agenda({ anchor, onOpen }: { anchor: string; onOpen: (id: string) => vo
           </section>
         );
       })}
+    </div>
+  );
+}
+
+/** The activity menu (right click / long press): details or remove from the plan (undoable). */
+function ItemMenu({ id, x, y, onClose, onOpen, onRemove }: { id: string; x: number; y: number; onClose: () => void; onOpen: () => void; onRemove: () => void }) {
+  const { doc, places } = useTrip();
+  const found = findItem(doc, id);
+  useEffect(() => {
+    const close = (e: Event) => {
+      if (e instanceof KeyboardEvent && e.key !== 'Escape') return;
+      onClose();
+    };
+    window.addEventListener('keydown', close);
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    return () => {
+      window.removeEventListener('keydown', close);
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', close);
+    };
+  }, [onClose]);
+  if (!found) return null;
+  const W = 220;
+  const left = clamp(x, 8, window.innerWidth - W - 8);
+  const top = clamp(y, 8, window.innerHeight - 140);
+  const name = itemName(found.item, places);
+  return (
+    <div className="fixed inset-0 z-[900]" onPointerDown={onClose} onContextMenu={(e) => (e.preventDefault(), onClose())}>
+      <div
+        role="menu"
+        className="absolute rounded-xl border border-neutral-200 bg-white shadow-xl py-1 text-sm"
+        style={{ left, top, width: W }}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
+        <p className="px-3 pt-1.5 pb-1 text-xs font-semibold text-neutral-500 truncate">
+          {name}
+          {found.item.start ? ` · ${found.item.start}` : ''}
+        </p>
+        <button type="button" role="menuitem" onClick={() => (onOpen(), onClose())} className="w-full flex items-center gap-2 px-3 min-h-[40px] text-left hover:bg-neutral-50">
+          <Info size={15} /> Detalii
+        </button>
+        <button type="button" role="menuitem" onClick={() => (onRemove(), onClose())} className="w-full flex items-center gap-2 px-3 min-h-[40px] text-left text-red-700 hover:bg-red-50">
+          <Trash2 size={15} /> Scoate din program
+        </button>
+      </div>
     </div>
   );
 }
