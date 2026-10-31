@@ -80,6 +80,7 @@ export const addPlaceToDay = (placeId: string, date: string, position?: number):
     costs: structuredClone(place.costTemplate),
     notes: null,
     calendarEventId: null,
+    routes: [],
   };
   day.items.splice(clampPos(position, day.items.length), 0, item);
   return next;

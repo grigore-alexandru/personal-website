@@ -173,3 +173,15 @@ test("swapDays exchanges the plans of two days and keeps the document valid", as
   assert.ok(TripDoc.safeParse(next).success);
   assert.deepEqual(validateDay(day(next, "2026-11-10"), next).filter((w) => w.severity === "error"), []);
 });
+
+test("unknown fields survive a parse (older clients never drop newer data)", () => {
+  const raw = JSON.parse(readFileSync(new URL("../../../data/trips/sf-2026.seed.json", import.meta.url), "utf8"));
+  raw.futureField = 1;
+  raw.places[0].futureField = "x";
+  raw.days[0].items[0].futureField = true;
+  const parsed = TripDoc.parse(raw) as any;
+  assert.equal(parsed.futureField, 1);
+  assert.equal(parsed.places[0].futureField, "x");
+  assert.equal(parsed.days[0].items[0].futureField, true);
+  assert.deepEqual(parsed.days[0].items[0].routes, []);
+});

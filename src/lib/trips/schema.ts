@@ -1,4 +1,6 @@
 // src/lib/trips/schema.ts — single source of truth for the trip document shape.
+// Objects use .passthrough(): keys this version does not know are kept, so an older app on the phone
+// never strips fields that a newer version (or Claude) added when it saves the whole document.
 import { z } from "zod";
 
 export const Slug = z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "slug");
@@ -54,7 +56,7 @@ export const Photo = z.object({
   path: z.string().nullable(), // storage path in bucket trip-media once uploaded
   alt: z.string(),
   credit: z.string().nullable().optional(), // author + license for photos that are not the user's own (Wikimedia Commons)
-});
+}).passthrough();
 
 export const Duration = z.object({
   text: z.string(),
@@ -83,6 +85,23 @@ export const Place = z.object({
   links: z.array(z.object({ label: z.string(), url: z.string().url() })),
   notes: z.string().nullable(), // verbatim from Obsidian
   source: z.object({ obsidianHeading: z.string() }),
+}).passthrough();
+
+export const RouteMode = z.enum(["walk", "bart", "caltrain", "muni", "bus", "ferry", "car", "plane", "other"]);
+export const RouteStep = z.object({
+  mode: RouteMode,
+  text: z.string().min(1),
+  durationMin: z.number().int().nonnegative().nullable().optional(),
+});
+/** Step-by-step way there ("to") or back ("from"), shown as a dropdown on the activity. */
+export const Route = z.object({
+  id: Slug,
+  direction: z.enum(["to", "from"]),
+  title: z.string().min(1), // "SFO → acasă"
+  summary: z.string().nullable(), // "BART Yellow/Red ~25 min + 15 min pe jos"
+  destination: z.string().nullable(), // "base" or a place id — where Navighează points
+  steps: z.array(RouteStep),
+  notes: z.string().nullable(),
 });
 
 export const ItemKind = z.enum(["visit", "transport", "deadline", "note"]);
@@ -99,7 +118,9 @@ export const Item = z
     costs: z.array(CostLine),
     notes: z.string().nullable(),
     calendarEventId: z.string().nullable(),
+    routes: z.array(Route).default([]), // optional in stored documents; [] when missing
   })
+  .passthrough()
   .refine((i) => i.placeId != null || (i.label != null && i.label.length > 0), { message: "item needs placeId or label" });
 
 export const DayKind = z.enum(["city", "daytrip", "valley", "travel"]);
@@ -112,7 +133,7 @@ export const Day = z.object({
   notes: z.string().nullable(),
   costs: z.array(CostLine), // day-level costs: local transport, food, transfers
   items: z.array(Item),
-});
+}).passthrough();
 
 export const Leg = z.object({
   from: z.string(),
@@ -137,7 +158,7 @@ export const Trip = z.object({
   departure: z.object({ date: ISODate, time: HHmm.nullable(), airport: z.string() }),
   fxRonPerUsd: z.number().positive().nullable(),
   notes: z.string().nullable(),
-});
+}).passthrough();
 
 export const TripDoc = z
   .object({
@@ -152,8 +173,9 @@ export const TripDoc = z
       updatedBy: z.string().nullable(),
       source: z.string().nullable(),
       geocodedAt: z.string().nullable(),
-    }),
+    }).passthrough(),
   })
+  .passthrough()
   .superRefine((doc, ctx) => {
     const issue = (message: string) => ctx.addIssue({ code: z.ZodIssueCode.custom, message });
     const placeIds = new Set<string>();
@@ -205,3 +227,5 @@ export type CostLine = z.infer<typeof CostLine>;
 export type CostCategory = z.infer<typeof CostCategory>;
 export type GeoPoint = z.infer<typeof GeoPoint>;
 export type Leg = z.infer<typeof Leg>;
+export type Route = z.infer<typeof Route>;
+export type RouteMode = z.infer<typeof RouteMode>;

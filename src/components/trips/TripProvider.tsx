@@ -9,7 +9,7 @@ import { commit, createCommitQueue, supabaseStore, type Snapshot } from '@/lib/t
 import { validateTrip, type Warning } from '@/lib/trips/validate';
 import { nowMinutesIn, todayIn } from '@/lib/trips/time';
 import { ToastContainer, type ToastData, type ToastType } from '@/components/ui/Toast';
-import { CACHE_KEY, PHOTO_BUCKET, PHOTO_URL_TTL_S, POLL_MS, TRIP_ID, TRIP_TZ } from './tripConfig';
+import { BASE, CACHE_KEY, PHOTO_BUCKET, PHOTO_URL_TTL_S, POLL_MS, TRIP_ID, TRIP_TZ } from './tripConfig';
 
 export type SyncState = 'saved' | 'saving' | 'offline' | 'cache';
 
@@ -63,6 +63,36 @@ function writeCache(snap: Snapshot) {
 
 const NON_TEXT_INPUTS = new Set(['checkbox', 'radio', 'button', 'submit', 'reset', 'range', 'color', 'file']);
 
+const PHOTO_CACHE_KEY = `${CACHE_KEY}:photos`;
+const WARM_KEY = `${CACHE_KEY}:warm`;
+const PHOTO_URLS_FRESH_MS = 11 * 60 * 60 * 1000; // signed URLs live 12 h
+
+type PhotoCache = { paths: string; at: number; urls: [string, string][] };
+
+function readJson<T>(key: string): T | null {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeJson(key: string, value: unknown) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    /* convenience only */
+  }
+}
+
+/** Small stable hash for "did the list of pages/photos change since the last offline download?". */
+function signature(text: string): string {
+  let h = 5381;
+  for (let i = 0; i < text.length; i++) h = ((h << 5) + h + text.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(36);
+}
+
 /** True while the user is typing in a text field (polled updates wait until blur). Checkboxes keep focus after a tap, so they don't count. */
 const typing = () => {
   const el = typeof document !== 'undefined' ? document.activeElement : null;
@@ -71,7 +101,7 @@ const typing = () => {
   return el.tagName === 'INPUT' && !NON_TEXT_INPUTS.has((el as HTMLInputElement).type);
 };
 
-export function TripProvider({ children }: { children: ReactNode }) {
+export function TripProvider({ children, buildId = 'local' }: { children: ReactNode; buildId?: string }) {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const store = useMemo(() => supabaseStore(supabase), [supabase]);
   const queue = useMemo(() => createCommitQueue(), []);
@@ -125,7 +155,8 @@ export function TripProvider({ children }: { children: ReactNode }) {
     }
   }, [store, acceptServer, goLogin]);
 
-  // 1. Mount: cache first, then the database.
+  // 1. Mount: the plan saved on this phone first; then, if online, only the hash (a few bytes) —
+  //    the whole document is downloaded only when it changed.
   useEffect(() => {
     setOnline(navigator.onLine);
     const cached = readCache();
@@ -134,8 +165,21 @@ export function TripProvider({ children }: { children: ReactNode }) {
       setServer(cached);
       setFromCache(true);
     }
-    void load();
-  }, [load]);
+    if (!navigator.onLine) {
+      if (!cached) setLoadError('Ești offline și planul nu e încă salvat pe acest telefon. Deschide aplicația o dată cu internet.');
+      return;
+    }
+    if (!cached) {
+      void load();
+      return;
+    }
+    store
+      .loadHash(TRIP_ID)
+      .then((hash) => (hash === cached.hash ? acceptServer(cached, false) : void load()))
+      .catch((e) => {
+        if (isAuthError(e)) goLogin();
+      });
+  }, [load, store, acceptServer, goLogin]);
 
   // 2. Poll the hash every 20 s while visible and online; immediately on focus/online.
   const poll = useCallback(async () => {
@@ -254,16 +298,30 @@ export function TripProvider({ children }: { children: ReactNode }) {
     return [...new Set(paths)].sort().join('\n');
   }, [doc]);
 
-  const signPhotos = useCallback(async () => {
-    const paths = photoPaths ? photoPaths.split('\n') : [];
-    if (paths.length === 0) return;
-    const all = paths.flatMap((p) => [p, thumbOf(p)]);
-    const { data, error } = await supabase.storage.from(PHOTO_BUCKET).createSignedUrls(all, PHOTO_URL_TTL_S);
-    if (error || !data) return;
-    const map = new Map<string, string>();
-    for (const row of data) if (row.path && row.signedUrl) map.set(row.path, row.signedUrl);
-    setPhotoUrls(map);
-  }, [photoPaths, supabase]);
+  // Signed URLs are kept on the phone, so photos still resolve offline: the service worker answers
+  // from its cache by object path, whatever (expired) token the URL carries.
+  const signPhotos = useCallback(
+    async (force = false) => {
+      const paths = photoPaths ? photoPaths.split('\n') : [];
+      if (paths.length === 0) return;
+      const saved = readJson<PhotoCache>(PHOTO_CACHE_KEY);
+      if (saved) setPhotoUrls(new Map(saved.urls));
+      const fresh = saved && saved.paths === photoPaths && Date.now() - saved.at < PHOTO_URLS_FRESH_MS;
+      if ((fresh && !force) || !navigator.onLine) return;
+      try {
+        const all = paths.flatMap((p) => [p, thumbOf(p)]);
+        const { data, error } = await supabase.storage.from(PHOTO_BUCKET).createSignedUrls(all, PHOTO_URL_TTL_S);
+        if (error || !data) return;
+        const map = new Map<string, string>();
+        for (const row of data) if (row.path && row.signedUrl) map.set(row.path, row.signedUrl);
+        setPhotoUrls(map);
+        writeJson(PHOTO_CACHE_KEY, { paths: photoPaths, at: Date.now(), urls: [...map] } satisfies PhotoCache);
+      } catch {
+        /* offline / flaky signal: keep the saved URLs */
+      }
+    },
+    [photoPaths, supabase],
+  );
 
   useEffect(() => {
     void signPhotos();
@@ -272,8 +330,41 @@ export function TripProvider({ children }: { children: ReactNode }) {
   const refreshPhotos = useCallback(async () => {
     if (photosRefreshed.current) return;
     photosRefreshed.current = true;
-    await signPhotos();
+    await signPhotos(true);
   }, [signPhotos]);
+
+  // Offline: register the service worker (production only — it would cache dev bundles), then let it
+  // download every trip page, its scripts and all photos, once per deploy or when pages/photos change.
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'production' || !('serviceWorker' in navigator)) return;
+    navigator.serviceWorker.register(`${BASE}/sw.js`, { scope: `${BASE}/` }).catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'production' || !('serviceWorker' in navigator)) return;
+    if (!doc || fromCache || !navigator.onLine) return;
+    if (photoPaths && photoUrls.size === 0) return; // wait for the signed URLs
+    const pages = [
+      ...['azi', 'zile', 'harta', 'locuri', 'bilete', 'buget'].map((p) => `${BASE}/${p}`),
+      ...doc.days.map((d) => `${BASE}/zile/${d.date}`),
+      ...doc.places.map((p) => `${BASE}/locuri/${p.id}`),
+    ];
+    const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
+    const photos = saveData ? [] : [...photoUrls.values()];
+    const sig = signature(`${buildId}|${pages.join(',')}|${photoPaths}`);
+    const last = readJson<{ sig: string; at: number }>(WARM_KEY);
+    if (last?.sig === sig && Date.now() - last.at < 24 * 60 * 60 * 1000) return;
+    let cancelled = false;
+    void navigator.serviceWorker.ready.then((reg) => {
+      if (cancelled || !reg.active) return;
+      reg.active.postMessage({ type: 'warm', pages, photos, refreshPages: last?.sig !== sig });
+      writeJson(WARM_KEY, { sig, at: Date.now() });
+      void import('./MapView').catch(() => undefined); // caches the Leaflet chunk for the map offline
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [doc, fromCache, photoUrls, photoPaths, buildId]);
 
   const photoUrl = useCallback(
     (path: string | null, thumb = false) => (path ? photoUrls.get(thumb ? thumbOf(path) : path) ?? null : null),

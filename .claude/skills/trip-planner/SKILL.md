@@ -31,6 +31,7 @@ Answer in the user's language (usually Romanian). Never address the user by name
 | Schedule a place | `select public.trip_add_item('sf-2026', '<date>', '{"id":"i-MMDD-<place>","placeId":"<place>"}'::jsonb, <position or null>);` (copies the place's cost template) |
 | Add a non-place item (ferry, deadline) | `... trip_add_item(..., '{"id":"i-MMDD-<slug>","label":"Feribot …","kind":"transport","start":"09:25","fixed":true}'::jsonb)` |
 | Swap two days' plans (dates stay) | `select public.trip_swap_days('sf-2026', '<date a>', '<date b>');` — moves title, kind, status, items, costs and notes; ask first if either day is confirmed |
+| Step-by-step way there / back for an activity (dropdown in the app) | `select public.trip_set_item_routes('sf-2026', '<item id>', '[{"id":"<slug>","direction":"to|from","title":"SFO → acasă","summary":"BART ~25 min + 15 min pe jos","destination":"base|<place id>","steps":[{"mode":"walk|bart|caltrain|muni|bus|ferry|car|plane|other","text":"…","durationMin":10}],"notes":null}]'::jsonb);` — replaces all routes of that item |
 | Unschedule | `select public.trip_remove_item('sf-2026', '<item id>');` |
 | Time, duration, done, notes | `select public.trip_update_item('sf-2026', '<item id>', '{"start":"10:00","durationMin":120}'::jsonb);` |
 | Confirm a day / rename | `select public.trip_update_day('sf-2026', '<date>', '{"status":"confirmed"}'::jsonb);` |
@@ -65,6 +66,8 @@ After every change say exactly what changed: `zi · element · vechi → nou`.
 - App: `src/app/admin/trips/sf-2026/` (routes) and `src/components/trips/` (screens, `TripProvider`); library and tests in `src/lib/trips/` (`npm run test:trips`).
 - Database: `supabase/migrations/20261030120000_create_trip_planner.sql`, `20261030120100_create_trip_media.sql`. Seed: `data/trips/sf-2026.seed.json` (already imported; the database is now the source of truth).
 - Photos: `npm run trips:photos -- --media "<Obsidian>/Writing/Media" --dry-run` (needs `SUPABASE_SERVICE_ROLE_KEY` in the shell, never in the repo).
+- Home: `trip.base` = 2600 Harrison St (Mission). Travel times can now be computed from `base` (procedure above). Never put the street number or apartment in links or prompts sent outside — say "Mission, Harrison St & 22nd St".
+- Offline: the app works without internet on the phone (service worker + saved plan); edits need a connection.
 - Muni: every day has a `muni` line at $5.70 (Muni Day Pass with Clipper, no cable car — sfmta.com, checked 2026-10-31); a single ride is $2.85.
 - Photos: `place.photos[]` = `{source, path, alt, credit?}`; `credit` is required for photos that aren't the user's own ("Foto: <author>, <license>, Wikimedia Commons"). Prefer Wikimedia Commons; never Google Maps/Search images.
 - Food: each day has a `mancare` line in `day.costs`; Buget shows them in their own "Mâncare" section. Food places (`kind: "food"`) are an orange layer on the map.

@@ -112,7 +112,7 @@ export function AskAiButton() {
   );
 
   const tripLines = [
-    doc.trip.base ? `Stau la: ${doc.trip.base.name ?? ''} ${doc.trip.base.address ?? ''}`.trim() : 'Cazarea nu e încă stabilită.',
+    doc.trip.base ? `Stau în zona: ${doc.trip.base.name ?? 'cazare stabilită'} (adresa exactă nu o trimit).` : 'Cazarea nu e încă stabilită.',
     ...(doc.trip.notes ? [`Notele mele: ${doc.trip.notes.replace(/\n/g, ' ')}`] : []),
   ];
   const prompt = buildPrompt({

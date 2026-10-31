@@ -38,7 +38,7 @@ export default async function TripLayout({ children }: { children: ReactNode }) 
   if (!(profile as { is_admin?: boolean } | null)?.is_admin) notFound();
 
   return (
-    <TripProvider>
+    <TripProvider buildId={process.env.VERCEL_GIT_COMMIT_SHA ?? 'local'}>
       <TripShell>{children}</TripShell>
     </TripProvider>
   );

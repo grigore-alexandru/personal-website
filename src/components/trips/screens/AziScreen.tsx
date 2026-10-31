@@ -11,6 +11,7 @@ import { useTrip } from '../TripProvider';
 import { BASE, dayHref } from '../tripConfig';
 import { coverOf, minutesText, photoPlace, ticketsToBuy } from '../helpers';
 import { useAiContext } from '../ai';
+import { RouteList } from '../RouteList';
 import { aziPage } from '../aiPages';
 import { Card, MoneyText, NavigateButtons, NoteText, PlacePhoto, StatusChip, WarningList } from '../ui';
 
@@ -53,6 +54,28 @@ function Shortcut({ href, label, count }: { href: string; label: string; count: 
   );
 }
 
+/** Before departure: what to do on landing (first day's items with notes or routes), readable offline. */
+function FirstDaySteps() {
+  const { doc, places } = useTrip();
+  const items = doc.days[0].items.filter((i) => i.notes || i.routes.length > 0);
+  if (items.length === 0) return null;
+  return (
+    <Card className="p-4 space-y-3">
+      <p className="text-xs font-bold uppercase tracking-wide text-neutral-500">La aterizare</p>
+      {items.map((i) => (
+        <div key={i.id} className="space-y-2">
+          <p className="font-bold leading-tight">
+            {i.start && <span className="tabular-nums mr-2">{i.start}</span>}
+            {itemName(i, places)}
+          </p>
+          {i.notes && <NoteText text={i.notes} />}
+          <RouteList item={i} />
+        </div>
+      ))}
+    </Card>
+  );
+}
+
 function Before() {
   const { doc, today } = useTrip();
   const n = daysUntil(today, doc.trip.startDate);
@@ -60,6 +83,7 @@ function Before() {
     <div className="space-y-4">
       <h1 className="text-3xl font-bold">{n === 1 ? 'Pleci mâine' : `Pleci în ${n} zile`}</h1>
       <DayCard day={doc.days[0]} />
+      <FirstDaySteps />
       <div className="grid gap-2 sm:grid-cols-2">
         <Shortcut href={`${BASE}/bilete`} label="Bilete de luat" count={ticketsToBuy(doc).length} />
         <Shortcut href={`${BASE}/buget#de-completat`} label="Prețuri lipsă" count={missingPriceLines(doc).length} />
@@ -154,6 +178,11 @@ function During() {
             </div>
           </div>
           {(next.notes || place?.notes) && <NoteText text={(next.notes ?? place?.notes)!} className="px-4 pb-3" />}
+          {next.routes.length > 0 && (
+            <div className="px-4 pb-3">
+              <RouteList item={next} open />
+            </div>
+          )}
           <div className="px-4 pb-4 space-y-3">
             <NavigateButtons target={place ? navigationTarget(place) : null} />
             <label className="inline-flex items-center gap-2 min-h-[44px] font-semibold cursor-pointer select-none">

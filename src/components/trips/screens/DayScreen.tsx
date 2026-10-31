@@ -15,6 +15,7 @@ import { useTrip } from '../TripProvider';
 import { AREA, BASE, DAY_KIND, dayHref, placeHref } from '../tripConfig';
 import { coverOf, dayOptionLabel, doneCount, minutesText, photoPlace, scheduledDates } from '../helpers';
 import { AddCostForm } from '../AddCostForm';
+import { RouteList } from '../RouteList';
 import { useAiContext } from '../ai';
 import { dayPage } from '../aiPages';
 import { Card, Chip, CostLineRow, ExtLink, MoneyText, NavigateButtons, NoteText, PlacePhoto, SectionTitle, StatusChip, WarningList } from '../ui';
@@ -291,6 +292,12 @@ function ItemRow({ day, item, index, count }: { day: Day; item: Item; index: num
       )}
 
       {itemWarnings.length > 0 && <WarningList warnings={itemWarnings} className="px-3 pb-3" />}
+
+      {item.routes.length > 0 && (
+        <div className="px-3 pb-3">
+          <RouteList item={item} />
+        </div>
+      )}
 
       {menu && (
         <div className="border-t border-neutral-100 p-3 grid gap-3 sm:grid-cols-2">

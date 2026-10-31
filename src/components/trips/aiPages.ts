@@ -42,6 +42,8 @@ export function dayLines(day: Day, doc: TripDoc): string[] {
       `${n + 1}. ${i.start ?? 'fără oră'} ${itemName(i, places)}${len ? ` (${minutesText(len)})` : ''}${p?.location?.address ? ` — ${p.location.address}` : ''}${i.done ? ' [făcut]' : ''}${i.kind === 'deadline' ? ' [limită fixă]' : i.fixed ? ' [oră fixă]' : ''}`,
     );
   });
+  for (const i of day.items)
+    for (const r of i.routes) lines.push(`Drum ${r.direction === 'to' ? 'dus' : 'întors'} (${itemName(i, places)}): ${r.title}${r.summary ? ` — ${r.summary}` : ''}`);
   for (const w of validateDay(day, doc).filter((w) => w.severity !== 'info')) lines.push(`Atenție: ${w.message}`);
   if (day.notes) lines.push(`Note zi: ${oneLine(day.notes)}`);
   return lines;
