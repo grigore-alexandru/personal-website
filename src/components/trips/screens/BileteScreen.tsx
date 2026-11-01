@@ -2,11 +2,11 @@
 
 import Link from '../TripLink';
 import { useState } from 'react';
-import { Clock, ExternalLink, Lock, Plane } from 'lucide-react';
+import { Clock, ExternalLink, Lock, Pencil, Plane, StickyNote } from 'lucide-react';
 import type { Place } from '@/lib/trips/schema';
 import { formatDateRo, formatDateShort } from '@/lib/trips/time';
 import { itemName } from '@/lib/trips/validate';
-import { setBookingStatus } from '@/lib/trips/mutations';
+import { setBookingStatus, setTripNotes } from '@/lib/trips/mutations';
 import { useTrip } from '../TripProvider';
 import { dayHref, placeHref } from '../tripConfig';
 import { scheduledDates, ticketsToBuy } from '../helpers';
@@ -37,6 +37,8 @@ export function BileteScreen() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Bilete</h1>
 
+      <TripNotes />
+
       <section>
         <SectionTitle>De luat</SectionTitle>
         {todo.length === 0 ? (
@@ -63,7 +65,7 @@ export function BileteScreen() {
                     {p.name}
                     <span className="block text-xs font-normal text-neutral-500">{(dates.get(p.id) ?? []).map(formatDateShort).join(', ') || 'neprogramat'}</span>
                   </Link>
-                  <Chip tone="green">luat</Chip>
+                  <Chip tone="green">{p.kind === 'event' ? 'confirmat' : 'luat'}</Chip>
                   {p.booking?.reference && <span className="text-sm font-mono text-neutral-700">{p.booking.reference}</span>}
                   <BookedUndo place={p} />
                 </Card>
@@ -90,11 +92,78 @@ export function BileteScreen() {
   );
 }
 
+/** Notes and reminders for the whole trip, on top of the page; links in them can be tapped. */
+function TripNotes() {
+  const { doc, mutate } = useTrip();
+  const saved = doc.trip.notes ?? '';
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState(saved);
+  const save = () => {
+    if (text.trim() === saved.trim() || mutate(setTripNotes(text.trim() || null))) setEditing(false);
+  };
+  return (
+    <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+      <div className="flex items-center gap-2 mb-1.5">
+        <StickyNote size={16} className="text-amber-700" />
+        <h2 className="flex-1 text-sm font-bold text-amber-950">Note și remindere</h2>
+        {!editing && (
+          <button
+            type="button"
+            onClick={() => {
+              setText(saved);
+              setEditing(true);
+            }}
+            className="inline-flex items-center gap-1 min-h-[36px] px-2 text-xs font-semibold text-amber-900"
+          >
+            <Pencil size={13} /> Editează
+          </button>
+        )}
+      </div>
+      {editing ? (
+        <div className="space-y-2">
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            rows={Math.max(5, text.split('\n').length + 1)}
+            autoFocus
+            aria-label="Note și remindere"
+            className="w-full rounded-xl border border-amber-300 bg-white p-3 text-sm leading-relaxed focus:outline-none focus:border-amber-600"
+          />
+          <div className="flex gap-2">
+            <button type="button" onClick={save} className="min-h-[40px] px-4 rounded-xl bg-black text-white text-sm font-semibold">
+              Salvează
+            </button>
+            <button type="button" onClick={() => setEditing(false)} className="min-h-[40px] px-4 rounded-xl border border-amber-300 text-sm font-semibold">
+              Renunță
+            </button>
+          </div>
+        </div>
+      ) : saved ? (
+        <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-amber-950">
+          {saved.split(/(https?:\/\/[^\s)]+)/).map((part, i) =>
+            /^https?:\/\//.test(part) ? (
+              <ExtLink key={i} href={part} className="underline underline-offset-2">
+                {part.replace(/^https?:\/\//, '')}
+              </ExtLink>
+            ) : (
+              part
+            ),
+          )}
+        </p>
+      ) : (
+        <p className="text-sm text-amber-900/70">Nimic notat încă.</p>
+      )}
+    </section>
+  );
+}
+
 function TodoTicket({ place, dates }: { place: Place; dates: string[] }) {
   const { mutate, toast } = useTrip();
   const [ref, setRef] = useState('');
   const [open, setOpen] = useState(false);
   const b = place.booking!;
+  const isEvent = place.kind === 'event';
+  const waitlisted = /^Ești pe lista/.test(b.note ?? '');
   return (
     <li>
       <Card className="p-4 space-y-2">
@@ -105,25 +174,25 @@ function TodoTicket({ place, dates }: { place: Place; dates: string[] }) {
             </Link>
             <p className="text-sm text-neutral-600">{dates.length ? dates.map(formatDateRo).join(' · ') : 'neprogramat'}</p>
           </div>
-          <Chip tone="amber">de luat</Chip>
+          <Chip tone="amber">{waitlisted ? 'pe listă' : isEvent ? 'de confirmat' : 'de luat'}</Chip>
         </div>
         {b.note && <p className="text-sm text-neutral-700 whitespace-pre-wrap">{b.note}</p>}
         <div className="flex flex-wrap gap-2">
           {b.url && (
             <ExtLink href={b.url} className="inline-flex items-center gap-1.5 min-h-[44px] px-4 rounded-xl bg-black text-white text-sm font-semibold">
-              Cumpără <ExternalLink size={14} />
+              {isEvent ? 'Pagina evenimentului' : 'Cumpără'} <ExternalLink size={14} />
             </ExtLink>
           )}
           {!open ? (
             <button type="button" onClick={() => setOpen(true)} className="min-h-[44px] px-4 rounded-xl border border-neutral-300 text-sm font-semibold">
-              Am luat biletul
+              {isEvent ? 'M-am înregistrat' : 'Am luat biletul'}
             </button>
           ) : (
             <form
               className="flex flex-wrap gap-2"
               onSubmit={(e) => {
                 e.preventDefault();
-                if (mutate(setBookingStatus(place.id, 'booked', ref.trim() || undefined))) toast(`${place.name}: bilet luat`);
+                if (mutate(setBookingStatus(place.id, 'booked', ref.trim() || undefined))) toast(`${place.name}: ${isEvent ? 'confirmat' : 'bilet luat'}`);
               }}
             >
               <input

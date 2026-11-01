@@ -288,3 +288,28 @@ test("different regions: unreachable next activity is an error, enough time or t
   assert.equal(check("14:00").length, 0); // two hours are enough
   assert.equal(check("12:05", stanford.id).length, 0); // same area
 });
+
+test("weather: forecast per region is parsed, codes are named, a day belongs to its main region", async () => {
+  const { parseForecast, weatherKind, weatherText, forecastUrl } = await import("./weather");
+  const { dayRegion } = await import("./regions");
+  const point = { daily: { time: ["2026-11-03", "2026-11-04"], weather_code: [61, 0], temperature_2m_max: [17.6, null], temperature_2m_min: [9.4, 8], precipitation_probability_max: [50, 0], wind_speed_10m_max: [12.2, 3] } };
+  const f = parseForecast([point, point]);
+  assert.deepEqual(f.sf?.["2026-11-03"], { code: 61, max: 18, min: 9, rain: 50, wind: 12 });
+  assert.equal(f.sf?.["2026-11-04"], undefined); // no temperature, no entry
+  assert.ok(f.peninsula);
+  assert.deepEqual(parseForecast({ error: true }), {});
+  assert.equal(weatherKind(61).kind, "rain");
+  assert.equal(weatherKind(2).kind, "partly");
+  assert.equal(weatherText(f.sf!["2026-11-03"]), "9–18°C, ploaie, ploaie 50%");
+  assert.ok(!forecastUrl().includes("37.7553967")); // never the home address
+
+  const base = seed.places[0];
+  const places = new Map([
+    ["a", { ...base, id: "a", kind: "attraction" as const, area: "sf" as const }],
+    ["e", { ...base, id: "e", kind: "event" as const, area: "peninsula" as const }],
+    ["e2", { ...base, id: "e2", kind: "event" as const, area: "peninsula" as const }],
+  ]);
+  assert.equal(dayRegion([{ placeId: "a" }, { placeId: "e" }, { placeId: "e2" }], places), "sf"); // events don't outvote the day's plan
+  assert.equal(dayRegion([{ placeId: "e" }], places), "peninsula");
+  assert.equal(dayRegion([], places), "sf");
+});

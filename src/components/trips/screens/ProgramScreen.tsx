@@ -8,7 +8,8 @@ import type { Day, Item, Place } from '@/lib/trips/schema';
 import { autoScheduleDay, diffItems, findItem, removeItem, restoreItems, scheduleItem, updateItem, type Mutation } from '@/lib/trips/mutations';
 import { formatDateRo, formatDateShort, fromMinutes, toMinutes, weekdayName, weekdayOf } from '@/lib/trips/time';
 import { itemName, type Warning } from '@/lib/trips/validate';
-import { REGIONS, cityOf, cityShort, regionOf } from '@/lib/trips/regions';
+import { REGIONS, cityOf, cityShort, dayRegion, regionOf } from '@/lib/trips/regions';
+import { weatherText } from '@/lib/trips/weather';
 import { useTrip } from '../TripProvider';
 import { BASE, CACHE_KEY, DAY_KIND, ITEM_KIND_HEX, dayHref } from '../tripConfig';
 import { minutesText } from '../helpers';
@@ -16,6 +17,7 @@ import { useAiContext } from '../ai';
 import { dayLines, placeDetails } from '../aiPages';
 import { PlacePhoto, StatusChip, worstSeverity } from '../ui';
 import { ActivitySheet, type Change } from '../program/ActivitySheet';
+import { WeatherLine, WeatherMini, WeatherProvider, WeatherStrip, useForecast } from '../program/WeatherParts';
 import { AddSheet } from '../program/AddSheet';
 import { DAY_MIN, SNAP_MIN, clamp, gridMinutes, layoutColumns, shiftAnchor, snap, travelAround, visibleDates, type View } from '../program/calendarLayout';
 
@@ -203,9 +205,17 @@ export function ProgramScreen() {
     const head = `Activitatea selectată: ${itemName(sel.item, places)} — ${formatDateRo(sel.day.date)}, ${sel.item.start ? `${sel.item.start}–${fromMinutes(toMinutes(sel.item.start) + minutes)}` : 'fără oră'}`;
     return [head, ...(place ? placeDetails(place, doc).slice(1) : [])];
   })();
+  const forecast = useForecast();
   useAiContext({
     title: `Program — ${rangeText}${sel ? ` · ${itemName(sel.item, places)}` : ''}`,
-    lines: [...selLines, ...(view === 'agenda' ? doc.days : days).flatMap((d) => dayLines(d, doc))],
+    lines: [
+      ...selLines,
+      ...(view === 'agenda' ? doc.days : days).flatMap((d) => {
+        const region = dayRegion(d.items, places);
+        const w = forecast[region]?.[d.date];
+        return [...dayLines(d, doc), ...(w ? [`Vremea prognozată (${REGIONS[region].label}): ${weatherText(w)}`] : [])];
+      }),
+    ],
     suggestions: [
       'E realist programul? Ce aș muta ca să pierd mai puțin timp pe drum?',
       'Propune ore pentru activitățile care nu au încă oră.',
@@ -218,6 +228,7 @@ export function ProgramScreen() {
   const small = 'h-8 inline-flex items-center justify-center rounded-lg border border-neutral-200 bg-white disabled:opacity-30';
 
   return (
+    <WeatherProvider value={forecast}>
     <MenuCtx.Provider value={openMenu}>
     <div className={`space-y-2 ${view === 'agenda' ? '' : '-mb-10 md:mb-0'}`}>
       <h1 className="sr-only md:not-sr-only text-2xl font-bold md:pb-1">Program</h1>
@@ -347,6 +358,7 @@ export function ProgramScreen() {
       )}
     </div>
     </MenuCtx.Provider>
+    </WeatherProvider>
   );
 }
 
@@ -677,6 +689,7 @@ function Grid({ days, view, hourPx, offset, trayOpen, setTrayOpen, drag, setDrag
                 <span className="mt-0.5 flex items-center justify-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: DAY_KIND[d.kind].hex }} />
                   {sev && <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${sev === 'error' ? 'bg-red-500' : 'bg-amber-400'}`} />}
+                  <WeatherMini day={d} />
                   {!narrow && <span className="truncate text-[11px] font-medium text-neutral-600">{d.title}</span>}
                 </span>
               </button>
@@ -1107,16 +1120,18 @@ function Agenda({ anchor, onOpen }: { anchor: string; onOpen: (id: string) => vo
           </span>
         ))}
       </div>
+      <WeatherStrip days={doc.days} onPick={(date) => ref.current?.querySelector(`[data-day="${date}"]`)?.scrollIntoView({ block: 'start', behavior: 'smooth' })} />
       {doc.days.map((d) => {
         const items = [...d.items].sort((a, b) => (a.start ? toMinutes(a.start) : 1e4) - (b.start ? toMinutes(b.start) : 1e4));
         return (
-          <section key={d.date} data-day={d.date} className="scroll-mt-20">
-            <div className="flex items-baseline gap-2 mb-1.5">
-              <span className={`text-sm font-bold ${d.date === today ? 'text-red-600' : ''}`}>{short(d.date)}</span>
+          <section key={d.date} data-day={d.date} className="scroll-mt-[165px] md:scroll-mt-[210px]">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className={`flex-shrink-0 text-sm font-bold ${d.date === today ? 'text-red-600' : ''}`}>{short(d.date)}</span>
               <span className="w-1.5 h-1.5 rounded-full self-center" style={{ background: DAY_KIND[d.kind].hex }} />
               <Link href={dayHref(d.date)} className="text-sm text-neutral-600 truncate hover:underline">
                 {d.title}
               </Link>
+              <WeatherLine day={d} />
             </div>
             {items.length === 0 ? (
               <p className="text-sm text-neutral-400 pl-1">Nimic programat.</p>

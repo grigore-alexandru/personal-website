@@ -63,7 +63,7 @@ export function ActivitySheet({ itemId, onClose, change }: { itemId: string | nu
             )}
             {place?.booking?.required && (
               <Chip tone={place.booking.status === 'booked' ? 'green' : 'amber'}>
-                <Ticket size={10} /> {place.kind === 'event' ? (place.booking.status === 'booked' ? 'înregistrat' : 'de înregistrat') : place.booking.status === 'booked' ? 'bilet luat' : 'bilet de luat'}
+                <Ticket size={10} /> {/^Ești pe lista/.test(place.booking.note ?? '') && place.booking.status !== 'booked' ? 'pe lista de așteptare' : place.kind === 'event' ? (place.booking.status === 'booked' ? 'confirmat' : 'de confirmat') : place.booking.status === 'booked' ? 'bilet luat' : 'bilet de luat'}
               </Chip>
             )}
           </div>

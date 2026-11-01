@@ -54,3 +54,15 @@ export const cityShort = (place: Pick<Place, "area" | "location">) => {
   const city = cityOf(place);
   return city === REGIONS.sf.label ? REGIONS.sf.short : city === REGIONS[regionOf(place)].label ? REGIONS[regionOf(place)].short : city;
 };
+
+/** The part of the Bay Area a day mostly happens in; events count only when nothing else is planned. San Francisco by default. */
+export function dayRegion(items: { placeId: string | null }[], places: Map<string, Place>): Region {
+  const placed = items.map((i) => (i.placeId ? places.get(i.placeId) : undefined)).filter((p): p is Place => !!p && p.kind !== "food");
+  const main = placed.filter((p) => p.kind !== "event");
+  const counts = new Map<Region, number>();
+  for (const p of main.length ? main : placed) counts.set(regionOf(p), (counts.get(regionOf(p)) ?? 0) + 1);
+  let best: Region = "sf";
+  let n = 0;
+  for (const [r, c] of counts) if (c > n) [best, n] = [r, c];
+  return best;
+}

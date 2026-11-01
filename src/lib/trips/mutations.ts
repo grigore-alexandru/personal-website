@@ -138,6 +138,12 @@ export function parseDollars(text: string): number | null {
 // Additions for the app screens (not in the original plan; same pure style).
 // ---------------------------------------------------------------------------
 
+export const setTripNotes = (notes: string | null): Mutation => (doc) => {
+  const next = clone(doc);
+  next.trip.notes = notes;
+  return next;
+};
+
 /** ASCII slug from a label ("Feribot Sausalito → SF" → "feribot-sausalito-sf"). */
 export function slugify(text: string): string {
   const s = text
