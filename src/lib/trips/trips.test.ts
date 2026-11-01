@@ -313,3 +313,19 @@ test("weather: forecast per region is parsed, codes are named, a day belongs to 
   assert.equal(dayRegion([{ placeId: "e" }], places), "peninsula");
   assert.equal(dayRegion([], places), "sf");
 });
+
+test("Agenda drop: time follows the row above, else the row below, else stays", async () => {
+  const { agendaDropStart, agendaOrder } = await import("../../components/trips/program/calendarLayout");
+  const places = new Map(seed.places.map((p) => [p.id, p]));
+  const row = (id: string, start: string | null, durationMin: number | null) => ({ ...seed.days[0].items[0], id, placeId: null, label: id, kind: "visit" as const, start, durationMin, costs: [], routes: [] });
+  const a = row("a", "10:00", 70);
+  const b = row("b", "14:00", 60);
+  const free = row("free", null, null);
+  const moved = row("m", "09:00", 90);
+  assert.deepEqual(agendaOrder([free, b, a]).map((i) => i.id), ["a", "b", "free"]);
+  assert.equal(agendaDropStart([a, b], 1, moved, places), 11 * 60 + 15); // after a, rounded up to 15 min
+  assert.equal(agendaDropStart([a, b], -1, moved, places), 15 * 60); // at the end
+  assert.equal(agendaDropStart([a, b], 0, moved, places), 8 * 60 + 30); // before a, ends when it starts
+  assert.equal(agendaDropStart([free], 0, moved, places), 9 * 60); // nothing timed: keeps its time
+  assert.equal(agendaDropStart([], -1, free, places), null);
+});

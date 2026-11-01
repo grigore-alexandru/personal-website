@@ -108,3 +108,20 @@ export function travelAround(day: Day, item: Item, doc: TripDoc): Travel[] {
   const label = leg?.summary ?? `drum estimat din ${prevPlace ? REGIONS[fromRegion].short : 'casă'}`;
   return [...own, { minutes, label, when: 'before', tight: !!prev && start - endOf(prev) < minutes }];
 }
+
+/** Agenda order: by time, activities without one last. */
+export const agendaOrder = (items: Item[]) => [...items].sort((a, b) => (a.start ? toMinutes(a.start) : 1e4) - (b.start ? toMinutes(b.start) : 1e4));
+
+/**
+ * Start for an item dropped into a day's agenda list at `index` (rows of the list without the item itself; -1 = end):
+ * right after the timed row above, else ending when the timed row below starts, else the time it already had.
+ */
+export function agendaDropStart(rows: Item[], index: number, item: Item, places: Map<string, Place>): number | null {
+  const at = index < 0 ? rows.length : index;
+  const above = rows.slice(0, at).filter((r) => r.start).pop();
+  const below = rows.slice(at).find((r) => r.start);
+  const len = gridMinutes(item, places).minutes;
+  if (above) return clamp(Math.ceil((toMinutes(above.start!) + gridMinutes(above, places).minutes) / SNAP_MIN) * SNAP_MIN, 0, DAY_MIN - SNAP_MIN);
+  if (below) return clamp(Math.floor((toMinutes(below.start!) - len) / SNAP_MIN) * SNAP_MIN, 0, DAY_MIN - SNAP_MIN);
+  return item.start ? toMinutes(item.start) : null;
+}

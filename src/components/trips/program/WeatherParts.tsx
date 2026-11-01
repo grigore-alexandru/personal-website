@@ -140,6 +140,7 @@ function StripDay({ day, onPick }: { day: Day; onPick: (date: string) => void })
   return (
     <button
       type="button"
+      data-strip-date={day.date}
       onClick={() => onPick(day.date)}
       aria-label={`${formatDateRo(day.date)}: ${weather ? weatherText(weather) : 'fără prognoză încă'}`}
       className={`flex-shrink-0 w-[58px] rounded-xl border border-neutral-200 bg-white py-1 flex flex-col items-center ${rough ? 'opacity-70' : ''}`}

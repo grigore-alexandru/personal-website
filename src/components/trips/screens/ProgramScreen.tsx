@@ -19,7 +19,7 @@ import { PlacePhoto, StatusChip, worstSeverity } from '../ui';
 import { ActivitySheet, type Change } from '../program/ActivitySheet';
 import { WeatherLine, WeatherMini, WeatherProvider, WeatherStrip, useForecast } from '../program/WeatherParts';
 import { AddSheet } from '../program/AddSheet';
-import { DAY_MIN, SNAP_MIN, clamp, gridMinutes, layoutColumns, shiftAnchor, snap, travelAround, visibleDates, type View } from '../program/calendarLayout';
+import { DAY_MIN, SNAP_MIN, agendaDropStart, agendaOrder, clamp, gridMinutes, layoutColumns, shiftAnchor, snap, travelAround, visibleDates, type View } from '../program/calendarLayout';
 
 const VIEW_KEY = `${CACHE_KEY}:program:view`;
 const ZOOM_KEY = `${CACHE_KEY}:program:zoom`;
@@ -288,7 +288,7 @@ export function ProgramScreen() {
       </div>
 
       {view === 'agenda' ? (
-        <Agenda anchor={anchor} onOpen={setSelected} />
+        <Agenda anchor={anchor} onOpen={setSelected} change={change} />
       ) : (
         <>
           {tip && (
@@ -1101,11 +1101,167 @@ function TrayChip({
   );
 }
 
+type AgendaTarget = { date: string; index: number | null; line: CSSProperties | null };
+
+/**
+ * Drag rows of the agenda: long press on touch (a press that doesn't move opens the activity's menu), or just drag with
+ * the mouse. Drop between two rows, or on a day of the weather strip to send it straight there.
+ */
+function useAgendaDrag(root: React.RefObject<HTMLDivElement>, onDrop: (item: Item, t: AgendaTarget) => void) {
+  const openMenu = useContext(MenuCtx);
+  const [dragging, setDragging] = useState<Item | null>(null);
+  const [target, setTarget] = useState<AgendaTarget | null>(null);
+  const [pointer, setPointer] = useState({ x: 0, y: 0 });
+  const justDragged = useRef(false);
+  const press = useRef<{ item: Item; id: number; touch: boolean; x: number; y: number; active: boolean; moved: boolean; timer: number | null } | null>(null);
+  const last = useRef({ x: 0, y: 0 });
+
+  const targetAt = (x: number, y: number, skip: string): AgendaTarget | null => {
+    const tile = document.elementFromPoint(x, y)?.closest<HTMLElement>('[data-strip-date]');
+    if (tile?.dataset.stripDate) return { date: tile.dataset.stripDate, index: null, line: null };
+    const sections = [...(root.current?.querySelectorAll<HTMLElement>('[data-day]') ?? [])];
+    const section = sections.find((el) => el.getBoundingClientRect().bottom >= y) ?? sections[sections.length - 1];
+    if (!section?.dataset.day) return null;
+    const rows = [...section.querySelectorAll<HTMLElement>('[data-agenda-row]')].filter((el) => el.dataset.agendaRow !== skip);
+    const index = rows.findIndex((el) => {
+      const r = el.getBoundingClientRect();
+      return y < r.top + r.height / 2;
+    });
+    const box = section.getBoundingClientRect();
+    const anchorRow = index >= 0 ? rows[index] : rows[rows.length - 1];
+    const lineY = anchorRow ? anchorRow.getBoundingClientRect()[index >= 0 ? 'top' : 'bottom'] : box.bottom;
+    return { date: section.dataset.day, index, line: { top: lineY - 1, left: box.left, width: box.width } };
+  };
+
+  const handlers = useRef({ move: (_: PointerEvent) => {}, up: (_: PointerEvent) => {}, cancel: () => {} });
+  const listeners = useMemo(() => ({ move: (e: PointerEvent) => handlers.current.move(e), up: (e: PointerEvent) => handlers.current.up(e), cancel: () => handlers.current.cancel() }), []);
+  const end = () => {
+    const p = press.current;
+    if (p?.timer) window.clearTimeout(p.timer);
+    press.current = null;
+    setDragging(null);
+    setTarget(null);
+    window.removeEventListener('pointermove', listeners.move);
+    window.removeEventListener('pointerup', listeners.up);
+    window.removeEventListener('pointercancel', listeners.cancel);
+  };
+  const activate = (p: NonNullable<typeof press.current>) => {
+    p.active = true;
+    justDragged.current = true;
+    if (p.touch) navigator.vibrate?.(12);
+    setDragging(p.item);
+    setPointer({ ...last.current });
+    setTarget(targetAt(last.current.x, last.current.y, p.item.id));
+  };
+  handlers.current = {
+    move: (e) => {
+      const p = press.current;
+      if (!p || e.pointerId !== p.id) return;
+      last.current = { x: e.clientX, y: e.clientY };
+      const dist = Math.hypot(e.clientX - p.x, e.clientY - p.y);
+      if (!p.active) {
+        if (p.touch) {
+          if (dist > 8) end(); // a scroll, not a long press
+        } else if (dist > 4) {
+          activate(p);
+          p.moved = true;
+        }
+        return;
+      }
+      if (dist > 10) p.moved = true;
+      setPointer({ ...last.current });
+      setTarget(targetAt(e.clientX, e.clientY, p.item.id));
+    },
+    up: (e) => {
+      const p = press.current;
+      if (!p || e.pointerId !== p.id) return;
+      if (p.active) {
+        if (p.moved) {
+          const t = targetAt(e.clientX, e.clientY, p.item.id);
+          if (t) onDrop(p.item, t);
+        } else openMenu(p.item.id, e.clientX, e.clientY);
+        window.setTimeout(() => (justDragged.current = false), 0);
+      }
+      end();
+    },
+    cancel: () => {
+      justDragged.current = false;
+      end();
+    },
+  };
+
+  // Same reason as on the calendar: the listener must exist before the touch starts, and only blocks scrolling mid-drag.
+  useEffect(() => {
+    const block = (e: TouchEvent) => {
+      if (press.current?.active && e.cancelable) e.preventDefault();
+    };
+    window.addEventListener('touchmove', block, { passive: false });
+    return () => window.removeEventListener('touchmove', block);
+  }, []);
+
+  // scroll the page while holding near the top or bottom of the screen; the weather strip stays a drop target
+  useEffect(() => {
+    if (!dragging) return;
+    let raf = 0;
+    const tick = () => {
+      const p = press.current;
+      if (p?.active) {
+        const { x, y } = last.current;
+        const overStrip = !!document.elementFromPoint(x, y)?.closest('[data-strip-date]');
+        const top = 190;
+        const bottom = window.innerHeight - 90;
+        const dy = overStrip ? 0 : y < top ? -Math.ceil((top - y) / 8) : y > bottom ? Math.ceil((y - bottom) / 8) : 0;
+        if (dy) {
+          window.scrollBy(0, dy);
+          setTarget(targetAt(x, y, p.item.id));
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- loop runs for the life of one drag
+  }, [dragging?.id]);
+
+  const beginDrag = (e: ReactPointerEvent, item: Item) => {
+    if (e.button !== 0 || press.current) return;
+    const touch = e.pointerType !== 'mouse';
+    const p = { item, id: e.pointerId, touch, x: e.clientX, y: e.clientY, active: false, moved: false, timer: null as number | null };
+    last.current = { x: e.clientX, y: e.clientY };
+    press.current = p;
+    if (touch) p.timer = window.setTimeout(() => press.current === p && activate(p), LONG_PRESS_MS);
+    window.addEventListener('pointermove', listeners.move);
+    window.addEventListener('pointerup', listeners.up);
+    window.addEventListener('pointercancel', listeners.cancel);
+  };
+
+  return { beginDrag, dragging, target, pointer, justDragged };
+}
+
 /** Agenda — every day as a list with photos, times and the activities still without a time. */
-function Agenda({ anchor, onOpen }: { anchor: string; onOpen: (id: string) => void }) {
-  const { doc, places, today } = useTrip();
-  const menuFor = useMenuFor();
+function Agenda({ anchor, onOpen, change }: { anchor: string; onOpen: (id: string) => void; change: Change }) {
+  const { doc, places, today, toast } = useTrip();
   const ref = useRef<HTMLDivElement>(null);
+  const { beginDrag, dragging, target, pointer, justDragged } = useAgendaDrag(ref, onDrop);
+  const menuFor = useMenuFor(justDragged);
+
+  // Fixed times (events, ferries) keep their hour when moved to another day; everything else takes its time from where it lands.
+  function onDrop(item: Item, t: AgendaTarget) {
+    const from = findItem(doc, item.id)?.day.date;
+    const name = itemName(item, places);
+    if (item.fixed && t.date === from) {
+      if (t.index !== null) toast('Ora e fixă: o schimbi din detalii. Poți muta activitatea în altă zi.', 'error');
+      return;
+    }
+    const day = doc.days.find((d) => d.date === t.date);
+    if (!day) return;
+    const rows = agendaOrder(day.items).filter((i) => i.id !== item.id);
+    const min = item.fixed || t.index === null ? (item.start ? toMinutes(item.start) : null) : agendaDropStart(rows, t.index, item, places);
+    const start = min == null ? null : fromMinutes(min);
+    if (t.date === from && start === item.start) return;
+    change(`${name} → ${short(t.date)}${start ? `, ${start}` : ''}`, scheduleItem(item.id, t.date, start));
+  }
+
   useEffect(() => {
     ref.current?.querySelector(`[data-day="${anchor}"]`)?.scrollIntoView({ block: 'start' });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only when opening the agenda or picking a day
@@ -1122,7 +1278,7 @@ function Agenda({ anchor, onOpen }: { anchor: string; onOpen: (id: string) => vo
       </div>
       <WeatherStrip days={doc.days} onPick={(date) => ref.current?.querySelector(`[data-day="${date}"]`)?.scrollIntoView({ block: 'start', behavior: 'smooth' })} />
       {doc.days.map((d) => {
-        const items = [...d.items].sort((a, b) => (a.start ? toMinutes(a.start) : 1e4) - (b.start ? toMinutes(b.start) : 1e4));
+        const items = agendaOrder(d.items);
         return (
           <section key={d.date} data-day={d.date} className="scroll-mt-[165px] md:scroll-mt-[210px]">
             <div className="flex items-center gap-2 mb-1.5">
@@ -1144,9 +1300,13 @@ function Agenda({ anchor, onOpen }: { anchor: string; onOpen: (id: string) => vo
                     <li key={i.id}>
                       <button
                         type="button"
-                        onClick={() => onOpen(i.id)}
+                        data-agenda-row={i.id}
+                        onClick={() => {
+                          if (!justDragged.current) onOpen(i.id);
+                        }}
+                        onPointerDown={(e) => beginDrag(e, i)}
                         onContextMenu={(e) => menuFor(e, i.id)}
-                        className="w-full flex items-center gap-3 p-2.5 text-left hover:bg-neutral-50 select-none [-webkit-touch-callout:none]"
+                        className={`w-full flex items-center gap-3 p-2.5 text-left hover:bg-neutral-50 select-none cursor-grab active:cursor-grabbing [-webkit-touch-callout:none] ${dragging?.id === i.id ? 'opacity-30' : ''}`}
                       >
                         <span className="w-[74px] flex-shrink-0 text-xs font-semibold tabular-nums text-neutral-700">
                           {i.start ? (i.kind === 'deadline' ? i.start : `${i.start}–${fromMinutes(toMinutes(i.start) + minutes)}`) : <span className="text-neutral-400">fără oră</span>}
@@ -1184,6 +1344,16 @@ function Agenda({ anchor, onOpen }: { anchor: string; onOpen: (id: string) => vo
           </section>
         );
       })}
+      {dragging && target?.line && <div className="fixed z-30 h-0.5 rounded-full bg-blue-600 pointer-events-none" style={target.line} />}
+      {dragging && (
+        <div
+          className="fixed z-40 max-w-[240px] truncate rounded-lg bg-neutral-900 px-3 py-1.5 text-xs font-semibold text-white shadow-xl pointer-events-none"
+          style={{ left: pointer.x + 12, top: pointer.y - 34 }}
+        >
+          {itemName(dragging, places)}
+          {target ? ` → ${short(target.date)}` : ''}
+        </div>
+      )}
     </div>
   );
 }
