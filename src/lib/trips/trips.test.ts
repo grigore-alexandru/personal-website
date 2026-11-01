@@ -251,3 +251,14 @@ test("Program layout: overlapping items share columns; week view starts on Monda
   assert.equal(shiftAnchor(seed, "week", "2026-11-10", -1), "2026-11-08");
   assert.equal(shiftAnchor(seed, "3day", "2026-11-02", -1), "2026-11-02");
 });
+
+test("routeOf maps trip URLs to screens", async () => {
+  const { routeOf, BASE } = await import("../../components/trips/tripConfig");
+  assert.equal(routeOf(`${BASE}/azi`)?.screen, "azi");
+  assert.deepEqual([routeOf(`${BASE}/zile/2026-11-03`)?.screen, routeOf(`${BASE}/zile/2026-11-03`)?.param], ["day", "2026-11-03"]);
+  assert.deepEqual([routeOf(`${BASE}/locuri/alcatraz`)?.screen, routeOf(`${BASE}/locuri/alcatraz`)?.param], ["place", "alcatraz"]);
+  assert.equal(routeOf(`${BASE}/locuri`)?.screen, "harta");
+  assert.equal(routeOf(`${BASE}/program/`)?.screen, "program");
+  assert.equal(routeOf(`${BASE}/nimic`), null);
+  assert.equal(routeOf(`/admin`), null);
+});

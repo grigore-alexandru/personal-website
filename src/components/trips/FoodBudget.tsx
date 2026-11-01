@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from './TripLink';
 import { useState } from 'react';
 import { formatMoney, sumLines } from '@/lib/trips/money';
 import { formatDateShort, weekdayName } from '@/lib/trips/time';

@@ -1,7 +1,6 @@
 'use client';
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import Link, { tripGo } from '../TripLink';
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowDown, ArrowUp, ChevronDown, ChevronLeft, ChevronRight, Clock, Lock, MoreVertical, Plus, Search, Ticket } from 'lucide-react';
 import type { Day, Item, Place } from '@/lib/trips/schema';
@@ -30,7 +29,6 @@ const typingNow = () => {
 /** Ziua — one day in detail, with every light edit. */
 export function DayScreen({ date }: { date: string }) {
   const { doc, places, warnings, mutate, toast } = useTrip();
-  const router = useRouter();
   const index = doc.days.findIndex((d) => d.date === date);
   const day = doc.days[index];
   const prev = doc.days[index - 1];
@@ -40,12 +38,12 @@ export function DayScreen({ date }: { date: string }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (typingNow() || e.metaKey || e.ctrlKey || e.altKey) return;
-      if (e.key === 'ArrowLeft' && prev) router.push(dayHref(prev.date));
-      if (e.key === 'ArrowRight' && next) router.push(dayHref(next.date));
+      if (e.key === 'ArrowLeft' && prev) tripGo(dayHref(prev.date));
+      if (e.key === 'ArrowRight' && next) tripGo(dayHref(next.date));
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [prev, next, router]);
+  }, [prev, next]);
 
   useAiContext(day ? dayPage(day, doc) : { title: `Ziua ${date}`, lines: [], suggestions: [] });
 
@@ -116,7 +114,7 @@ export function DayScreen({ date }: { date: string }) {
               const other = e.target.value;
               if (!other || !mutate(swapDays(day.date, other))) return;
               toast(`„${day.title}” e acum pe ${formatDateRo(other)}`);
-              router.push(dayHref(other));
+              tripGo(dayHref(other));
             }}
             className="flex-1 min-w-0 min-h-[40px] rounded-lg border border-neutral-300 bg-white px-2 text-sm font-normal"
           >

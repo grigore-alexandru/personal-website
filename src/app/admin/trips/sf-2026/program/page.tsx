@@ -1,7 +1,6 @@
-import { ProgramScreen } from '@/components/trips/screens/ProgramScreen';
-
+// Drawn by TripRouter (see the layout); this route only answers direct opens.
 export const metadata = { title: { absolute: 'Program · San Francisco' } };
 
 export default function Page() {
-  return <ProgramScreen />;
+  return null;
 }

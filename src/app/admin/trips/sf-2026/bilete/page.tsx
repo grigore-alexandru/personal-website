@@ -1,7 +1,6 @@
-import { BileteScreen } from '@/components/trips/screens/BileteScreen';
-
+// Drawn by TripRouter (see the layout); this route only answers direct opens.
 export const metadata = { title: { absolute: 'Bilete · San Francisco' } };
 
 export default function Page() {
-  return <BileteScreen />;
+  return null;
 }

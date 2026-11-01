@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '../TripLink';
 import { useEffect, useState } from 'react';
 import { CalendarDays, Check, Clock, Lock, Unlock, Map as MapIcon, MapPin, Minus, Plus, Ticket, Trash2 } from 'lucide-react';
 import type { Mutation } from '@/lib/trips/mutations';

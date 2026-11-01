@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '../TripLink';
 import { dayBudget, formatMoney, tripBudget } from '@/lib/trips/money';
 import { formatDateShort, weekdayName, weekdayOf } from '@/lib/trips/time';
 import { useTrip } from '../TripProvider';

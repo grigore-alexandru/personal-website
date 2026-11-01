@@ -4,12 +4,14 @@ import { notFound } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { TripProvider } from '@/components/trips/TripProvider';
 import { TripShell } from '@/components/trips/TripShell';
+import { TripRouter } from '@/components/trips/TripRouter';
 
 /**
  * San Francisco trip app (2–19 Nov 2026). Logged-out visitors are sent to /admin/login by the
  * /admin middleware, like Runway; this layout additionally refuses signed-in non-admins on the
  * server (RLS on public.trip_documents would give them nothing anyway). The data is one JSON
- * document loaded and saved in the browser by TripProvider.
+ * document loaded and saved in the browser by TripProvider. TripRouter draws the screens in the browser, so
+ * moving between them never asks the server; the pages under this folder only give direct opens a title.
  */
 export const dynamic = 'force-dynamic';
 
@@ -39,7 +41,10 @@ export default async function TripLayout({ children }: { children: ReactNode }) 
 
   return (
     <TripProvider buildId={process.env.VERCEL_GIT_COMMIT_SHA ?? 'local'}>
-      <TripShell>{children}</TripShell>
+      <TripShell>
+        <TripRouter />
+        {children}
+      </TripShell>
     </TripProvider>
   );
 }

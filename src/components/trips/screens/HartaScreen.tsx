@@ -1,10 +1,10 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import Link from '../TripLink';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
-import { ArrowDown, LocateFixed, UtensilsCrossed, X } from 'lucide-react';
+import { ArrowDown, Home, LocateFixed, UtensilsCrossed, X } from 'lucide-react';
 import type { Place } from '@/lib/trips/schema';
 import { formatDateShort, navigationTarget } from '@/lib/trips/time';
 import { useTrip } from '../TripProvider';
@@ -17,18 +17,25 @@ import { NavigateButtons, PlacePhoto } from '../ui';
 import type { MapMarker } from '../MapView';
 import { LocuriSection } from './LocuriSection';
 
+/** The map's code isn't saved on this device yet and there is no connection: say so instead of crashing the app. */
+function MapMissing() {
+  return <div className="h-full w-full flex items-center justify-center p-6 text-center text-sm text-neutral-500">Harta nu e descărcată încă. Deschide aplicația o dată cu internet.</div>;
+}
+
 // Leaflet touches `window` at import time: client-only, and only in this route's chunk.
-const MapView = dynamic(() => import('../MapView'), {
+const MapView = dynamic(() => import('../MapView').catch(() => MapMissing), {
   ssr: false,
   loading: () => <div className="h-full w-full flex items-center justify-center text-sm text-neutral-500">Se încarcă harta…</div>,
 });
+
+/** Selection id of the home pin (place ids can't collide: it is not a place). */
+const HOME = 'base';
 
 const priceOf = (p: Place) => p.notes?.match(/\$\d+–\d+/)?.[0];
 
 /** Hartă — every place, or one day's stops in order; food places as their own layer; "near me". The places list (Locuri) follows below the map. */
 export function HartaScreen() {
   const { doc, places, toast } = useTrip();
-  const router = useRouter();
   const pathname = usePathname();
   const search = useSearchParams();
   const day = doc.days.find((d) => d.date === search?.get('zi')) ?? null;
@@ -78,7 +85,7 @@ export function HartaScreen() {
 
   const setDay = (date: string) => {
     setSelected(null);
-    router.replace(date ? `${pathname}?zi=${date}` : pathname ?? '');
+    window.history.replaceState(null, '', date ? `${pathname}?zi=${date}` : pathname ?? '');
   };
 
   const locate = async () => {
@@ -127,6 +134,16 @@ export function HartaScreen() {
         >
           <UtensilsCrossed size={15} /> Mâncare
         </button>
+        {doc.trip.base && (
+          <button
+            type="button"
+            aria-pressed={selected === HOME}
+            onClick={() => setSelected(selected === HOME ? null : HOME)}
+            className={`inline-flex items-center gap-1.5 min-h-[40px] px-3 rounded-xl border text-sm font-semibold ${selected === HOME ? 'bg-black border-black text-white' : 'bg-white border-neutral-300'}`}
+          >
+            <Home size={15} /> Acasă
+          </button>
+        )}
         <button
           type="button"
           onClick={() => void locate()}
@@ -139,6 +156,17 @@ export function HartaScreen() {
 
       <div className="relative h-[58vh] min-h-[360px] rounded-2xl overflow-hidden border border-neutral-200 bg-neutral-100 isolate">
         <MapView markers={markers} base={doc.trip.base} line={!!day} fit={fit} onSelect={setSelected} user={me} />
+
+        {selected === HOME && doc.trip.base && (
+          <div className="absolute inset-x-2 bottom-2 z-[500] rounded-2xl bg-white shadow-lg border border-neutral-200 p-3">
+            <button type="button" onClick={() => setSelected(null)} aria-label="Închide" className="absolute right-2 top-2 w-8 h-8 inline-flex items-center justify-center text-neutral-500">
+              <X size={18} />
+            </button>
+            <p className="font-bold leading-tight pr-8">Acasă</p>
+            <p className="text-xs text-neutral-500 mb-2 pr-8">{doc.trip.base.address ?? doc.trip.base.name}</p>
+            <NavigateButtons target={doc.trip.base} />
+          </div>
+        )}
 
         {sel && (
           <div className="absolute inset-x-2 bottom-2 z-[500] rounded-2xl bg-white shadow-lg border border-neutral-200 p-3">

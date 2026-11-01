@@ -1,12 +1,14 @@
 'use client';
 
-import Link from 'next/link';
+import Link from './TripLink';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { CalendarClock, CalendarDays, Check, CloudOff, Database, Loader2, Map, Sun, Ticket, Wallet } from 'lucide-react';
+import { CalendarClock, CalendarDays, Check, CloudOff, Database, Home, Loader2, Map, Sun, Ticket, Wallet } from 'lucide-react';
 import { useTrip, type SyncState } from './TripProvider';
 import { TABS } from './tripConfig';
 import { AiProvider, AskAiButton } from './ai';
+import { mapsDirectionsUrl } from '@/lib/trips/time';
+import { ExtLink } from './ui';
 
 const ICONS = { sun: Sun, calendar: CalendarDays, clock: CalendarClock, map: Map, ticket: Ticket, wallet: Wallet } as const;
 
@@ -19,7 +21,7 @@ const SYNC: Record<SyncState, { label: string; Icon: typeof Check; className: st
 
 /** Header with sync status, top tabs from 768 px, bottom tab bar below. */
 export function TripShell({ children }: { children: ReactNode }) {
-  const { sync } = useTrip();
+  const { sync, doc } = useTrip();
   const pathname = usePathname() ?? '';
   const s = SYNC[sync];
   const under = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
@@ -38,6 +40,14 @@ export function TripShell({ children }: { children: ReactNode }) {
               <s.Icon size={14} />
               <span className={sync === 'saved' || sync === 'saving' ? 'hidden sm:inline' : ''}>{s.label}</span>
             </span>
+            {doc.trip.base && (
+              <ExtLink
+                href={mapsDirectionsUrl(doc.trip.base, 'transit')}
+                className="inline-flex items-center justify-center w-9 h-9 rounded-full border border-neutral-300 text-neutral-800"
+              >
+                <Home size={17} aria-label="Navighează acasă" />
+              </ExtLink>
+            )}
             <AskAiButton />
           </div>
         </div>

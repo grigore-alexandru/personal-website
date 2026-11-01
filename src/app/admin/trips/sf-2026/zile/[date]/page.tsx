@@ -1,7 +1,6 @@
-import { DayScreen } from '@/components/trips/screens/DayScreen';
-
+// Drawn by TripRouter (see the layout); this route only answers direct opens.
 export const metadata = { title: { absolute: 'Ziua · San Francisco' } };
 
-export default function Page({ params }: { params: { date: string } }) {
-  return <DayScreen date={params.date} />;
+export default function Page() {
+  return null;
 }

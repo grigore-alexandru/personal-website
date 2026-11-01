@@ -69,3 +69,21 @@ export const ITEM_KIND_HEX = { visit: '#0ea5e9', transport: '#64748b', deadline:
 
 export const dayHref = (date: string) => `${BASE}/zile/${date}`;
 export const placeHref = (id: string) => `${BASE}/locuri/${id}`;
+
+export type TripRoute = { screen: 'azi' | 'zile' | 'day' | 'program' | 'harta' | 'place' | 'bilete' | 'buget'; param: string; title: string };
+
+/** Which screen a URL shows (TripRouter). Locuri lives on the Hartă screen. */
+export function routeOf(pathname: string): TripRoute | null {
+  if (!pathname.startsWith(`${BASE}/`)) return null;
+  const [first, param = ''] = pathname.slice(BASE.length + 1).replace(/\/$/, '').split('/');
+  const tab = (screen: TripRoute['screen'], title: string): TripRoute => ({ screen, param, title });
+  if (first === 'zile') return param ? tab('day', 'Ziua') : tab('zile', 'Zile');
+  if (first === 'locuri') return param ? tab('place', 'Loc') : tab('harta', 'Hartă');
+  if (param) return null;
+  if (first === 'azi') return tab('azi', 'Azi');
+  if (first === 'program') return tab('program', 'Program');
+  if (first === 'harta') return tab('harta', 'Hartă');
+  if (first === 'bilete') return tab('bilete', 'Bilete');
+  if (first === 'buget') return tab('buget', 'Buget');
+  return null;
+}

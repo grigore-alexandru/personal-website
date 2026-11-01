@@ -105,7 +105,9 @@ export default function MapView({
         .on('click', () => select.current(mk.id))
         .addTo(g);
     }
-    if (base) L.marker([base.lat, base.lng], { icon: home, title: base.name ?? 'Cazare' }).addTo(g);
+    if (base) L.marker([base.lat, base.lng], { icon: home, title: base.name ?? 'Cazare' })
+        .on('click', () => select.current('base'))
+        .addTo(g);
     if (user) L.marker([user.lat, user.lng], { icon: me, title: 'Tu ești aici', zIndexOffset: 1000 }).addTo(g);
     m.fitBounds(allBounds(), { padding: [30, 30], maxZoom: 15 });
     // eslint-disable-next-line react-hooks/exhaustive-deps

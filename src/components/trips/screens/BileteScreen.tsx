@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '../TripLink';
 import { useState } from 'react';
 import { Clock, ExternalLink, Lock, Plane } from 'lucide-react';
 import type { Place } from '@/lib/trips/schema';

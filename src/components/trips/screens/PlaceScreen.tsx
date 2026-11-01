@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '../TripLink';
 import { useEffect, useState } from 'react';
 import { ChevronLeft, ExternalLink, MapPinned } from 'lucide-react';
 import type { Place } from '@/lib/trips/schema';

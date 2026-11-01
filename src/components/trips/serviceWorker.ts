@@ -1,17 +1,15 @@
 // Service worker for the trip app (served by src/app/admin/trips/sf-2026/sw.js/route.ts, scope /admin/trips/sf-2026/).
 // Goal: the installed app opens and works offline on the phone.
-//  - pages:  network first (3.5 s), saved per path; offline → the saved copy of that page
+//  - pages:  network first (3.5 s), saved per path; offline → the saved copy, or the saved app shell
 //  - static: /_next/static + /trips/sf-2026 icons, cache first (file names are content-hashed)
 //  - photos: signed trip-media URLs, cache first keyed by object path (the token in the URL changes)
 //  - tiles:  OpenStreetMap tiles already seen, cache first, capped
 //  - "warm" message from the app: download every trip page, the scripts they reference, and all photos.
-// RSC requests (client-side navigation) go to the network; offline they fail and Next.js falls back to a
-// full page load, which this worker answers from the page cache.
 export function serviceWorkerSource(version: string, supabaseUrl: string): string {
   const storagePrefix = `${supabaseUrl.replace(/\/$/, '')}/storage/v1/object/sign/trip-media/`;
   return String.raw`/* trip app service worker — ${version} */
 const SCOPE = '/admin/trips/sf-2026/';
-const PAGES = 'trip-pages-v1';
+const PAGES = 'trip-pages-v2';
 const STATIC = 'trip-static-v1';
 const PHOTOS = 'trip-photos-v1';
 const TILES = 'trip-tiles-v1';
@@ -51,13 +49,17 @@ function offlinePage() {
 
 async function page(event) {
   const cache = await caches.open(PAGES);
-  const saved = await cache.match(pageKey(event.request.url));
+  // any trip URL can be answered with the app shell: the browser picks the screen from the URL
+  const saved = (await cache.match(pageKey(event.request.url))) || (await cache.match(SCOPE + 'azi'));
   const network = fromNetworkSavingPage(event.request);
   if (!saved) return network.catch(() => offlinePage());
   // Bad signal: don't wait more than 3.5 s when a saved copy exists; the network still updates it.
   const timeout = new Promise((resolve) => setTimeout(() => resolve(saved), 3500));
   event.waitUntil(network.catch(() => undefined));
-  return Promise.race([network.catch(() => saved), timeout]);
+  // A failing or redirecting answer (a bad connection can look like a logged-out session) must not replace the saved
+  // app; a session that really expired is sent to login by the app when it talks to the database.
+  const usable = network.then((res) => (res.ok && !res.redirected ? res : saved), () => saved);
+  return Promise.race([usable, timeout]);
 }
 
 async function cacheFirst(cacheName, request, key, init) {
@@ -112,11 +114,11 @@ function assetsIn(html) {
   return [...out];
 }
 
-async function warm({ pages = [], photos = [], refreshPages = false }) {
+async function warm({ pages = [], photos = [], assets: known = [], refreshPages = false }) {
   const pageCache = await caches.open(PAGES);
   const staticCache = await caches.open(STATIC);
   const photoCache = await caches.open(PHOTOS);
-  const assets = new Set();
+  const assets = new Set(known);
   for (const p of pages) {
     try {
       let res = refreshPages ? null : await pageCache.match(pageKey(new URL(p, self.location.origin).href));

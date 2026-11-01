@@ -344,11 +344,7 @@ export function TripProvider({ children, buildId = 'local' }: { children: ReactN
     if (process.env.NODE_ENV !== 'production' || !('serviceWorker' in navigator)) return;
     if (!doc || fromCache || !navigator.onLine) return;
     if (photoPaths && photoUrls.size === 0) return; // wait for the signed URLs
-    const pages = [
-      ...['azi', 'zile', 'program', 'harta', 'bilete', 'buget'].map((p) => `${BASE}/${p}`),
-      ...doc.days.map((d) => `${BASE}/zile/${d.date}`),
-      ...doc.places.map((p) => `${BASE}/locuri/${p.id}`),
-    ];
+    const pages = [`${BASE}/azi`]; // the same app shell draws every screen, so one saved page covers them all offline
     const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
     const photos = saveData ? [] : [...photoUrls.values()];
     const sig = signature(`${buildId}|${pages.join(',')}|${photoPaths}`);
@@ -359,7 +355,17 @@ export function TripProvider({ children, buildId = 'local' }: { children: ReactN
       if (cancelled || !reg.active) return;
       reg.active.postMessage({ type: 'warm', pages, photos, refreshPages: last?.sig !== sig });
       writeJson(WARM_KEY, { sig, at: Date.now() });
-      void import('./MapView').catch(() => undefined); // caches the Leaflet chunk for the map offline
+      // The map's code loads on demand and this page may have started before the worker took over, so hand it
+      // everything the page has fetched so far, the map's script and stylesheet included.
+      void import('./MapView')
+        .catch(() => undefined)
+        .then(() => {
+          const assets = performance
+            .getEntriesByType('resource')
+            .map((e) => e.name)
+            .filter((n) => new URL(n).pathname.startsWith('/_next/static/'));
+          reg.active?.postMessage({ type: 'warm', assets });
+        });
     });
     return () => {
       cancelled = true;

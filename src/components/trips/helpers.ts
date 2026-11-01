@@ -36,7 +36,8 @@ export const dayOptionLabel = (day: Day) => `${weekdayName(day.date).slice(0, 3)
 
 export const coverOf = (day: Day, places: Map<string, Place>): Place | undefined => {
   if (day.coverPlaceId) return places.get(day.coverPlaceId);
-  const first = day.items.find((i) => i.placeId);
+  // events imported without a photo must not take over the day's cover
+  const first = day.items.find((i) => i.placeId && places.get(i.placeId)?.kind !== 'event') ?? day.items.find((i) => i.placeId && places.get(i.placeId)?.photos.length);
   return first?.placeId ? places.get(first.placeId) : undefined;
 };
 

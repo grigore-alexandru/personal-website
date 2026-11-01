@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '../TripLink';
 import { ChevronRight } from 'lucide-react';
 import type { Day, Item } from '@/lib/trips/schema';
 import { dayBudget, formatMoney, missingPriceLines, tripBudget } from '@/lib/trips/money';
@@ -23,6 +23,22 @@ export function AziScreen() {
   if (phase === 'before') return <Before />;
   if (phase === 'after') return <After />;
   return <During />;
+}
+
+/** Way home, always one tap away. */
+function HomeCard() {
+  const { doc } = useTrip();
+  const base = doc.trip.base;
+  if (!base) return null;
+  return (
+    <Card className="p-4 space-y-2">
+      <div>
+        <p className="text-xs font-bold uppercase tracking-wide text-neutral-500">Acasă</p>
+        <p className="text-sm text-neutral-700">{base.address ?? base.name}</p>
+      </div>
+      <NavigateButtons target={base} />
+    </Card>
+  );
 }
 
 function DayCard({ day }: { day: Day }) {
@@ -84,6 +100,7 @@ function Before() {
       <h1 className="text-3xl font-bold">{n === 1 ? 'Pleci mâine' : `Pleci în ${n} zile`}</h1>
       <DayCard day={doc.days[0]} />
       <FirstDaySteps />
+      <HomeCard />
       <div className="grid gap-2 sm:grid-cols-2">
         <Shortcut href={`${BASE}/bilete`} label="Bilete de luat" count={ticketsToBuy(doc).length} />
         <Shortcut href={`${BASE}/buget#de-completat`} label="Prețuri lipsă" count={missingPriceLines(doc).length} />
@@ -225,6 +242,7 @@ function During() {
           <ChevronRight size={18} className="text-neutral-400" />
         </Link>
       )}
+      <HomeCard />
     </div>
   );
 }

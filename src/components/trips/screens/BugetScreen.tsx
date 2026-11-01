@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '../TripLink';
 import { CATEGORY_LABEL, formatMoney, missingPriceLines, tripBudget, type Money } from '@/lib/trips/money';
 import type { CostCategory } from '@/lib/trips/schema';
 import { formatDateShort, weekdayName } from '@/lib/trips/time';

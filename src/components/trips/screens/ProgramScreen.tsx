@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
-import Link from 'next/link';
+import Link from '../TripLink';
 import { motion } from 'framer-motion';
 import { AlertTriangle, CalendarDays, Check, Info, Trash2, ChevronDown, ChevronLeft, ChevronRight, Lock, Map as MapIcon, Minus, Plus, Ticket, Undo2, Wand2 } from 'lucide-react';
 import type { Day, Item, Place } from '@/lib/trips/schema';
