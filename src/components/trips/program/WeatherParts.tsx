@@ -114,10 +114,7 @@ export function WeatherStrip({ days, onPick }: { days: Day[]; onPick: (date: str
   if (Object.keys(forecast).length === 0) return null;
   return (
     <>
-      <section
-        aria-label="Vremea pe zile"
-        className="sticky z-20 -mx-4 px-4 py-1.5 bg-neutral-50/95 backdrop-blur top-[calc(57px+env(safe-area-inset-top))] md:top-[calc(102px+env(safe-area-inset-top))]"
-      >
+      <section aria-label="Vremea pe zile" className="-mx-4 px-4">
         <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {days.map((d) => (
             <StripDay key={d.date} day={d} onPick={onPick} />

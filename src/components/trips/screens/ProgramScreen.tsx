@@ -1199,7 +1199,7 @@ function useAgendaDrag(root: React.RefObject<HTMLDivElement>, onDrop: (item: Ite
     return () => window.removeEventListener('touchmove', block);
   }, []);
 
-  // scroll the page while holding near the top or bottom of the screen; the weather strip stays a drop target
+  // scroll the page while holding near the top or bottom of the screen; not over the weather strip, a drop target
   useEffect(() => {
     if (!dragging) return;
     let raf = 0;
@@ -1208,7 +1208,7 @@ function useAgendaDrag(root: React.RefObject<HTMLDivElement>, onDrop: (item: Ite
       if (p?.active) {
         const { x, y } = last.current;
         const overStrip = !!document.elementFromPoint(x, y)?.closest('[data-strip-date]');
-        const top = 190;
+        const top = 110;
         const bottom = window.innerHeight - 90;
         const dy = overStrip ? 0 : y < top ? -Math.ceil((top - y) / 8) : y > bottom ? Math.ceil((y - bottom) / 8) : 0;
         if (dy) {
@@ -1280,7 +1280,7 @@ function Agenda({ anchor, onOpen, change }: { anchor: string; onOpen: (id: strin
       {doc.days.map((d) => {
         const items = agendaOrder(d.items);
         return (
-          <section key={d.date} data-day={d.date} className="scroll-mt-[165px] md:scroll-mt-[210px]">
+          <section key={d.date} data-day={d.date} className="scroll-mt-20 md:scroll-mt-28">
             <div className="flex items-center gap-2 mb-1.5">
               <span className={`flex-shrink-0 text-sm font-bold ${d.date === today ? 'text-red-600' : ''}`}>{short(d.date)}</span>
               <span className="w-1.5 h-1.5 rounded-full self-center" style={{ background: DAY_KIND[d.kind].hex }} />
