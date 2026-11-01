@@ -8,8 +8,9 @@ import type { Day, Item, Place } from '@/lib/trips/schema';
 import { autoScheduleDay, diffItems, findItem, removeItem, restoreItems, scheduleItem, updateItem, type Mutation } from '@/lib/trips/mutations';
 import { formatDateRo, formatDateShort, fromMinutes, toMinutes, weekdayName, weekdayOf } from '@/lib/trips/time';
 import { itemName, type Warning } from '@/lib/trips/validate';
+import { REGIONS, cityOf, cityShort, regionOf } from '@/lib/trips/regions';
 import { useTrip } from '../TripProvider';
-import { BASE, CACHE_KEY, DAY_KIND, ITEM_KIND_HEX, PLACE_KIND_HEX, dayHref } from '../tripConfig';
+import { BASE, CACHE_KEY, DAY_KIND, ITEM_KIND_HEX, dayHref } from '../tripConfig';
 import { minutesText } from '../helpers';
 import { useAiContext } from '../ai';
 import { dayLines, placeDetails } from '../aiPages';
@@ -46,7 +47,7 @@ const write = (key: string, value: string) => {
   }
 };
 
-const colorOf = (item: Item, place: Place | undefined) => (place ? PLACE_KIND_HEX[place.kind] : ITEM_KIND_HEX[item.kind]);
+const colorOf = (item: Item, place: Place | undefined) => (place ? REGIONS[regionOf(place)].hex : ITEM_KIND_HEX[item.kind]);
 const short = (date: string) => `${weekdayName(date).slice(0, 3)} ${formatDateShort(date)}`;
 
 /** Right click (or a long press on something that can't be dragged): a small menu for one activity. */
@@ -842,11 +843,15 @@ function DayColumn({
           return (
             <div
               key={`t-${i.id}-${k}`}
-              className="absolute inset-x-0.5 rounded-md pointer-events-none overflow-hidden text-[9px] font-medium text-slate-500 px-1 bg-[repeating-linear-gradient(135deg,rgba(100,116,139,0.13)_0_4px,transparent_4px_8px)]"
+              className={`absolute inset-x-0.5 rounded-md pointer-events-none overflow-hidden text-[9px] font-medium px-1 ${
+                t.tight
+                  ? 'text-red-700 bg-[repeating-linear-gradient(135deg,rgba(220,38,38,0.2)_0_4px,transparent_4px_8px)]'
+                  : 'text-slate-500 bg-[repeating-linear-gradient(135deg,rgba(100,116,139,0.13)_0_4px,transparent_4px_8px)]'
+              }`}
               style={{ top: px(from), height: px(to - from) }}
               title={`${t.label} · ${minutesText(t.minutes)}`}
             >
-              {px(to - from) > 14 && !narrow && `↝ ${minutesText(t.minutes)}`}
+              {px(to - from) > 14 && !narrow && `↝ ~${minutesText(t.minutes)}`}
             </div>
           );
         });
@@ -963,13 +968,14 @@ function Block({
   const name = itemName(item, places);
   const tiny = h < 34;
   const bookingTodo = place?.booking?.required && place.booking.status === 'todo';
+  const where = place ? cityShort(place) : null;
   const style: CSSProperties = {
     top,
     height: h,
     left: `calc(${(col / cols) * 100}% + 2px)`,
     width: `calc(${100 / cols}% - 4px)`,
     borderLeftColor: color,
-    ...(photo ? {} : { background: `${color}1f` }),
+    ...(photo ? {} : { background: `linear-gradient(${color}1f, ${color}1f), #fff` }), // opaque: travel stripes stay behind the text
   };
 
   return (
@@ -1008,14 +1014,22 @@ function Block({
             {item.done && <Check size={11} />}
           </span>
         )}
+        {!tiny && where && (
+          <span className="self-start max-w-full truncate rounded px-1 mb-0.5 text-[9px] font-bold leading-[14px] text-white flex-shrink-0" style={{ background: color }}>
+            {where}
+          </span>
+        )}
         <span className={`font-semibold leading-tight ${narrow ? 'text-[10px]' : 'text-[11px]'} ${tiny ? 'truncate' : 'line-clamp-3'} ${item.done ? 'line-through' : ''} ${!tiny && !photo && !(narrow || cols > 1) ? 'pr-6' : ''}`}>
-          {tiny && !narrow ? `${item.start} ${name}` : name}
+          {tiny && !narrow ? `${item.start} ${where ? `${where} · ` : ''}${name}` : name}
         </span>
         {!tiny && (
           <span className={`text-[10px] tabular-nums leading-tight ${photo ? 'text-white/85' : 'text-neutral-600'}`}>
             {narrow ? item.start : `${item.start}–${fromMinutes(start + len)}`}
             {resizing != null && ` · ${minutesText(len)}`}
           </span>
+        )}
+        {!tiny && !narrow && h >= 84 && place?.location?.name && (
+          <span className={`text-[10px] leading-tight truncate ${photo ? 'text-white/85' : 'text-neutral-600'}`}>{place.location.name}</span>
         )}
       </div>
       {!item.fixed && (
@@ -1085,6 +1099,14 @@ function Agenda({ anchor, onOpen }: { anchor: string; onOpen: (id: string) => vo
   }, [anchor]);
   return (
     <div ref={ref} className="space-y-4">
+      <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-semibold text-neutral-600">
+        {Object.values(REGIONS).map((r) => (
+          <span key={r.label} className="inline-flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full" style={{ background: r.hex }} />
+            {r.label}
+          </span>
+        ))}
+      </div>
       {doc.days.map((d) => {
         const items = [...d.items].sort((a, b) => (a.start ? toMinutes(a.start) : 1e4) - (b.start ? toMinutes(b.start) : 1e4));
         return (
@@ -1127,6 +1149,15 @@ function Agenda({ anchor, onOpen }: { anchor: string; onOpen: (id: string) => vo
                             {i.kind === 'deadline' ? 'limită fixă' : `${estimated ? '~' : ''}${minutesText(minutes)}`}
                             {i.fixed && ' · oră fixă'}
                           </span>
+                          {place && (
+                            <span className="mt-0.5 flex items-center gap-1 text-xs font-semibold min-w-0" style={{ color: colorOf(i, place) }}>
+                              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: colorOf(i, place) }} />
+                              <span className="truncate">
+                                {cityOf(place)}
+                                {place.location?.name && place.location.name !== cityOf(place) ? <span className="font-normal text-neutral-500"> · {place.location.name}</span> : null}
+                              </span>
+                            </span>
+                          )}
                         </span>
                         {i.done && <Check size={16} className="text-green-600" />}
                       </button>

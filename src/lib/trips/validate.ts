@@ -2,6 +2,7 @@
 import type { Day, Item, Place, TripDoc } from "./schema";
 import { dayBudget } from "./money";
 import { fromMinutes, toMinutes, weekdayHabit, weekdayOf } from "./time";
+import { cityOf, regionMinutes, regionOf } from "./regions";
 
 export type WarningCode =
   | "CLOSED_DAY"
@@ -9,6 +10,7 @@ export type WarningCode =
   | "AFTER_DEADLINE"
   | "TIME_OVERLAP"
   | "TIME_ORDER"
+  | "CANT_MAKE_IT"
   | "BOOKING_TODO"
   | "DAY_TOO_FULL"
   | "MISSING_PRICES"
@@ -43,6 +45,8 @@ export function dayTravelMinutes(day: Day, doc: TripDoc): { minutes: number; kno
   }
   return { minutes, known, expected: Math.max(chain.length - 1, 0) };
 }
+
+const timeText = (min: number) => (min < 60 ? `${min} min` : `${Math.floor(min / 60)} h${min % 60 ? ` ${min % 60} min` : ""}`);
 
 export function validateDay(day: Day, doc: TripDoc): Warning[] {
   const places = new Map(doc.places.map((p) => [p.id, p]));
@@ -96,6 +100,29 @@ export function validateDay(day: Day, doc: TripDoc): Warning[] {
       out.push({ code: "TIME_ORDER", severity: "warn", itemId: b.item.id, message: `${itemName(b.item, places)} (${b.item.start}) e pus după un element care începe mai târziu.` });
     } else if (a.len != null && a.start + a.len > b.start) {
       out.push({ code: "TIME_OVERLAP", severity: "warn", itemId: b.item.id, message: `${itemName(a.item, places)} se suprapune cu ${itemName(b.item, places)}.` });
+    }
+  }
+
+  // Different parts of the Bay Area: is there time to get from whatever ends last to the next activity?
+  const byStart = timed.filter((t) => t.item.kind !== "deadline" && t.item.placeId).sort((x, y) => x.start - y.start);
+  for (let k = 1; k < byStart.length; k++) {
+    const b = byStart[k];
+    const pb = places.get(b.item.placeId!);
+    if (!pb) continue;
+    // Check every earlier activity, not just the last: they may be alternatives held side by side. Report the latest to end.
+    let worst: { name: string; city: string; end: number; need: number } | null = null;
+    for (const a of byStart.slice(0, k)) {
+      const pa = places.get(a.item.placeId!);
+      if (!pa) continue;
+      const need = doc.legs[legKey(pa.id, pb.id)]?.minutes ?? regionMinutes(regionOf(pa), regionOf(pb));
+      const end = a.start + (a.len ?? 0);
+      if (need > 0 && b.start - end < need && (!worst || end > worst.end)) worst = { name: itemName(a.item, places), city: cityOf(pa), end, need };
+    }
+    if (worst) {
+      out.push({
+        code: "CANT_MAKE_IT", severity: "error", itemId: b.item.id,
+        message: `Nu ajungi la ${itemName(b.item, places)} (${cityOf(pb)}, ${b.item.start}) dacă mergi la ${worst.name} (${worst.city}, până la ${fromMinutes(worst.end)}): drumul e de ~${timeText(worst.need)}.`,
+      });
     }
   }
 

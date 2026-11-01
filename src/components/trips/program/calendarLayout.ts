@@ -3,6 +3,7 @@
 import type { Day, Item, Place, TripDoc } from '../../../lib/trips/schema';
 import { itemMinutes, legKey } from '../../../lib/trips/validate';
 import { toMinutes, weekdayOf } from '../../../lib/trips/time';
+import { regionMinutes, regionOf, REGIONS, type Region } from '../../../lib/trips/regions';
 
 export type View = 'day' | '3day' | 'week' | 'agenda';
 export const VIEW_STEP: Record<View, number> = { day: 1, '3day': 3, week: 7, agenda: 1 };
@@ -76,22 +77,34 @@ export function layoutColumns(events: { id: string; start: number; end: number }
   return out;
 }
 
-export type Travel = { minutes: number; label: string; when: 'before' | 'after' };
+export type Travel = { minutes: number; label: string; when: 'before' | 'after'; tight: boolean };
 
 const routeMinutes = (r: Item['routes'][number]) => r.steps.reduce((s, st) => s + (st.durationMin ?? 0), 0);
 
 /**
- * Travel to draw around a timed item. Its own routes win: a way there goes before it; a way back, or one that
- * ends at home (the SFO landing), goes after it. Without routes, the computed transit leg from the previous stop.
+ * Travel to draw around a timed item. Its own routes win: a way there goes before it; a way back, or one that ends at
+ * home (the SFO landing), goes after it. Without routes: the computed transit leg from the previous stop (or home), else
+ * the typical time between two parts of the Bay Area. `tight` = it doesn't fit after whatever ends before.
  */
 export function travelAround(day: Day, item: Item, doc: TripDoc): Travel[] {
   const own = item.routes
     .filter((r) => routeMinutes(r) > 0)
-    .map((r): Travel => ({ minutes: routeMinutes(r), label: r.summary ?? r.title, when: r.direction === 'from' || r.destination === 'base' ? 'after' : 'before' }));
+    .map((r): Travel => ({ minutes: routeMinutes(r), label: r.summary ?? r.title, when: r.direction === 'from' || r.destination === 'base' ? 'after' : 'before', tight: false }));
   if (own.some((t) => t.when === 'before') || !item.placeId || !item.start) return own;
-  const timed = day.items.filter((i) => i.placeId && i.start).sort((a, b) => toMinutes(a.start!) - toMinutes(b.start!));
-  const k = timed.findIndex((i) => i.id === item.id);
-  const from = k > 0 ? timed[k - 1].placeId! : doc.trip.base ? 'base' : null;
-  const leg = from ? doc.legs[legKey(from, item.placeId)] : undefined;
-  return leg ? [...own, { minutes: leg.minutes, label: leg.summary ?? 'drum', when: 'before' }] : own;
+  const places = new Map(doc.places.map((p) => [p.id, p]));
+  const here = places.get(item.placeId);
+  if (!here) return own;
+  const start = toMinutes(item.start);
+  const endOf = (i: Item) => toMinutes(i.start!) + (itemMinutes(i, places) ?? 0);
+  const before = day.items.filter((i) => i.id !== item.id && i.placeId && i.start && i.kind !== 'deadline' && toMinutes(i.start) <= start);
+  const prev = before.length ? before.reduce((best, i) => (endOf(i) > endOf(best) ? i : best)) : null;
+  const prevPlace = prev ? places.get(prev.placeId!) : undefined;
+  const from = prevPlace ? prevPlace.id : doc.trip.base ? 'base' : null;
+  if (!from) return own;
+  const fromRegion: Region = prevPlace ? regionOf(prevPlace) : 'sf'; // home is in the city
+  const leg = doc.legs[legKey(from, here.id)];
+  const minutes = leg?.minutes ?? regionMinutes(fromRegion, regionOf(here));
+  if (!minutes) return own;
+  const label = leg?.summary ?? `drum estimat din ${prevPlace ? REGIONS[fromRegion].short : 'casă'}`;
+  return [...own, { minutes, label, when: 'before', tight: !!prev && start - endOf(prev) < minutes }];
 }

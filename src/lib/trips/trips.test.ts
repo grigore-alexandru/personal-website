@@ -262,3 +262,29 @@ test("routeOf maps trip URLs to screens", async () => {
   assert.equal(routeOf(`${BASE}/nimic`), null);
   assert.equal(routeOf(`/admin`), null);
 });
+
+test("different regions: unreachable next activity is an error, enough time or the same region is not", async () => {
+  const { cityOf, cityShort, regionMinutes } = await import("./regions");
+  assert.equal(regionMinutes("sf", "peninsula"), 100);
+  assert.equal(regionMinutes("peninsula", "sf"), 100);
+  assert.equal(regionMinutes("sf", "sf"), 0);
+  const base = seed.places[0];
+  const stanford = { ...base, id: "x-stanford", area: "peninsula" as const, hours: null, booking: null, location: { name: "Old Union", address: "520 Lasuen Mall, Stanford, CA 94305, USA", lat: 37.4, lng: -122.1, googlePlaceId: null } };
+  const city = { ...base, id: "x-city", area: "sf" as const, hours: null, booking: null, location: { name: "Baseten", address: "560 Davis St, San Francisco, CA 94111, USA", lat: 37.7, lng: -122.4, googlePlaceId: null } };
+  assert.equal(cityOf(stanford), "Stanford");
+  assert.equal(cityShort(city), "SF");
+  const item = (id: string, placeId: string, start: string) => ({ ...seed.days[0].items[0], id, placeId, label: null, start, durationMin: 60, kind: "visit" as const, costs: [], routes: [] });
+  const check = (second: string, place = city.id) => {
+    const doc = structuredClone(seed);
+    doc.places.push(stanford, city);
+    const d = doc.days[5];
+    d.items = [item("i-a", stanford.id, "11:00"), item("i-b", place, second)];
+    return validateDay(d, doc).filter((w) => w.code === "CANT_MAKE_IT");
+  };
+  const tight = check("13:00");
+  assert.equal(tight.length, 1); // 12:00 → 13:00: one hour for a 1 h 40 trip
+  assert.equal(tight[0].severity, "error");
+  assert.equal(tight[0].itemId, "i-b");
+  assert.equal(check("14:00").length, 0); // two hours are enough
+  assert.equal(check("12:05", stanford.id).length, 0); // same area
+});

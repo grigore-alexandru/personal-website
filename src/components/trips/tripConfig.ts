@@ -55,16 +55,7 @@ export const AREA: Record<Place['area'], string> = {
   bay: 'Golf',
 };
 
-/** Calendar colours per place kind (Program); items without a place use ITEM_KIND_HEX. */
-export const PLACE_KIND_HEX: Record<Place['kind'], string> = {
-  zone: '#6366f1',
-  attraction: '#0ea5e9',
-  museum: '#a855f7',
-  daytrip: '#10b981',
-  event: '#ec4899',
-  nature: '#22c55e',
-  food: FOOD_HEX,
-};
+/** Calendar colours of items without a place; places take their region's colour (lib/trips/regions). */
 export const ITEM_KIND_HEX = { visit: '#0ea5e9', transport: '#64748b', deadline: '#f59e0b', note: '#737373' } as const;
 
 export const dayHref = (date: string) => `${BASE}/zile/${date}`;

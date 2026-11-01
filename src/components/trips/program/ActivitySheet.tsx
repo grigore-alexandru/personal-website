@@ -9,7 +9,8 @@ import { formatDateRo, fromMinutes, navigationTarget, toMinutes, weekdayOf } fro
 import { itemName } from '@/lib/trips/validate';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useTrip } from '../TripProvider';
-import { AREA, BASE, DAY_KIND, PLACE_KIND, dayHref, placeHref } from '../tripConfig';
+import { BASE, DAY_KIND, PLACE_KIND, dayHref, placeHref } from '../tripConfig';
+import { REGIONS, cityOf, regionMinutes, regionOf } from '@/lib/trips/regions';
 import { dayOptionLabel, minutesText } from '../helpers';
 import { RouteList } from '../RouteList';
 import { Chip, ExtLink, NavigateButtons, NoteText, PlacePhoto, WarningList } from '../ui';
@@ -55,7 +56,6 @@ export function ActivitySheet({ itemId, onClose, change }: { itemId: string | nu
               <span className="w-2 h-2 rounded-full" style={{ background: DAY_KIND[day.kind].hex }} /> {formatDateRo(day.date)}
             </Chip>
             {place && <Chip>{PLACE_KIND[place.kind]}</Chip>}
-            {place && <Chip>{AREA[place.area]}</Chip>}
             {item.fixed && (
               <Chip tone="amber">
                 <Lock size={10} /> oră fixă
@@ -63,7 +63,7 @@ export function ActivitySheet({ itemId, onClose, change }: { itemId: string | nu
             )}
             {place?.booking?.required && (
               <Chip tone={place.booking.status === 'booked' ? 'green' : 'amber'}>
-                <Ticket size={10} /> {place.booking.status === 'booked' ? 'bilet luat' : 'bilet de luat'}
+                <Ticket size={10} /> {place.kind === 'event' ? (place.booking.status === 'booked' ? 'înregistrat' : 'de înregistrat') : place.booking.status === 'booked' ? 'bilet luat' : 'bilet de luat'}
               </Chip>
             )}
           </div>
@@ -80,6 +80,17 @@ export function ActivitySheet({ itemId, onClose, change }: { itemId: string | nu
             </p>
           )}
         </div>
+
+        {place && (
+          <div className="rounded-2xl p-3" style={{ background: `${REGIONS[regionOf(place)].hex}14`, borderLeft: `4px solid ${REGIONS[regionOf(place)].hex}` }}>
+            <p className="flex items-center gap-1.5 text-base font-bold" style={{ color: REGIONS[regionOf(place)].hex }}>
+              <MapPin size={16} /> {cityOf(place)}
+            </p>
+            {place.location?.name && place.location.name !== cityOf(place) && <p className="text-sm font-medium text-neutral-800">{place.location.name}</p>}
+            <p className="text-xs text-neutral-600">{place.location?.address ?? 'Adresa exactă nu e cunoscută încă.'}</p>
+            {regionOf(place) !== 'sf' && <p className="mt-1 text-xs font-semibold text-neutral-700">~{minutesText(regionMinutes('sf', regionOf(place)))} cu transportul din San Francisco</p>}
+          </div>
+        )}
 
         {itemWarnings.length > 0 && <WarningList warnings={itemWarnings} />}
 
