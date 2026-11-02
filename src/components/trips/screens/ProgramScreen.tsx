@@ -1333,7 +1333,7 @@ function Agenda({ anchor, onOpen, change }: { anchor: string; onOpen: (id: strin
                               </span>
                             </span>
                           )}
-                          {i.notes && <span className="mt-1 block rounded-md bg-amber-50 px-2 py-1 text-xs leading-snug text-amber-950 whitespace-pre-wrap line-clamp-5">{i.notes}</span>}
+                          {i.notes && <span className="mt-1 block rounded-md bg-amber-50 px-2 py-1 text-xs leading-snug text-amber-950 whitespace-pre-wrap">{i.notes}</span>}
                         </span>
                         {i.done && <Check size={16} className="text-green-600" />}
                       </button>
