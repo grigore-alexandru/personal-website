@@ -3,8 +3,8 @@
 import dynamic from 'next/dynamic';
 import Link from '../TripLink';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
-import { ArrowDown, Home, LocateFixed, UtensilsCrossed, X } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowDown, Check, FileText, Home, LocateFixed, UtensilsCrossed, X } from 'lucide-react';
 import type { Place } from '@/lib/trips/schema';
 import { formatDateShort, navigationTarget } from '@/lib/trips/time';
 import { useTrip } from '../TripProvider';
@@ -16,6 +16,7 @@ import { mapPage, placesPage } from '../aiPages';
 import { NavigateButtons, PlacePhoto } from '../ui';
 import type { MapMarker } from '../MapView';
 import { LocuriSection } from './LocuriSection';
+import { MAP_PDFS, isMapSaved, saveAllMaps, type MapPdf } from '../offlineMaps';
 
 /** The map's code isn't saved on this device yet and there is no connection: say so instead of crashing the app. */
 function MapMissing() {
@@ -30,6 +31,40 @@ const MapView = dynamic(() => import('../MapView').catch(() => MapMissing), {
 
 /** Selection id of the home pin (place ids can't collide: it is not a place). */
 const HOME = 'base';
+
+const MapPdfViewer = dynamic(() => import('../MapPdfViewer'), { ssr: false });
+
+/** Transit maps kept on the device: a tap opens the viewer; the tick says it's there for offline. */
+function OfflineMaps({ onOpen }: { onOpen: (doc: MapPdf) => void }) {
+  const [saved, setSaved] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    let gone = false;
+    void saveAllMaps().then(async () => {
+      const flags = await Promise.all(MAP_PDFS.map((d) => isMapSaved(d).catch(() => false)));
+      if (!gone) setSaved(new Set(MAP_PDFS.filter((_, i) => flags[i]).map((d) => d.id)));
+    });
+    return () => {
+      gone = true;
+    };
+  }, []);
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="text-xs font-semibold text-neutral-500">Hărți offline</span>
+      {MAP_PDFS.map((d) => (
+        <button
+          key={d.id}
+          type="button"
+          onClick={() => onOpen(d)}
+          title={`${d.hint} · ${d.size}${saved.has(d.id) ? ' · salvată pe dispozitiv' : ''}`}
+          className="inline-flex items-center gap-1.5 min-h-[36px] px-3 rounded-xl border border-neutral-300 bg-white text-sm font-semibold"
+        >
+          <FileText size={14} /> {d.title}
+          {saved.has(d.id) && <Check size={14} className="text-green-600" aria-label="salvată offline" />}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 const priceOf = (p: Place) => p.notes?.match(/\$\d+–\d+/)?.[0];
 
@@ -99,6 +134,26 @@ export function HartaScreen() {
     }
   };
 
+  // ?pdf=<id> keeps the viewer in the history, so the phone's back button closes it
+  const pdf = MAP_PDFS.find((d) => d.id === search?.get('pdf')) ?? null;
+  const openedHere = useRef(false);
+  const pdfUrl = (id: string | null) => {
+    const q = new URLSearchParams(window.location.search);
+    if (id) q.set('pdf', id);
+    else q.delete('pdf');
+    return `${pathname}${q.size ? `?${q}` : ''}`;
+  };
+  const openPdf = (doc: MapPdf) => {
+    openedHere.current = true;
+    window.history.pushState(null, '', pdfUrl(doc.id));
+  };
+  const closePdf = useCallback(() => {
+    if (openedHere.current) window.history.back();
+    else window.history.replaceState(null, '', pdfUrl(null));
+    openedHere.current = false;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reads the current address when called
+  }, [pathname]);
+
   const nearFood = me ? nearest(me, foodPlaces, 3) : [];
 
   return (
@@ -152,6 +207,8 @@ export function HartaScreen() {
           <LocateFixed size={15} /> {locating ? 'Se caută…' : 'Locația mea'}
         </button>
       </div>
+      <OfflineMaps onOpen={openPdf} />
+      {pdf && <MapPdfViewer doc={pdf} onClose={closePdf} />}
       {day && <p className="text-xs text-neutral-500">Liniile arată ordinea zilei, nu traseul.</p>}
 
       <div className="relative h-[58vh] min-h-[360px] rounded-2xl overflow-hidden border border-neutral-200 bg-neutral-100 isolate">

@@ -13,7 +13,7 @@ const PAGES = 'trip-pages-v2';
 const STATIC = 'trip-static-v1';
 const PHOTOS = 'trip-photos-v1';
 const TILES = 'trip-tiles-v1';
-const KEEP = [PAGES, STATIC, PHOTOS, TILES];
+const KEEP = [PAGES, STATIC, PHOTOS, TILES, 'trip-docs-v1']; // trip-docs: the map PDFs, saved by the app itself
 const STORAGE = ${JSON.stringify(storagePrefix)};
 const MAX_TILES = 600;
 
@@ -97,7 +97,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   if (url.origin !== self.location.origin) return;
-  if (url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/trips/sf-2026/')) {
+  if (url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/trips/sf-2026/') || url.pathname === '/pdf.worker.min.mjs') {
     event.respondWith(cacheFirst(STATIC, request));
     return;
   }

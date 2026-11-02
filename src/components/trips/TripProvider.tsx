@@ -9,6 +9,7 @@ import { commit, createCommitQueue, supabaseStore, type Snapshot } from '@/lib/t
 import { validateTrip, type Warning } from '@/lib/trips/validate';
 import { nowMinutesIn, todayIn } from '@/lib/trips/time';
 import { ToastContainer, type ToastData, type ToastType } from '@/components/ui/Toast';
+import { saveAllMaps } from './offlineMaps';
 import { BASE, CACHE_KEY, PHOTO_BUCKET, PHOTO_URL_TTL_S, POLL_MS, TRIP_ID, TRIP_TZ } from './tripConfig';
 
 export type SyncState = 'saved' | 'saving' | 'offline' | 'cache';
@@ -335,6 +336,11 @@ export function TripProvider({ children, buildId = 'local' }: { children: ReactN
 
   // Offline: register the service worker (production only — it would cache dev bundles), then let it
   // download every trip page, its scripts and all photos, once per deploy or when pages/photos change.
+  // The transit map PDFs go on the device at the first online start, whichever tab is opened.
+  useEffect(() => {
+    if (navigator.onLine && 'caches' in window) void saveAllMaps();
+  }, []);
+
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production' || !('serviceWorker' in navigator)) return;
     navigator.serviceWorker.register(`${BASE}/sw.js`, { scope: `${BASE}/` }).catch(() => undefined);
@@ -357,14 +363,14 @@ export function TripProvider({ children, buildId = 'local' }: { children: ReactN
       writeJson(WARM_KEY, { sig, at: Date.now() });
       // The map's code loads on demand and this page may have started before the worker took over, so hand it
       // everything the page has fetched so far, the map's script and stylesheet included.
-      void import('./MapView')
+      void Promise.all([import('./MapView'), import('./MapPdfViewer')])
         .catch(() => undefined)
         .then(() => {
           const assets = performance
             .getEntriesByType('resource')
             .map((e) => e.name)
             .filter((n) => new URL(n).pathname.startsWith('/_next/static/'));
-          reg.active?.postMessage({ type: 'warm', assets });
+          reg.active?.postMessage({ type: 'warm', assets: [...assets, '/pdf.worker.min.mjs'] });
         });
     });
     return () => {
